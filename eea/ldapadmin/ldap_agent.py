@@ -20,8 +20,7 @@ org_attr_map = {
 
 class LdapAgent(object):
     def __init__(self, **config):
-        self.conn = ldap.initialize('ldap://' + config['ldap_server'])
-        self.conn.protocol_version = ldap.VERSION3
+        self.conn = self.connect(config['ldap_server'])
         self._encoding = config.get('encoding', 'utf-8')
         self._user_dn_suffix = config.get('users_dn',
                                           "ou=Users,o=EIONET,l=Europe")
@@ -30,6 +29,11 @@ class LdapAgent(object):
         self._role_dn_suffix = config.get('roles_dn',
                                           "ou=Roles,o=EIONET,l=Europe")
         self._bound = False
+
+    def connect(self, server):
+        conn = ldap.initialize('ldap://' + server)
+        conn.protocol_version = ldap.VERSION3
+        return conn
 
     def _role_dn(self, role_id):
         if role_id is None:
