@@ -1,7 +1,7 @@
 def initialize(context):
-    import editor
+    import roles_editor
     constructors = (
-        ('manage_add_editor_html', editor.manage_add_editor_html),
-        ('manage_add_editor', editor.manage_add_editor),
+        ('manage_add_editor_html', roles_editor.manage_add_editor_html),
+        ('manage_add_editor', roles_editor.manage_add_editor),
     )
-    context.registerClass(editor.Editor, constructors=constructors)
+    context.registerClass(roles_editor.RolesEditor, constructors=constructors)

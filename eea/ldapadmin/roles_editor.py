@@ -15,15 +15,15 @@ eionet_edit_roles = 'Eionet edit roles'
 
 manage_add_editor_html = PageTemplateFile('zpt/editor_manage_add', globals())
 manage_add_editor_html.properties_form_fields = lambda: \
-    Editor.manage_edit.pt_macros()['properties_form_fields']
+    RolesEditor.manage_edit.pt_macros()['properties_form_fields']
 
 def manage_add_editor(parent, id, REQUEST=None):
-    """ Create a new Editor object """
+    """ Create a new RolesEditor object """
     if REQUEST is not None:
         config = REQUEST.form
     else:
         config = {}
-    obj = Editor(config)
+    obj = RolesEditor(config)
     obj.title = config.get('title', id)
     obj.ldap_server = 'ldap2.eionet.europa.eu'
     obj._setId(id)
@@ -39,10 +39,10 @@ def _get_session_messages(request):
         session['messages'] = PersistentList()
     return session['messages']
 
-class Editor(Folder):
+class RolesEditor(Folder):
     meta_type = 'Eionet Roles Editor'
     security = ClassSecurityInfo()
-    icon = 'misc_/EionetRolesEditor/editor.gif'
+    icon = 'misc_/EionetRolesEditor/roles_editor.gif'
 
     meta_types = (
         {'name': Query.meta_type, 'action': 'manage_add_query_html'},
@@ -57,7 +57,7 @@ class Editor(Folder):
         return dict(self.config)
 
     def __init__(self, config):
-        super(Editor, self).__init__()
+        super(RolesEditor, self).__init__()
         self.config = PersistentMapping({
             'login_dn': config.get('login_dn', ''),
             'login_pw': config.get('login_pw', ''),
