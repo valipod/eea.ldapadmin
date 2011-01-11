@@ -69,7 +69,11 @@ def remove_roles_editor(S):
 def setUpModule():
     global _selenium_wrapper
     _selenium_wrapper = SeleniumWrapper()
-    _selenium_wrapper.start_up_selenium()
+    try:
+        _selenium_wrapper.start_up_selenium()
+    except ImportError:
+        from nose import SkipTest
+        raise SkipTest
     create_roles_editor(_selenium_wrapper.selenium)
 
 def tearDownModule():
