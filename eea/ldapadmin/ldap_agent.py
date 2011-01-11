@@ -29,9 +29,6 @@ class LdapAgent(object):
                                          "ou=Organisations,o=EIONET,l=Europe")
         self._role_dn_suffix = config.get('roles_dn',
                                           "ou=Roles,o=EIONET,l=Europe")
-        self._login_dn = config.get('login_dn',
-                                    "uid=_admin,ou=Users,o=EIONET,l=Europe")
-        self._login_pw = config.get('login_pw', "admin")
         self._bound = False
 
     def _role_dn(self, role_id):
@@ -230,8 +227,8 @@ class LdapAgent(object):
         assert dn == query_dn
         return {'description': attr.get('description', [""])[0]}
 
-    def perform_bind(self):
-        result = self.conn.simple_bind_s(self._login_dn, self._login_pw)
+    def perform_bind(self, login_dn, login_pw):
+        result = self.conn.simple_bind_s(login_dn, login_pw)
         # may throw ldap.INVALID_CREDENTIALS
         assert result == (ldap.RES_BIND, [])
         self._bound = True

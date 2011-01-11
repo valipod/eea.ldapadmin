@@ -88,6 +88,9 @@ class Editor(Folder):
 
         REQUEST.RESPONSE.redirect(self.absolute_url() + '/manage_edit')
 
+    def _login_data(self):
+        return (self.config['login_dn'], self.config['login_pw'])
+
     security.declareProtected(view, 'index_html')
     index_html = PageTemplateFile('zpt/editor_browse', globals())
 
@@ -130,7 +133,7 @@ class Editor(Folder):
         else:
             role_id = parent_role_id + '-' + role_id_frag
         agent = self.get_ldap_agent()
-        agent.perform_bind()
+        agent.perform_bind(*self._login_data())
         agent.create_role(role_id, description)
         self.add_message("Created role %s %r" % (role_id, description))
         RESPONSE.redirect(self.absolute_url() + '/?role_id=' + role_id)
@@ -142,7 +145,7 @@ class Editor(Folder):
         agent = self.get_ldap_agent()
 
         if REQUEST.form.get('confirm', 'no') == 'yes':
-            agent.perform_bind()
+            agent.perform_bind(*self._login_data())
             agent.delete_role(role_id)
             parent_role_id = '-'.join(role_id.split('-')[:-1])
             self.add_message("Removed role %s" % role_id)
@@ -165,7 +168,7 @@ class Editor(Folder):
     def do_add_to_role(self, RESPONSE, role_id, user_id):
         """ Add user `user_id` to role `role_id` """
         agent = self.get_ldap_agent()
-        agent.perform_bind()
+        agent.perform_bind(*self._login_data())
         agent.add_to_role(role_id, 'user', user_id)
         self.add_message("User %r added to role %r" % (user_id, role_id))
         RESPONSE.redirect(self.absolute_url() + '/?role_id=' + role_id)
@@ -178,7 +181,7 @@ class Editor(Folder):
         agent = self.get_ldap_agent()
 
         if REQUEST.form.get('confirm', 'no') == 'yes':
-            agent.perform_bind()
+            agent.perform_bind(*self._login_data())
             for user_id in user_id_list:
                 agent.remove_from_role(role_id, 'user', user_id)
             self.add_message("Users %r removed from role %r" %
