@@ -463,3 +463,136 @@ class TestRemoveFromRole(unittest.TestCase):
             ((user_dn('userone'), role_dn('K-N-P')), {}),
             ((user_dn('userone'), role_dn('K-N-O')), {}),
             ((user_dn('userone'), role_dn('K-N')), {})]
+
+org_info_fixture = {
+    'name': u"Ye olde bridge club",
+    'phone': u"555 2222",
+    'fax': u"555 9999",
+    'url': u"http://bridge.example.com/",
+    'address': (u"13 Card games road\n"
+                u"K\xf8benhavn, Danmark\n"),
+    'street': u"Card games road",
+    'po_box': u"123456",
+    'postal_code': u"456789",
+    'country': u"Denmark",
+    'locality': u"K\xf8benhavn",
+}
+
+class OrganisationsTest(unittest.TestCase):
+    def setUp(self):
+        self.agent = StubbedLdapAgent(ldap_server='')
+        self.mock_conn = self.agent.conn
+
+    def test_get_organisation(self):
+        bridge_club_dn = 'cn=bridge_club,ou=Organisations,o=EIONET,l=Europe'
+        self.mock_conn.search_s.return_value = [(bridge_club_dn, {
+            'o': ['Ye olde bridge club'],
+            'telephoneNumber': ['555 2222'],
+            'facsimileTelephoneNumber': ['555 9999'],
+            'street': ['Card games road'],
+            'postOfficeBox': ['123456'],
+            'postalCode': ['456789'],
+            'postalAddress': ['13 Card games road\n'
+                              'K\xc3\xb8benhavn, Danmark\n'],
+            'st': ['Denmark'],
+            'l': ['K\xc3\xb8benhavn'],
+            'labeledURI': ['http://bridge.example.com/'],
+        })]
+
+        org_info = self.agent.org_info('bridge_club')
+
+        self.mock_conn.search_s.assert_called_once_with(
+                bridge_club_dn, ldap.SCOPE_BASE)
+        self.assertEqual(org_info, dict(org_info_fixture,
+                                        dn=bridge_club_dn,
+                                        id='bridge_club'))
+        for name in org_info_fixture:
+            assert type(org_info[name]) is unicode
+
+    def test_create_organisation(self):
+        self.agent._bound = True
+        self.mock_conn.add_s.return_value = (ldap.RES_ADD, [])
+
+        self.agent.create_org('poker_club', {
+            'name': u"P\xf8ker club",
+            'url': u"http://poker.example.com/",
+        })
+
+        poker_club_dn = 'cn=poker_club,ou=Organisations,o=EIONET,l=Europe'
+        self.mock_conn.add_s.assert_called_once_with(poker_club_dn, [
+            ('o', ['P\xc3\xb8ker club']),
+            ('labeledURI', ['http://poker.example.com/']),
+        ])
+
+    def test_delete_organisation(self):
+        self.agent._bound = True
+        self.mock_conn.delete_s.return_value = (ldap.RES_DELETE, [])
+        poker_club_dn = 'cn=poker_club,ou=Organisations,o=EIONET,l=Europe'
+
+        self.agent.delete_org('poker_club')
+
+        self.mock_conn.delete_s.assert_called_once_with(poker_club_dn)
+
+class OrganisationEditTest(unittest.TestCase):
+    def setUp(self):
+        self.agent = StubbedLdapAgent(ldap_server='')
+        self.mock_conn = self.agent.conn
+        self.mock_conn.search_s.return_value = [
+            ('cn=bridge_club,ou=Organisations,o=EIONET,l=Europe', {
+                'o': ['Ye olde bridge club'],
+                'labeledURI': ['http://bridge.example.com/'],
+             })]
+        self.mock_conn.modify_s.return_value = (ldap.RES_MODIFY, [])
+
+    def test_change_nothing(self):
+        self.agent.set_org_info('bridge_club', {
+            'name': u"Ye olde bridge club",
+            'url': u"http://bridge.example.com/",
+        })
+
+        assert self.mock_conn.modify_s.call_count == 0
+
+    def test_add_one(self):
+        self.agent.set_org_info('bridge_club', {
+            'name': u"Ye olde bridge club",
+            'url': u"http://bridge.example.com/",
+            'phone': u"555 2222",
+        })
+
+        bridge_club_dn = 'cn=bridge_club,ou=Organisations,o=EIONET,l=Europe'
+        modify_statements = [ (ldap.MOD_ADD, 'telephoneNumber', ['555 2222']) ]
+        self.mock_conn.modify_s.assert_called_once_with(
+                bridge_club_dn, tuple(modify_statements))
+
+    def test_change_one(self):
+        self.agent.set_org_info('bridge_club', {
+            'name': u"Ye new bridge club",
+            'url': u"http://bridge.example.com/",
+        })
+
+        bridge_club_dn = 'cn=bridge_club,ou=Organisations,o=EIONET,l=Europe'
+        modify_statements = [ (ldap.MOD_REPLACE, 'o', ['Ye new bridge club']) ]
+        self.mock_conn.modify_s.assert_called_once_with(
+                bridge_club_dn, tuple(modify_statements))
+
+    def test_remove_one(self):
+        self.agent.set_org_info('bridge_club', {
+            'url': u"http://bridge.example.com/",
+        })
+
+        bridge_club_dn = 'cn=bridge_club,ou=Organisations,o=EIONET,l=Europe'
+        modify_statements = [ (ldap.MOD_DELETE, 'o', ['Ye olde bridge club']) ]
+        self.mock_conn.modify_s.assert_called_once_with(
+                bridge_club_dn, tuple(modify_statements))
+
+    def test_unicode(self):
+        self.agent.set_org_info('bridge_club', {
+            'name': u"\u0143\xe9w n\xe6\u1e41",
+            'url': u"http://bridge.example.com/",
+        })
+
+        bridge_club_dn = 'cn=bridge_club,ou=Organisations,o=EIONET,l=Europe'
+        modify_statements = [ (ldap.MOD_REPLACE, 'o', [
+                '\xc5\x83\xc3\xa9w n\xc3\xa6\xe1\xb9\x81']) ]
+        self.mock_conn.modify_s.assert_called_once_with(
+                bridge_club_dn, tuple(modify_statements))

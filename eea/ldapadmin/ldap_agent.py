@@ -1,3 +1,4 @@
+from string import ascii_lowercase
 import ldap, ldap.filter
 
 if 'set' not in dir(__builtins__):
@@ -15,7 +16,15 @@ user_attr_map = {
 
 org_attr_map = {
     'name': 'o',
+    'phone': 'telephoneNumber',
+    'fax': 'facsimileTelephoneNumber',
     'url': 'labeledURI',
+    'address': 'postalAddress',
+    'street': 'street',
+    'po_box': 'postOfficeBox',
+    'postal_code': 'postalCode',
+    'country': 'st',
+    'locality': 'l',
 }
 
 class LdapAgent(object):
@@ -95,7 +104,7 @@ class LdapAgent(object):
             if ldap_name in attr:
                 out[name] = attr[ldap_name][0].decode(self._encoding)
             else:
-                out[name] = None
+                out[name] = u""
         return out
 
     def _unpack_org_info(self, dn, attr):
@@ -104,7 +113,7 @@ class LdapAgent(object):
             if ldap_name in attr:
                 out[name] = attr[ldap_name][0].decode(self._encoding)
             else:
-                out[name] = None
+                out[name] = u""
         return out
 
     def role_names_in_role(self, role_id):
@@ -236,6 +245,53 @@ class LdapAgent(object):
         # may throw ldap.INVALID_CREDENTIALS
         assert result == (ldap.RES_BIND, [])
         self._bound = True
+
+    def _org_info_diff(self, org_id, old_info, new_info):
+        def pack(value):
+            return [value.encode(self._encoding)]
+
+        for name in org_attr_map:
+            old_value = old_info.get(name, u"")
+            new_value = new_info.get(name, u"")
+            ldap_name = org_attr_map[name]
+
+            if old_value == new_value == '':
+                pass
+
+            elif old_value == '':
+                yield (ldap.MOD_ADD, ldap_name, pack(new_value))
+
+            elif new_value == '':
+                yield (ldap.MOD_DELETE, ldap_name, pack(old_value))
+
+            elif old_value != new_value:
+                yield (ldap.MOD_REPLACE, ldap_name, pack(new_value))
+
+    def create_org(self, org_id, org_info):
+        """ Create a new organisation with attributes from `org_info` """
+        assert self._bound, "call `perform_bind` before `create_org`"
+        assert type(org_id) is str
+        for ch in org_id:
+            assert ch in ascii_lowercase + '_'
+        attrs = [ (org_attr_map[name], [value.encode('utf-8')])
+                  for name, value in sorted(org_info.iteritems()) ]
+        result = self.conn.add_s(self._org_dn(org_id), attrs)
+        assert result == (ldap.RES_ADD, [])
+
+    def set_org_info(self, org_id, new_info):
+        old_info = self.org_info(org_id)
+        changes = tuple(self._org_info_diff(org_id, old_info, new_info))
+        if not changes:
+            return
+        org_dn = self._org_dn(org_id)
+        result = self.conn.modify_s(org_dn, changes)
+        assert result == (ldap.RES_MODIFY, [])
+
+    def delete_org(self, org_id):
+        """ Remove the organisation `org_id` """
+        assert self._bound, "call `perform_bind` before `delete_org`"
+        result = self.conn.delete_s(self._org_dn(org_id))
+        assert result == (ldap.RES_DELETE, [])
 
     def create_role(self, role_id, description):
         """
