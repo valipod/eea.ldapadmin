@@ -1,0 +1,13 @@
+<tal:block content="structure here/manage_page_header" />
+
+<h2>Add Eionet organisations editor</h2>
+
+<form action="manage_add_organisations_editor" method="post">
+    <label for="edit-id">id</label>
+    <input name="id" id="edit-id" />
+    <br />
+
+    <input type="submit" />
+</form>
+
+<tal:block content="structure here/manage_page_footer" />
