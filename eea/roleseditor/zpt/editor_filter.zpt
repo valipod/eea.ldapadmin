@@ -1,0 +1,32 @@
+<metal:block use-macro="here/general_tmpl/macros/page">
+
+<h1 metal:fill-slot="title">Filter roles</h1>
+
+<metal:block fill-slot="content">
+
+<p>
+    Enter a search pattern, e.g. <tt>eea-staff</tt> or
+    <tt>eionet-*-*-*-dk</tt>.
+</p>
+
+<tal:block define="pattern python:request.get('pattern', '') or None;
+                   user request/AUTHENTICATED_USER;
+                   is_authenticated python:'Authenticated' in user.getRoles()">
+
+<form name="filter">
+    <input type="search" name="pattern" size="30"
+           tal:attributes="value pattern" />
+    <input type="submit" value="Filter roles" />
+</form>
+
+<tal:block define="agent here/get_ldap_agent">
+    <tal:block condition="pattern">
+        <metal:block use-macro="here/general_tmpl/macros/filter-results" />
+    </tal:block>
+</tal:block>
+
+</tal:block>
+
+
+</metal:block>
+</metal:block>

@@ -1,0 +1,50 @@
+<tal:block content="structure here/manage_page_header" />
+<tal:block content="structure here/manage_tabs" />
+
+<style>
+    form.edit-roles-editor label {
+        display: inline-block;
+        width: 10em;
+    }
+</style>
+
+<br />
+<form tal:define="config here/get_config|python:{}"
+      tal:attributes="action string:${here/absolute_url}/manage_edit_save"
+      class="edit-roles-editor" method="post">
+
+    <metal:block define-macro="properties_form_fields">
+    <label for="edit-login_dn">Login DN</label>
+    <input id="edit-login_dn" name="login_dn" size="50"
+           tal:attributes="value config/login_dn|nothing" />
+    <br />
+
+    <label for="edit-login_pw">Login password</label>
+    <input id="edit-login_pw" name="login_pw" type="password" size="50" />
+    <br />
+
+    <label for="edit-ldap_server">LDAP server</label>
+    <input id="edit-ldap_server" name="ldap_server" size="50"
+           tal:attributes="value config/ldap_server|nothing" />
+    <br />
+
+    <label for="edit-users_dn">Users base DN</label>
+    <input id="edit-users_dn" name="users_dn" size="50"
+           tal:attributes="value config/users_dn|nothing" />
+    <br />
+
+    <label for="edit-orgs_dn">Organisations base DN</label>
+    <input id="edit-orgs_dn" name="orgs_dn" size="50"
+           tal:attributes="value config/orgs_dn|nothing" />
+    <br />
+
+    <label for="edit-roles_dn">Roles base DN</label>
+    <input id="edit-roles_dn" name="roles_dn" size="50"
+           tal:attributes="value config/roles_dn|nothing" />
+    <br />
+    </metal:block>
+
+    <input type="submit" value="Save" />
+</form>
+
+<tal:block content="structure here/manage_page_footer" />

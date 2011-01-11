@@ -1,0 +1,19 @@
+<metal:block use-macro="here/general_tmpl/macros/page">
+
+<h1 metal:fill-slot="title">
+    Filter roles &mdash; <tt tal:content="here/pattern" />
+</h1>
+
+<metal:block fill-slot="content">
+
+<tal:block define="pattern here/pattern;
+                   is_authenticated python:'Authenticated' in user.getRoles()">
+
+<tal:block define="agent here/get_ldap_agent">
+    <metal:block use-macro="here/general_tmpl/macros/filter-results" />
+</tal:block>
+
+</tal:block>
+
+</metal:block>
+</metal:block>

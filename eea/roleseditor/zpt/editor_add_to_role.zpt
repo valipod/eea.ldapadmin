@@ -1,0 +1,46 @@
+<tal:block define="role_id python:request.get('role_id')"
+><metal:block use-macro="here/general_tmpl/macros/page">
+
+<h1 metal:fill-slot="title">
+    Add users to role <tt tal:content="role_id" />
+</h1>
+
+<metal:block fill-slot="content">
+
+<tal:block define="name python:request.get('name', None);
+                   is_authenticated python:True # because page is protected">
+
+    <form>
+        <input type="hidden" name="role_id" tal:attributes="value role_id" />
+        <label>name:
+            <input type="text" name="name" tal:attributes="value name" />
+        </label>
+        <input type="submit" value="Search" />
+    </form>
+
+    <tal:block condition="name">
+    <tal:block define="results python:here.search_by_name(name)">
+
+    <ul>
+        <li tal:repeat="user_info results">
+            <metal:block use-macro="here/general_tmpl/macros/user-info" />
+            <form tal:define="url string:${here/absolute_url}/do_add_to_role"
+                  tal:attributes="action url" method="post"
+                  style="display: inline">
+                <input type="hidden" name="role_id"
+                       tal:attributes="value role_id" />
+                <input type="hidden" name="user_id"
+                       tal:attributes="value user_info/id" />
+                <input type="submit" value="add" />
+            </form>
+        </li>
+    </ul>
+
+    </tal:block>
+    </tal:block>
+</tal:block>
+
+
+</metal:block>
+</metal:block>
+</tal:block>

@@ -1,0 +1,12 @@
+<configure xmlns:meta="http://namespaces.zope.org/meta">
+
+  <meta:directives namespace="http://ns.eionet.europa.eu/roles">
+    <meta:directive name="mock_ldap"
+                    schema=".tests.functional_mocks.IMockLdapDirective"
+                    handler=".tests.functional_mocks.mock_ldap" />
+    <meta:directive name="mock_mail"
+                    schema=".tests.functional_mocks.IMockMailDirective"
+                    handler=".tests.functional_mocks.mock_mail" />
+  </meta:directives>
+
+</configure>
