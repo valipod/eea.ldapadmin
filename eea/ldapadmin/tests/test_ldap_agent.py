@@ -4,6 +4,7 @@ from copy import deepcopy
 import ldap
 from eea.ldapadmin import ldap_agent
 from mock import Mock, patch, wraps
+from mock_recorder import Recorder
 
 import fixtures
 
@@ -350,14 +351,14 @@ class TestAddToRole(unittest.TestCase):
         role_dn = agent._role_dn
         agent._bound = True
 
-        mock_search = mock_conn.search_s
-        mock_search.expect(user_dn('x'), ldap.SCOPE_BASE, attrlist=(),
-                           return_value=[])
+        recorder = mock_conn.search_s.side_effect = Recorder()
+        recorder.expect(user_dn('x'), ldap.SCOPE_BASE, attrlist=(),
+                        return_value=[])
 
         self.assertRaises(ValueError, agent._add_member_dn_to_role_dn,
                           role_dn('K-N-O'), user_dn('x'))
 
-        mock_search.assert_expect_satisfied()
+        recorder.assert_end()
 
     @agent_with_mock_connection
     def test_missing_role(self, agent, mock_conn):
@@ -365,16 +366,16 @@ class TestAddToRole(unittest.TestCase):
         role_dn = agent._role_dn
         agent._bound = True
 
-        mock_search = mock_conn.search_s
-        mock_search.expect(user_dn('userone'), ldap.SCOPE_BASE, attrlist=(),
-                           return_value=[(user_dn('userone'), {})])
-        mock_search.expect(role_dn('K-N-X'), ldap.SCOPE_BASE, attrlist=(),
-                           return_value=[])
+        recorder = mock_conn.search_s.side_effect = Recorder()
+        recorder.expect(user_dn('userone'), ldap.SCOPE_BASE, attrlist=(),
+                        return_value=[(user_dn('userone'), {})])
+        recorder.expect(role_dn('K-N-X'), ldap.SCOPE_BASE, attrlist=(),
+                        return_value=[])
 
         self.assertRaises(ValueError, agent._add_member_dn_to_role_dn,
                           role_dn('K-N-X'), user_dn('userone'))
 
-        mock_search.assert_expect_satisfied()
+        recorder.assert_end()
 
     @agent_with_mock_connection
     def test_add(self, agent, mock_conn):
@@ -382,27 +383,28 @@ class TestAddToRole(unittest.TestCase):
         role_dn = agent._role_dn
         agent._bound = True
 
-        mock_search = mock_conn.search_s
-        mock_search.expect(user_dn('userone'), ldap.SCOPE_BASE, attrlist=(),
-                           return_value=[(user_dn('userone'), {})])
-        mock_search.expect(role_dn('K-N-O'), ldap.SCOPE_BASE, attrlist=(),
-                           return_value=[(role_dn('K-N-O'), {})])
+        search_recorder = mock_conn.search_s.side_effect = Recorder()
+        search_recorder.expect(user_dn('userone'), ldap.SCOPE_BASE,
+                               attrlist=(),
+                               return_value=[(user_dn('userone'), {})])
+        search_recorder.expect(role_dn('K-N-O'), ldap.SCOPE_BASE, attrlist=(),
+                               return_value=[(role_dn('K-N-O'), {})])
 
-        mock_modify = mock_conn.modify_s
+        modify_recorder = mock_conn.modify_s.side_effect = Recorder()
         for r in 'K-N-O', 'K-N', 'K', None:
             dn = user_dn('userone')
             args_add = ()
-            mock_modify.expect(role_dn(r),
-                               ((ldap.MOD_ADD, 'uniqueMember', [dn]),),
-                               return_value=(ldap.RES_MODIFY, []))
-            mock_modify.expect(role_dn(r),
-                               ((ldap.MOD_DELETE, 'uniqueMember', ['']),),
-                               return_value=(ldap.RES_MODIFY, []))
+            modify_recorder.expect(role_dn(r),
+                                   ((ldap.MOD_ADD, 'uniqueMember', [dn]),),
+                                   return_value=(ldap.RES_MODIFY, []))
+            modify_recorder.expect(role_dn(r),
+                                   ((ldap.MOD_DELETE, 'uniqueMember', ['']),),
+                                   return_value=(ldap.RES_MODIFY, []))
 
         agent._add_member_dn_to_role_dn(role_dn('K-N-O'), user_dn('userone'))
 
-        mock_search.assert_expect_satisfied()
-        mock_modify.assert_expect_satisfied()
+        search_recorder.assert_end()
+        modify_recorder.assert_end()
 
 class TestRemoveFromRole(unittest.TestCase):
     @agent_with_mock_connection
@@ -410,14 +412,14 @@ class TestRemoveFromRole(unittest.TestCase):
         user_dn = agent._user_dn
         role_dn = agent._role_dn
         mock_rm = agent._remove_member_dn_from_single_role_dn = Mock()
-        mock_search = mock_conn.search_s
-        mock_search.expect(user_dn('x'), ldap.SCOPE_BASE, attrlist=(),
-                           return_value=[])
+        recorder = mock_conn.search_s.side_effect = Recorder()
+        recorder.expect(user_dn('x'), ldap.SCOPE_BASE, attrlist=(),
+                        return_value=[])
 
         self.assertRaises(ValueError, agent._remove_member_dn_from_role_dn,
                           role_dn('K-N-O'), user_dn('x'))
 
-        mock_search.assert_expect_satisfied()
+        recorder.assert_end()
         assert mock_rm.call_count == 0
 
     @agent_with_mock_connection
@@ -427,16 +429,16 @@ class TestRemoveFromRole(unittest.TestCase):
         user_dn = agent._user_dn
         role_dn = agent._role_dn
         mock_rm = agent._remove_member_dn_from_single_role_dn = Mock()
-        mock_search = mock_conn.search_s
-        mock_search.expect(user_dn('userone'), ldap.SCOPE_BASE, attrlist=(),
-                           return_value=[(user_dn('userone'), {})])
-        mock_search.expect(role_dn('K-N-X'), ldap.SCOPE_BASE, attrlist=(),
-                           return_value=[])
+        recorder = mock_conn.search_s.side_effect = Recorder()
+        recorder.expect(user_dn('userone'), ldap.SCOPE_BASE, attrlist=(),
+                        return_value=[(user_dn('userone'), {})])
+        recorder.expect(role_dn('K-N-X'), ldap.SCOPE_BASE, attrlist=(),
+                        return_value=[])
 
         self.assertRaises(ValueError, agent._remove_member_dn_from_role_dn,
                           role_dn('K-N-X'), user_dn('userone'))
 
-        mock_search.assert_expect_satisfied()
+        recorder.assert_end()
         assert mock_rm.call_count == 0
 
     @agent_with_mock_connection
@@ -444,20 +446,20 @@ class TestRemoveFromRole(unittest.TestCase):
         user_dn = agent._user_dn
         role_dn = agent._role_dn
         mock_rm = agent._remove_member_dn_from_single_role_dn = Mock()
-        mock_search = mock_conn.search_s
+        recorder = mock_conn.search_s.side_effect = Recorder()
         the_filter = ('(&(objectClass=groupOfUniqueNames)'
                       '(uniqueMember=%s))') % user_dn('userone')
-        mock_search.expect(user_dn('userone'), ldap.SCOPE_BASE, attrlist=(),
-                           return_value=[(user_dn('userone'), {})])
-        mock_search.expect(role_dn('K-N-O'), ldap.SCOPE_BASE, attrlist=(),
-                           return_value=[(role_dn('K-N-O'), {})])
-        mock_search.expect(role_dn('K-N-O'), ldap.SCOPE_SUBTREE, attrlist=(),
-                           filterstr=the_filter, return_value=[])
+        recorder.expect(user_dn('userone'), ldap.SCOPE_BASE, attrlist=(),
+                        return_value=[(user_dn('userone'), {})])
+        recorder.expect(role_dn('K-N-O'), ldap.SCOPE_BASE, attrlist=(),
+                        return_value=[(role_dn('K-N-O'), {})])
+        recorder.expect(role_dn('K-N-O'), ldap.SCOPE_SUBTREE, attrlist=(),
+                        filterstr=the_filter, return_value=[])
 
         self.assertRaises(ValueError, agent._remove_member_dn_from_role_dn,
                           role_dn('K-N-O'), user_dn('userone'))
 
-        mock_search.assert_expect_satisfied()
+        recorder.assert_end()
         assert mock_rm.call_count == 0
 
     @agent_with_mock_connection
@@ -465,24 +467,24 @@ class TestRemoveFromRole(unittest.TestCase):
         user_dn = agent._user_dn
         role_dn = agent._role_dn
         mock_rm = agent._remove_member_dn_from_single_role_dn = Mock()
-        mock_search = mock_conn.search_s
+        recorder = mock_conn.search_s.side_effect = Recorder()
         the_filter = ('(&(objectClass=groupOfUniqueNames)'
                       '(uniqueMember=%s))') % user_dn('userone')
-        mock_search.expect(user_dn('userone'), ldap.SCOPE_BASE, attrlist=(),
-                           return_value=[(user_dn('userone'), {})])
-        mock_search.expect(role_dn('K-N'), ldap.SCOPE_BASE, attrlist=(),
-                           return_value=[(role_dn('K-N'), {})])
-        mock_search.expect(role_dn('K-N'), ldap.SCOPE_SUBTREE, attrlist=(),
-                           filterstr=the_filter,
-                           return_value=[ (role_dn('K-N-O'), {}),
-                                          (role_dn('K-N-P'), {}),
-                                          (role_dn('K-N-P-Q'), {}),
-                                          (role_dn('K-N'), {}) ])
+        recorder.expect(user_dn('userone'), ldap.SCOPE_BASE, attrlist=(),
+                        return_value=[(user_dn('userone'), {})])
+        recorder.expect(role_dn('K-N'), ldap.SCOPE_BASE, attrlist=(),
+                        return_value=[(role_dn('K-N'), {})])
+        recorder.expect(role_dn('K-N'), ldap.SCOPE_SUBTREE, attrlist=(),
+                        filterstr=the_filter,
+                        return_value=[ (role_dn('K-N-O'), {}),
+                                       (role_dn('K-N-P'), {}),
+                                       (role_dn('K-N-P-Q'), {}),
+                                       (role_dn('K-N'), {}) ])
 
         agent._remove_member_dn_from_role_dn(role_dn('K-N'),
                                              user_dn('userone'))
 
-        mock_search.assert_expect_satisfied()
+        recorder.assert_end()
         assert mock_rm.call_args_list == [
             ((user_dn('userone'), role_dn('K-N-P-Q')), {}),
             ((user_dn('userone'), role_dn('K-N-P')), {}),
