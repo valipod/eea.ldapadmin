@@ -1,5 +1,5 @@
 import logging
-log = logging.getLogger('eea.roleseditor.tests.functional_mocks')
+log = logging.getLogger('eea.ldapadmin.tests.functional_mocks')
 log.setLevel(logging.DEBUG)
 
 from zope.interface import Interface
@@ -12,7 +12,7 @@ class IMockMailDirective(Interface):
 
 def mock_ldap(_context, **kwargs):
     import simplejson as json
-    from eea.roleseditor import ldap_agent
+    from eea.ldapadmin import ldap_agent
     import mock_ldap
     from OFS.Folder import Folder
 

@@ -17,7 +17,7 @@ class SeleniumWrapper(object):
             pass
         else:
             config_from_file = testconfig.config[
-                'eea.roleseditor.tests.functional'] or {}
+                'eea.ldapadmin.tests.functional'] or {}
             self.config.update(config_from_file)
 
         self.selenium = selenium_client('localhost',

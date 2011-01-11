@@ -2,7 +2,7 @@ import unittest
 from copy import deepcopy
 
 import ldap
-from eea.roleseditor import ldap_agent
+from eea.ldapadmin import ldap_agent
 from mock import Mock, patch, wraps
 
 import fixtures
@@ -421,7 +421,7 @@ class TestRemoveFromRole(unittest.TestCase):
         assert mock_rm.call_count == 0
 
     @agent_with_mock_connection
-    @patch('eea.roleseditor.ldap_agent.LdapAgent'
+    @patch('eea.ldapadmin.ldap_agent.LdapAgent'
            '._remove_member_dn_from_single_role_dn')
     def test_missing_role(self, agent, mock_conn, mock_rm):
         user_dn = agent._user_dn

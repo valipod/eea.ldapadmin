@@ -1,7 +1,7 @@
 import os
 from setuptools import setup, find_packages
 
-setup(name='eea.roleseditor',
+setup(name='eea.ldapadmin',
       version='0.1',
       author='Eau de Web',
       author_email='office@eaudeweb.ro',
