@@ -1,0 +1,7 @@
+<ul class="organisations">
+  <li tal:repeat="org options/sorted_organisations">
+    <a tal:define="orgs_url string:${options/base_url}/organisation"
+       tal:attributes="href string:${orgs_url}?id=${org/id}"
+       tal:content="org/name"></a>
+  </li>
+</ul>

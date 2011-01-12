@@ -1,0 +1,16 @@
+<h1>Edit organisation</h1>
+
+<form tal:attributes="action string:${options/base_url}/edit_organisation"
+      method="post">
+<table>
+
+  <tal:block define="form_data options/form_data">
+    <metal:block use-macro="options/form_macro" />
+  </tal:block>
+
+  <tr>
+    <td colspan="2"><input type="submit" value="Save" /></td>
+  </tr>
+
+</table>
+</form>

@@ -1,0 +1,55 @@
+<h1 tal:content="options/organisation/name"></h1>
+
+<table tal:define="org_info options/organisation">
+
+  <tr>
+    <td>Name:</td>
+    <td tal:content="org_info/name"></td>
+  </tr>
+
+  <tr>
+    <td>URL:</td>
+    <td tal:content="org_info/url"></td>
+  </tr>
+
+  <tr>
+    <td>Phone:</td>
+    <td tal:content="org_info/phone"></td>
+  </tr>
+
+  <tr>
+    <td>Fax:</td>
+    <td tal:content="org_info/fax"></td>
+  </tr>
+
+  <tr>
+    <td>Street:</td>
+    <td tal:content="org_info/street"></td>
+  </tr>
+
+  <tr>
+    <td>PO box:</td>
+    <td tal:content="org_info/po_box"></td>
+  </tr>
+
+  <tr>
+    <td>Postal code:</td>
+    <td tal:content="org_info/postal_code"></td>
+  </tr>
+
+  <tr>
+    <td>Locality:</td>
+    <td tal:content="org_info/locality"></td>
+  </tr>
+
+  <tr>
+    <td>Country:</td>
+    <td tal:content="org_info/country"></td>
+  </tr>
+
+  <tr>
+    <td>Full address:</td>
+    <td tal:content="org_info/address"></td>
+  </tr>
+
+</table>

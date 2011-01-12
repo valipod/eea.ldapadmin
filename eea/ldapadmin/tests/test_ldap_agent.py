@@ -520,6 +520,9 @@ class OrganisationsTest(unittest.TestCase):
 
         poker_club_dn = 'cn=poker_club,ou=Organisations,o=EIONET,l=Europe'
         self.mock_conn.add_s.assert_called_once_with(poker_club_dn, [
+            ('objectClass', ['top', 'groupOfUniqueNames',
+                             'organizationGroup', 'labeledURIObject']),
+            ('uniqueMember', ['']),
             ('o', ['P\xc3\xb8ker club']),
             ('labeledURI', ['http://poker.example.com/']),
         ])
@@ -532,6 +535,22 @@ class OrganisationsTest(unittest.TestCase):
         self.agent.delete_org('poker_club')
 
         self.mock_conn.delete_s.assert_called_once_with(poker_club_dn)
+
+    def test_get_all_organisations(self):
+        self.mock_conn.search_s.return_value = [
+            ('cn=bridge_club,ou=Organisations,o=EIONET,l=Europe', {
+                'o': ["Bridge club"]}),
+            ('cn=poker_club,ou=Organisations,o=EIONET,l=Europe', {
+                'o': ["P\xc3\xb6ker club"]})
+        ]
+
+        orgs = self.agent.all_organisations()
+
+        self.assertEqual(orgs, {'bridge_club': u"Bridge club",
+                                'poker_club': u"P\xf6ker club"})
+        self.mock_conn.search_s.assert_called_once_with(
+            'ou=Organisations,o=EIONET,l=Europe', ldap.SCOPE_ONELEVEL,
+            filterstr='(objectClass=organizationGroup)', attrlist=('o',))
 
 class OrganisationEditTest(unittest.TestCase):
     def setUp(self):

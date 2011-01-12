@@ -24,6 +24,8 @@ org_attr_map = {
     'locality': 'l',
 }
 
+editable_org_fields = list(org_attr_map)
+
 class LdapAgent(object):
     def __init__(self, **config):
         self.conn = self.connect(config['ldap_server'])
@@ -270,8 +272,18 @@ class LdapAgent(object):
         assert type(org_id) is str
         for ch in org_id:
             assert ch in ascii_lowercase + '_'
-        attrs = [ (org_attr_map[name], [value.encode('utf-8')])
-                  for name, value in sorted(org_info.iteritems()) ]
+
+        attrs = [
+            ('objectClass', ['top', 'groupOfUniqueNames',
+                             'organizationGroup', 'labeledURIObject']),
+            ('uniqueMember', ['']),
+        ]
+
+        for name, value in sorted(org_info.iteritems()):
+            if value == "":
+                continue
+            attrs.append( (org_attr_map[name], [value.encode('utf-8')]) )
+
         result = self.conn.add_s(self._org_dn(org_id), attrs)
         assert result == (ldap.RES_ADD, [])
 
@@ -477,3 +489,11 @@ class LdapAgent(object):
         member_dn = self._member_dn(member_type, member_id)
         return [self._role_id(role_dn) for role_dn in
                 self._sub_roles_with_member(self._role_dn(None), member_dn)]
+
+    def all_organisations(self):
+        result = self.conn.search_s(self._org_dn_suffix, ldap.SCOPE_ONELEVEL,
+                    filterstr='(objectClass=organizationGroup)',
+                    attrlist=('o',))
+        return dict( (self._org_id(dn),
+                      attr.get('o', [u""])[0].decode(self._encoding))
+                     for dn, attr in result )

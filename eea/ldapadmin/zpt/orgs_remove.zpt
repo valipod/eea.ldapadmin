@@ -1,0 +1,18 @@
+<form tal:define="org_info options/org_info"
+      tal:attributes="action string:${options/base_url}/remove_organisation"
+      method="post">
+
+  <p class="confirm-delete">
+    Are you sure you want to remove the organisation
+    <tal:block content="org_info/name"/>
+    (<tt tal:content="org_info/id"></tt>)?
+  </p>
+
+  <p>
+    <input type="hidden" name="id" tal:attributes="value org_info/id"/>
+    <input type="submit" value="Yes, remove"/>
+    <a tal:attributes="href string:${options/base_url}/organisation?id=${org_info/id}"
+        >Cancel</a>
+  </p>
+
+</form>
