@@ -25,6 +25,7 @@ class OrganisationsUITest(unittest.TestCase):
     def setUp(self):
         self.ui = StubbedOrganisationsEditor('organisations')
         self.mock_agent = Mock()
+        self.mock_agent.all_organisations.return_value = {}
         self.ui._get_ldap_agent = Mock(return_value=self.mock_agent)
         self.request = mock_request()
 
@@ -55,7 +56,13 @@ class OrganisationsUITest(unittest.TestCase):
 
         self.mock_agent.create_org.assert_called_once_with('bridge_club',
                                                            org_info_fixture)
-        self.request.RESPONSE.redirect.assert_called_with('URL/')
+        self.request.RESPONSE.redirect.assert_called_with(
+            'URL/organisation?id=bridge_club')
+
+        self.request.form = {'id': 'bridge_club'}
+        page = parse_html(self.ui.organisation(self.request))
+        self.assertEqual(page.xpath('//div[@class="system-msg"]')[0].text,
+                         'Organisation "bridge_club" created successfully.')
 
     def test_edit_org_form(self):
         self.request.form = {'id': 'bridge_club'}
@@ -88,6 +95,11 @@ class OrganisationsUITest(unittest.TestCase):
             'bridge_club', org_info_fixture)
         self.request.RESPONSE.redirect.assert_called_with(
             'URL/organisation?id=bridge_club')
+
+        self.request.form = {'id': 'bridge_club'}
+        page = parse_html(self.ui.organisation(self.request))
+        msg = page.xpath('//div[@class="system-msg"]')[0].text
+        self.assertTrue(msg.startswith('Organisation saved'))
 
     def test_list_organisations(self):
         self.mock_agent.all_organisations.return_value = {
@@ -154,3 +166,7 @@ class OrganisationsUITest(unittest.TestCase):
 
         self.mock_agent.delete_org.assert_called_once_with('bridge_club')
         self.request.RESPONSE.redirect.assert_called_with('URL/')
+
+        page = parse_html(self.ui.index_html(self.request))
+        self.assertEqual(page.xpath('//div[@class="system-msg"]')[0].text,
+                         'Organisation "bridge_club" has been removed.')

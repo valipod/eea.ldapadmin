@@ -1,3 +1,12 @@
+<metal:block define-macro="messages">
+  <div class="error-msg"
+       tal:condition="python:messages.get('error', False)"
+       tal:content="messages/error"/>
+  <div class="system-msg"
+       tal:condition="python:messages.get('info', False)"
+       tal:content="messages/info"/>
+</metal:block>
+
 <metal:block define-macro="org_form_fields">
 <tal:block define="form_data form_data|python:{}">
 

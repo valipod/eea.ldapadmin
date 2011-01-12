@@ -1,4 +1,5 @@
 import operator
+from datetime import datetime
 
 from AccessControl import ClassSecurityInfo
 from App.class_init import InitializeClass
@@ -6,6 +7,7 @@ from Products.PageTemplates.PageTemplateFile import PageTemplateFile
 from OFS.SimpleItem import SimpleItem
 from OFS.PropertyManager import PropertyManager
 from AccessControl.Permissions import view
+from persistent.mapping import PersistentMapping
 
 from ldap_agent import LdapAgent, editable_org_fields
 
@@ -28,6 +30,24 @@ def load_template(name, _memo={}):
 
 def get_template_macro(name):
     return load_template('zpt/orgs_macros.zpt').macros[name]
+
+SESSION_MESSAGES = 'eea.ldapadmin.orgs_editor.messages'
+
+def _get_session_messages(request):
+    session = request.SESSION
+    if SESSION_MESSAGES in session.keys():
+        msgs = dict(session[SESSION_MESSAGES])
+        del session[SESSION_MESSAGES]
+    else:
+        msgs = {}
+    return msgs
+
+def _set_session_message(request, msg_type, msg):
+    session = request.SESSION
+    if SESSION_MESSAGES not in session.keys():
+        session[SESSION_MESSAGES] = PersistentMapping()
+    # TODO: allow for more than one message of each type
+    session[SESSION_MESSAGES][msg_type] = msg
 
 
 class OrganisationsEditor(SimpleItem):
@@ -60,7 +80,9 @@ class OrganisationsEditor(SimpleItem):
                 for org_id, name in orgs_by_id.iteritems()]
         orgs.sort(key=operator.itemgetter('name'))
         options = {'base_url': self.absolute_url(),
-                   'sorted_organisations': orgs}
+                   'sorted_organisations': orgs,
+                   'messages': _get_session_messages(REQUEST),
+                   'messages_macro': get_template_macro('messages')}
         return self._render_template('zpt/orgs_index.zpt', **options)
 
     security.declareProtected(view, 'organisation')
@@ -69,7 +91,9 @@ class OrganisationsEditor(SimpleItem):
         org_id = REQUEST.form['id']
         agent = self._get_ldap_agent()
         options = {'base_url': self.absolute_url(),
-                   'organisation': agent.org_info(org_id)}
+                   'organisation': agent.org_info(org_id),
+                   'messages': _get_session_messages(REQUEST),
+                   'messages_macro': get_template_macro('messages')}
         return self._render_template('zpt/orgs_view.zpt', **options)
 
     security.declareProtected(eionet_edit_orgs, 'create_organisation_html')
@@ -91,7 +115,10 @@ class OrganisationsEditor(SimpleItem):
         agent.perform_bind('uid=_admin,ou=Users,o=EIONET,l=Europe', '_admin')
         agent.create_org(org_id, org_info)
 
-        REQUEST.RESPONSE.redirect(self.absolute_url() + '/')
+        msg = 'Organisation "%s" created successfully.' % org_id
+        _set_session_message(REQUEST, 'info', msg)
+        REQUEST.RESPONSE.redirect(self.absolute_url() +
+                                  '/organisation?id=' + org_id)
 
     security.declareProtected(eionet_edit_orgs, 'edit_organisation_html')
     def edit_organisation_html(self, REQUEST):
@@ -117,6 +144,8 @@ class OrganisationsEditor(SimpleItem):
         agent.perform_bind('uid=_admin,ou=Users,o=EIONET,l=Europe', '_admin')
         agent.set_org_info(org_id, org_info)
 
+        when = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        _set_session_message(REQUEST, 'info', "Organisation saved (%s)" % when)
         REQUEST.RESPONSE.redirect(self.absolute_url() +
                                   '/organisation?id=' + org_id)
 
@@ -135,6 +164,9 @@ class OrganisationsEditor(SimpleItem):
         agent = self._get_ldap_agent()
         agent.perform_bind('uid=_admin,ou=Users,o=EIONET,l=Europe', '_admin')
         agent.delete_org(org_id)
+
+        _set_session_message(REQUEST, 'info',
+                             'Organisation "%s" has been removed.' % org_id)
         REQUEST.RESPONSE.redirect(self.absolute_url() + '/')
 
 InitializeClass(OrganisationsEditor)

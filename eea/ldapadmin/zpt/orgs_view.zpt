@@ -1,5 +1,9 @@
 <h1 tal:content="options/organisation/name"></h1>
 
+<tal:block define="messages options/messages">
+  <metal:block use-macro="options/messages_macro"/>
+</tal:block>
+
 <table tal:define="org_info options/organisation">
 
   <tr>

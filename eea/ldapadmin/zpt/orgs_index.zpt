@@ -1,3 +1,7 @@
+<tal:block define="messages options/messages">
+  <metal:block use-macro="options/messages_macro"/>
+</tal:block>
+
 <ul class="organisations">
   <li tal:repeat="org options/sorted_organisations">
     <a tal:define="orgs_url string:${options/base_url}/organisation"
