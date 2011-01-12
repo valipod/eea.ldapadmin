@@ -1,16 +1,14 @@
 import unittest
-import re
 from lxml.html.soupparser import fromstring
 from mock import Mock
 from eea.ldapadmin.orgs_editor import OrganisationsEditor
 
 def parse_html(html):
-    return fromstring(re.sub(r'\s+', ' ', html))
+    return fromstring(html)
 
 class StubbedOrganisationsEditor(OrganisationsEditor):
-    def _render_template(self, name, **options):
-        from eea.ldapadmin.orgs_editor import load_template
-        return "<html>%s</html>" % load_template(name)(**options)
+    def _zope2_wrapper(self, body_html):
+        return "<html>%s</html>" % body_html
 
     def absolute_url(self):
         return "URL"
