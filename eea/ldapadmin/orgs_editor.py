@@ -1,5 +1,5 @@
 from AccessControl import ClassSecurityInfo
-from Globals import InitializeClass
+from App.class_init import InitializeClass
 from Products.PageTemplates.PageTemplateFile import PageTemplateFile
 from OFS.SimpleItem import SimpleItem
 from OFS.PropertyManager import PropertyManager
@@ -26,11 +26,12 @@ def load_template(name, _memo={}):
 
 class OrganisationsEditor(SimpleItem):
     meta_type = 'Eionet Organisations Editor'
-    icon = 'misc_/EionetRolesEditor/orgs_editor.gif'
+    security = ClassSecurityInfo()
+    icon = '++resource++eea.ldapadmin-orgs_editor.gif'
+
     manage_options = SimpleItem.manage_options[:1] + (
         {'label':'View', 'action':''},
     ) + SimpleItem.manage_options[1:]
-    security = ClassSecurityInfo()
 
     def __init__(self, id):
         self.id = id

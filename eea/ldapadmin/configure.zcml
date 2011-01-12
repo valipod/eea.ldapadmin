@@ -1,7 +1,20 @@
 <configure xmlns="http://namespaces.zope.org/zope"
+           xmlns:browser="http://namespaces.zope.org/browser"
            xmlns:five="http://namespaces.zope.org/five">
+
   <five:registerPackage
       package="eea.ldapadmin"
       initialize="eea.ldapadmin.initialize"
       />
+
+  <browser:resource
+      name="eea.ldapadmin-roles_editor.gif"
+      image="www/editor.gif"
+      />
+
+  <browser:resource
+      name="eea.ldapadmin-orgs_editor.gif"
+      image="www/editor.gif"
+      />
+
 </configure>

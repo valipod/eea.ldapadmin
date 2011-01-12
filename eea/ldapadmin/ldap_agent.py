@@ -1,9 +1,6 @@
 from string import ascii_lowercase
 import ldap, ldap.filter
 
-if 'set' not in dir(__builtins__):
-    from sets import Set as set
-
 user_attr_map = {
     'name': 'cn',
     'email': 'mail',

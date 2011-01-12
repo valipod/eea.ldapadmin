@@ -2,7 +2,7 @@ from string import ascii_lowercase
 
 from AccessControl import ClassSecurityInfo
 from AccessControl.Permissions import view, view_management_screens
-from Globals import InitializeClass
+from App.class_init import InitializeClass
 from OFS.Folder import Folder
 from Products.PageTemplates.PageTemplateFile import PageTemplateFile
 from persistent.mapping import PersistentMapping
@@ -42,7 +42,7 @@ def _get_session_messages(request):
 class RolesEditor(Folder):
     meta_type = 'Eionet Roles Editor'
     security = ClassSecurityInfo()
-    icon = 'misc_/EionetRolesEditor/roles_editor.gif'
+    icon = '++resource++eea.ldapadmin-roles_editor.gif'
 
     meta_types = (
         {'name': Query.meta_type, 'action': 'manage_add_query_html'},
