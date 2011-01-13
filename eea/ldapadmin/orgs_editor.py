@@ -169,4 +169,71 @@ class OrganisationsEditor(SimpleItem):
                              'Organisation "%s" has been removed.' % org_id)
         REQUEST.RESPONSE.redirect(self.absolute_url() + '/')
 
+    security.declareProtected(eionet_edit_orgs, 'members_html')
+    def members_html(self, REQUEST):
+        """ view """
+        org_id = REQUEST.form['id']
+        agent = self._get_ldap_agent()
+        org_members = [agent.user_info(user_id)
+                       for user_id in agent.members_in_org(org_id)]
+        org_members.sort(key=operator.itemgetter('name'))
+        options = {'base_url': self.absolute_url(),
+                   'organisation': agent.org_info(org_id),
+                   'org_members': org_members}
+        return self._render_template('zpt/orgs_members.zpt', **options)
+
+    security.declareProtected(eionet_edit_orgs, 'remove_members')
+    def remove_members(self, REQUEST):
+        """ view """
+        org_id = REQUEST.form['id']
+        user_id_list = REQUEST.form['user_id']
+
+        assert type(user_id_list) is list
+        for user_id in user_id_list:
+            assert type(user_id) is str
+
+        agent = self._get_ldap_agent()
+        agent.perform_bind('uid=_admin,ou=Users,o=EIONET,l=Europe', '_admin')
+        agent.remove_from_org(org_id, user_id_list)
+
+        REQUEST.RESPONSE.redirect(self.absolute_url() +
+                                  '/members_html?id=' + org_id)
+
+    security.declareProtected(eionet_edit_orgs,
+                              'add_members_html')
+    def add_members_html(self, REQUEST):
+        """ view """
+        org_id = REQUEST.form['id']
+        search_query = REQUEST.form.get('search_query', u"")
+        assert type(search_query) is unicode
+
+        if search_query:
+            agent = self._get_ldap_agent()
+            found_users = agent.search_by_name(search_query)
+        else:
+            found_users = []
+
+        options = {'base_url': self.absolute_url(),
+                   'org_id': org_id,
+                   'search_query': search_query,
+                   'found_users': found_users}
+        return self._render_template('zpt/orgs_add_members.zpt', **options)
+
+    security.declareProtected(eionet_edit_orgs, 'remove_members')
+    def add_members(self, REQUEST):
+        """ view """
+        org_id = REQUEST.form['id']
+        user_id_list = REQUEST.form['user_id']
+
+        assert type(user_id_list) is list
+        for user_id in user_id_list:
+            assert type(user_id) is str
+
+        agent = self._get_ldap_agent()
+        agent.perform_bind('uid=_admin,ou=Users,o=EIONET,l=Europe', '_admin')
+        agent.add_to_org(org_id, user_id_list)
+
+        REQUEST.RESPONSE.redirect(self.absolute_url() +
+                                  '/members_html?id=' + org_id)
+
 InitializeClass(OrganisationsEditor)

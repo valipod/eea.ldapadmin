@@ -170,3 +170,92 @@ class OrganisationsUITest(unittest.TestCase):
         page = parse_html(self.ui.index_html(self.request))
         self.assertEqual(page.xpath('//div[@class="system-msg"]')[0].text,
                          'Organisation "bridge_club" has been removed.')
+
+
+class OrganisationsUIMembersTest(unittest.TestCase):
+    def setUp(self):
+        self.ui = StubbedOrganisationsEditor('organisations')
+        self.mock_agent = Mock()
+        self.ui._get_ldap_agent = Mock(return_value=self.mock_agent)
+        self.request = mock_request()
+
+        user_list = {
+            'anne': {'id': 'anne', 'name': "Anne Tester"},
+            'jsmith': {'id': 'jsmith', 'name': "Joe Smith"},
+        }
+        self.mock_agent.members_in_org.return_value = sorted(user_list.keys())
+        self.mock_agent.user_info.side_effect = user_list.get
+        self.mock_agent.org_info.return_value = dict(org_info_fixture,
+                                                     id='bridge_club')
+
+    def test_enumerate_members(self):
+        self.request.form = {'id': 'bridge_club'}
+
+        page = parse_html(self.ui.members_html(self.request))
+
+        self.mock_agent.members_in_org.assert_called_once_with('bridge_club')
+        self.mock_agent.user_info.assert_called_with('jsmith')
+
+        form = page.xpath('//form')[0]
+        self.assertEqual(form.attrib['action'],
+                         'URL/remove_members')
+        self.assertEqual(form.xpath('.//input[@name="id"]')[0].attrib['value'],
+                         'bridge_club')
+
+        members_li = page.xpath('.//ul[@class="organisation-members"]/li')
+        self.assertTrue("Anne Tester" in members_li[0].text_content())
+        self.assertTrue("Joe Smith" in members_li[1].text_content())
+
+        anne_checkbox = members_li[0].xpath('.//input')[0]
+        self.assertEqual(anne_checkbox.attrib['name'], 'user_id:list')
+        self.assertEqual(anne_checkbox.attrib['value'], 'anne')
+
+    def test_remove_members_submit(self):
+        self.request.form = {'id': 'bridge_club', 'user_id': ['jsmith']}
+
+        self.ui.remove_members(self.request)
+
+        self.mock_agent.remove_from_org.assert_called_once_with(
+            'bridge_club', ['jsmith'])
+        self.request.RESPONSE.redirect.assert_called_with(
+            'URL/members_html?id=bridge_club')
+        # TODO session message
+
+    def test_add_members_html(self):
+        self.request.form = {'id': 'bridge_club', 'search_query': u"smith"}
+        self.mock_agent.search_by_name.return_value = [
+            {'id': 'anne', 'name': "Anne Smith"},
+            {'id': 'jsmith', 'name': "Joe Something"},
+        ]
+
+        page = parse_html(self.ui.add_members_html(self.request))
+
+        form_search = page.xpath('//form[@name="search-users"]')[0]
+        self.assertEqual(form_search.attrib['action'],
+                         'URL/add_members_html')
+        _xp = './/input[@name="search_query:utf8:ustring"]'
+        self.assertEqual(form_search.xpath(_xp)[0].attrib['value'], u"smith")
+
+        form_add_members = page.xpath('//form[@name="add-members"]')[0]
+        self.assertEqual(form_add_members.attrib['action'],
+                         'URL/add_members')
+
+        self.mock_agent.search_by_name.assert_called_once_with(u'smith')
+        results_li = form_add_members.xpath('.//ul/li')
+        self.assertTrue("Anne Smith" in results_li[0].text_content())
+        self.assertTrue("Joe Something" in results_li[1].text_content())
+
+        anne_checkbox = results_li[0].xpath('.//input')[0]
+        self.assertEqual(anne_checkbox.attrib['name'], 'user_id:list')
+        self.assertEqual(anne_checkbox.attrib['value'], 'anne')
+
+    def test_add_members_submit(self):
+        self.request.form = {'id': 'bridge_club', 'user_id': ['jsmith']}
+
+        self.ui.add_members(self.request)
+
+        self.mock_agent.add_to_org.assert_called_once_with(
+            'bridge_club', ['jsmith'])
+        self.request.RESPONSE.redirect.assert_called_with(
+            'URL/members_html?id=bridge_club')
+        # TODO session message

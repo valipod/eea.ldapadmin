@@ -296,6 +296,40 @@ class LdapAgent(object):
         result = self.conn.modify_s(org_dn, changes)
         assert result == (ldap.RES_MODIFY, [])
 
+    def members_in_org(self, org_id):
+        query_dn = self._org_dn(org_id)
+        result = self.conn.search_s(query_dn, ldap.SCOPE_BASE,
+                                    attrlist=('uniqueMember',))
+        assert len(result) == 1
+        dn, attr = result[0]
+        return [self._user_id(dn) for dn in attr['uniqueMember'] if dn != '']
+
+    def add_to_org(self, org_id, user_id_list):
+        assert self._bound, "call `perform_bind` before `add_to_org`"
+
+        user_dn_list = [self._user_dn(user_id) for user_id in user_id_list]
+        changes = ( (ldap.MOD_ADD, 'uniqueMember', user_dn_list), )
+
+        if not self.members_in_org(org_id):
+            # we are removing all members; add placeholder value
+            changes += ((ldap.MOD_DELETE, 'uniqueMember', ['']),)
+
+        result = self.conn.modify_s(self._org_dn(org_id), changes)
+        assert result == (ldap.RES_MODIFY, [])
+
+    def remove_from_org(self, org_id, user_id_list):
+        assert self._bound, "call `perform_bind` before `remove_from_org`"
+
+        user_dn_list = [self._user_dn(user_id) for user_id in user_id_list]
+        changes = ( (ldap.MOD_DELETE, 'uniqueMember', user_dn_list), )
+
+        if not (set(self.members_in_org(org_id)) - set(user_id_list)):
+            # we are removing all members; add placeholder value
+            changes = ((ldap.MOD_ADD, 'uniqueMember', ['']),) + changes
+
+        result = self.conn.modify_s(self._org_dn(org_id), changes)
+        assert result == (ldap.RES_MODIFY, [])
+
     def delete_org(self, org_id):
         """ Remove the organisation `org_id` """
         assert self._bound, "call `perform_bind` before `delete_org`"

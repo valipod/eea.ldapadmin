@@ -1,0 +1,26 @@
+<form name="search-users"
+      tal:attributes="action string:${options/base_url}/add_members_html">
+  <input type="hidden" name="id" tal:attributes="value options/org_id"/>
+  <input type="search" name="search_query:utf8:ustring"
+         tal:attributes="value options/search_query"/>
+  <input type="submit" value="Search"/>
+</form>
+
+<form name="add-members" method="post" tal:condition="options/found_users"
+      tal:attributes="action string:${options/base_url}/add_members">
+
+  <ul>
+    <li tal:repeat="user_info options/found_users">
+      <label>
+        <input type="checkbox" name="user_id:list"
+               tal:attributes="value user_info/id"/>
+        <tal:block content="user_info/name"/>
+        (<tt tal:content="user_info/id"></tt>)
+      </label>
+    </li>
+  </ul>
+
+  <input type="hidden" name="id" tal:attributes="value options/org_id"/>
+  <input type="submit" value="Add to organisation"/>
+
+</form>

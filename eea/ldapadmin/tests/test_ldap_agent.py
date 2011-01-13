@@ -552,6 +552,81 @@ class OrganisationsTest(unittest.TestCase):
             'ou=Organisations,o=EIONET,l=Europe', ldap.SCOPE_ONELEVEL,
             filterstr='(objectClass=organizationGroup)', attrlist=('o',))
 
+    def test_members_in_organisation(self):
+        self.mock_conn.search_s.return_value = [
+            ('cn=bridge_club,ou=Organisations,o=EIONET,l=Europe', {
+                'uniqueMember': ['uid=anne,ou=Users,o=EIONET,l=Europe',
+                                 'uid=jsmith,ou=Users,o=EIONET,l=Europe']
+            })]
+
+        members = self.agent.members_in_org('bridge_club')
+
+        self.assertEqual(set(members), set(['anne', 'jsmith']))
+        self.mock_conn.search_s.assert_called_once_with(
+            'cn=bridge_club,ou=Organisations,o=EIONET,l=Europe',
+            ldap.SCOPE_BASE, attrlist=('uniqueMember',))
+
+    def test_remove_from_org(self):
+        self.mock_conn.modify_s.return_value = (ldap.RES_MODIFY, [])
+        self.agent._bound = True
+        self.agent.members_in_org = Mock(return_value=['anne', 'jsmith', 'xy'])
+
+        self.agent.remove_from_org('bridge_club', ['anne', 'jsmith'])
+
+        self.mock_conn.modify_s.assert_called_once_with(
+            'cn=bridge_club,ou=Organisations,o=EIONET,l=Europe', (
+                (ldap.MOD_DELETE, 'uniqueMember', [
+                    'uid=anne,ou=Users,o=EIONET,l=Europe',
+                    'uid=jsmith,ou=Users,o=EIONET,l=Europe'
+                 ]),
+            ))
+
+    def test_remove_from_org_all_members(self):
+        self.mock_conn.modify_s.return_value = (ldap.RES_MODIFY, [])
+        self.agent._bound = True
+        self.agent.members_in_org = Mock(return_value=['anne', 'jsmith'])
+        self.mock_conn.modify_s.reset_mock()
+
+        self.agent.remove_from_org('bridge_club', ['anne', 'jsmith'])
+
+        self.mock_conn.modify_s.assert_called_once_with(
+            'cn=bridge_club,ou=Organisations,o=EIONET,l=Europe', (
+                (ldap.MOD_ADD, 'uniqueMember', ['']),
+                (ldap.MOD_DELETE, 'uniqueMember', [
+                    'uid=anne,ou=Users,o=EIONET,l=Europe',
+                    'uid=jsmith,ou=Users,o=EIONET,l=Europe'
+                 ]),
+            ))
+
+    def test_add_to_org(self):
+        self.mock_conn.modify_s.return_value = (ldap.RES_MODIFY, [])
+        self.agent._bound = True
+        self.agent.members_in_org = Mock(return_value=['anne'])
+
+        self.agent.add_to_org('bridge_club', ['anne'])
+
+        self.mock_conn.modify_s.assert_called_once_with(
+            'cn=bridge_club,ou=Organisations,o=EIONET,l=Europe', (
+                (ldap.MOD_ADD, 'uniqueMember', [
+                    'uid=anne,ou=Users,o=EIONET,l=Europe',
+                 ]),
+            ))
+
+    def test_add_to_empty_org(self):
+        self.mock_conn.modify_s.return_value = (ldap.RES_MODIFY, [])
+        self.agent._bound = True
+        self.agent.members_in_org = Mock(return_value=[])
+
+        self.agent.add_to_org('bridge_club', ['anne'])
+
+        self.mock_conn.modify_s.assert_called_once_with(
+            'cn=bridge_club,ou=Organisations,o=EIONET,l=Europe', (
+                (ldap.MOD_ADD, 'uniqueMember', [
+                    'uid=anne,ou=Users,o=EIONET,l=Europe',
+                 ]),
+                (ldap.MOD_DELETE, 'uniqueMember', ['']),
+            ))
+
 class OrganisationEditTest(unittest.TestCase):
     def setUp(self):
         self.agent = StubbedLdapAgent(ldap_server='')

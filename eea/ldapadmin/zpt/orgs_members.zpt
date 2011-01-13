@@ -1,0 +1,35 @@
+<div id="operations" tal:define="org_info options/organisation">
+  <h2>Operations</h2>
+  <ul>
+    <li>
+      <a tal:attributes="href string:${options/base_url}/add_members_html?id=${org_info/id}"
+         >Add members</a>
+    </li>
+  </ul>
+</div>
+
+<h1>
+  <tt tal:content="options/organisation/id"></tt> &ndash;
+  <tal:block content="options/organisation/name"/>
+</h1>
+
+<form method="post" tal:condition="options/org_members"
+      tal:attributes="action string:${options/base_url}/remove_members">
+
+  <input type="hidden" name="id"
+         tal:attributes="value options/organisation/id"/>
+
+  <ul class="organisation-members">
+    <li tal:repeat="member options/org_members">
+      <label>
+        <input type="checkbox" name="user_id:list"
+               tal:attributes="value member/id"/>
+        <tal:block content="member/name"/>
+        (<tt tal:content="member/id"></tt>)
+      </label>
+    </li>
+  </ul>
+
+  <input type="submit" value="Remove"/>
+
+</form>

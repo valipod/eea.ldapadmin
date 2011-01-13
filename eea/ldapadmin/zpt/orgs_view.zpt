@@ -9,6 +9,10 @@
       <a tal:attributes="href string:${options/base_url}/remove_organisation_html?id=${org_info/id}"
          >Delete <tal:block content="org_info/id"/></a>
     </li>
+    <li>
+      <a tal:attributes="href string:${options/base_url}/members_html?id=${org_info/id}"
+         >Members</a>
+    </li>
   </ul>
 </div>
 
