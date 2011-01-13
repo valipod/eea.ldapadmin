@@ -1,4 +1,21 @@
-<h1 tal:content="options/organisation/name"></h1>
+<div id="operations" tal:define="org_info options/organisation">
+  <h2>Operations</h2>
+  <ul>
+    <li>
+      <a tal:attributes="href string:${options/base_url}/edit_organisation_html?id=${org_info/id}"
+         >Edit <tal:block content="org_info/id"/></a>
+    </li>
+    <li>
+      <a tal:attributes="href string:${options/base_url}/remove_organisation_html?id=${org_info/id}"
+         >Delete <tal:block content="org_info/id"/></a>
+    </li>
+  </ul>
+</div>
+
+<h1>
+  <tt tal:content="options/organisation/id"></tt> &ndash;
+  <tal:block content="options/organisation/name"/>
+</h1>
 
 <tal:block define="messages options/messages">
   <metal:block use-macro="options/messages_macro"/>

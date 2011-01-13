@@ -2,10 +2,23 @@
   <metal:block use-macro="options/messages_macro"/>
 </tal:block>
 
+<div id="operations">
+  <h2>Operations</h2>
+  <ul>
+    <li>
+      <a tal:attributes="href string:${options/base_url}/create_organisation_html"
+          >Create organisation</a>
+    </li>
+  </ul>
+</div>
+
+<h1>Organisations</h1>
+
 <ul class="organisations">
   <li tal:repeat="org options/sorted_organisations">
     <a tal:define="orgs_url string:${options/base_url}/organisation"
        tal:attributes="href string:${orgs_url}?id=${org/id}"
-       tal:content="org/name"></a>
+       tal:content="org/id"></a>
+    <tal:block content="org/name"/>
   </li>
 </ul>

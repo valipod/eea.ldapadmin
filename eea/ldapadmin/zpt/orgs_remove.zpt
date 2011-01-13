@@ -4,7 +4,7 @@
 
   <p class="confirm-delete">
     Are you sure you want to remove the organisation
-    <tal:block content="org_info/name"/>
+    <em tal:content="org_info/name"></em>
     (<tt tal:content="org_info/id"></tt>)?
   </p>
 

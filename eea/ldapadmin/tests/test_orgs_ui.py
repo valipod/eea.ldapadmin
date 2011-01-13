@@ -112,8 +112,8 @@ class OrganisationsUITest(unittest.TestCase):
         orgs_ul = page.xpath('//ul[@class="organisations"]')[0]
         org_0 = orgs_ul.xpath('li')[0]
         org_1 = orgs_ul.xpath('li')[1]
-        self.assertEqual(org_0.xpath('a')[0].text.strip(), "Bridge club")
-        self.assertEqual(org_1.xpath('a')[0].text.strip(), u"P\xf8ker club")
+        self.assertTrue("Bridge club" in org_0.text_content())
+        self.assertTrue(u"P\xf8ker club" in org_1.text_content())
         self.assertEqual(org_0.xpath('a')[0].attrib['href'],
                          'URL/organisation?id=bridge_club')
 
@@ -125,7 +125,7 @@ class OrganisationsUITest(unittest.TestCase):
         page = parse_html(self.ui.organisation(self.request))
 
         org_h1 = page.xpath('//h1')[0]
-        self.assertEqual(org_h1.text.strip(), "Ye olde bridge club")
+        self.assertTrue("Ye olde bridge club" in org_h1.text_content())
 
         org_table = page.xpath('//table')[0]
         def html_value(label):
