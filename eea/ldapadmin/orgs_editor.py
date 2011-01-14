@@ -179,7 +179,9 @@ class OrganisationsEditor(SimpleItem):
         org_members.sort(key=operator.itemgetter('name'))
         options = {'base_url': self.absolute_url(),
                    'organisation': agent.org_info(org_id),
-                   'org_members': org_members}
+                   'org_members': org_members,
+                   'messages': _get_session_messages(REQUEST),
+                   'messages_macro': get_template_macro('messages')}
         return self._render_template('zpt/orgs_members.zpt', **options)
 
     security.declareProtected(eionet_edit_orgs, 'remove_members')
@@ -196,6 +198,9 @@ class OrganisationsEditor(SimpleItem):
         agent.perform_bind('uid=_admin,ou=Users,o=EIONET,l=Europe', '_admin')
         agent.remove_from_org(org_id, user_id_list)
 
+        _set_session_message(REQUEST, 'info',
+                             'Removed %d members from organisation "%s".' %
+                              (len(user_id_list), org_id))
         REQUEST.RESPONSE.redirect(self.absolute_url() +
                                   '/members_html?id=' + org_id)
 
@@ -233,6 +238,9 @@ class OrganisationsEditor(SimpleItem):
         agent.perform_bind('uid=_admin,ou=Users,o=EIONET,l=Europe', '_admin')
         agent.add_to_org(org_id, user_id_list)
 
+        _set_session_message(REQUEST, 'info',
+                             'Added %d members to organisation "%s".' %
+                              (len(user_id_list), org_id))
         REQUEST.RESPONSE.redirect(self.absolute_url() +
                                   '/members_html?id=' + org_id)
 

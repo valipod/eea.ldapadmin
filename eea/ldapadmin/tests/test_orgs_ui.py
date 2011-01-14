@@ -219,7 +219,11 @@ class OrganisationsUIMembersTest(unittest.TestCase):
             'bridge_club', ['jsmith'])
         self.request.RESPONSE.redirect.assert_called_with(
             'URL/members_html?id=bridge_club')
-        # TODO session message
+
+        self.request.form = {'id': 'bridge_club'}
+        page = parse_html(self.ui.members_html(self.request))
+        self.assertEqual(page.xpath('//div[@class="system-msg"]')[0].text,
+                         'Removed 1 members from organisation "bridge_club".')
 
     def test_add_members_html(self):
         self.request.form = {'id': 'bridge_club', 'search_query': u"smith"}
@@ -258,4 +262,8 @@ class OrganisationsUIMembersTest(unittest.TestCase):
             'bridge_club', ['jsmith'])
         self.request.RESPONSE.redirect.assert_called_with(
             'URL/members_html?id=bridge_club')
-        # TODO session message
+
+        self.request.form = {'id': 'bridge_club'}
+        page = parse_html(self.ui.members_html(self.request))
+        self.assertEqual(page.xpath('//div[@class="system-msg"]')[0].text,
+                         'Added 1 members to organisation "bridge_club".')
