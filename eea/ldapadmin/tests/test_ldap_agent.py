@@ -274,6 +274,21 @@ class LdapAgentTest(unittest.TestCase):
         # TODO: assert error when deleting non-existent role
         # TODO: test deleting top-level role
 
+    def test_search_by_name(self):
+        self.agent._unpack_user_info = Mock()
+        jsmith_dn = self.agent._user_dn('jsmith')
+        jsmith_info = Mock()
+        self.mock_conn.search_s.return_value = [ (jsmith_dn, jsmith_info) ]
+
+        results = self.agent.search_by_name(u'SM\u012bth')
+
+        self.mock_conn.search_s.assert_called_once_with(
+            self.agent._user_dn_suffix, ldap.SCOPE_ONELEVEL,
+            filterstr=('(&(objectClass=person)(|(uid=*sm\xc4\xabth*)'
+                                               '(cn=*sm\xc4\xabth*)))'))
+        self.agent._unpack_user_info.assert_called_with(jsmith_dn, jsmith_info)
+        self.assertEqual(results, [self.agent._unpack_user_info.return_value])
+
 class TestCreateRole(unittest.TestCase):
     def setUp(self):
         self.agent = StubbedLdapAgent(ldap_server='')

@@ -385,12 +385,12 @@ class LdapAgent(object):
             assert result == (ldap.RES_DELETE, [])
 
     def search_by_name(self, name):
+        query = name.lower().encode(self._encoding)
         query_filter = ldap.filter.filter_format(
-            '(&(objectClass=person)(|(uid=*%s*)(cn=*%s*)))', (name, name))
+            '(&(objectClass=person)(|(uid=*%s*)(cn=*%s*)))', (query, query))
 
-        result = self.conn.search_s(
-            'ou=Users,o=EIONET,l=Europe', ldap.SCOPE_ONELEVEL,
-            filterstr=query_filter)
+        result = self.conn.search_s(self._user_dn_suffix, ldap.SCOPE_ONELEVEL,
+                                    filterstr=query_filter)
 
         return [self._unpack_user_info(dn, attr) for (dn, attr) in result]
 
