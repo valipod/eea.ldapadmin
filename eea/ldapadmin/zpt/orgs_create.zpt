@@ -1,14 +1,19 @@
 <h1>Create organisation</h1>
 
-<form tal:attributes="action string:${options/base_url}/create_organisation"
+<tal:block define="messages options/messages">
+  <metal:block use-macro="options/messages_macro"/>
+</tal:block>
+
+<form tal:define="form_data options/org_info"
+      tal:attributes="action string:${options/base_url}/create_organisation"
       method="post">
-<table>
+  <table>
 
-  <metal:block use-macro="options/form_macro" />
+    <metal:block use-macro="options/form_macro" />
 
-  <tr>
-    <td colspan="2"><input type="submit" value="Create organisation" /></td>
-  </tr>
+    <tr>
+      <td colspan="2"><input type="submit" value="Create organisation" /></td>
+    </tr>
 
-</table>
+  </table>
 </form>

@@ -1,5 +1,7 @@
 import operator
 from datetime import datetime
+import re
+import itertools
 
 from AccessControl import ClassSecurityInfo
 from App.class_init import InitializeClass
@@ -7,6 +9,7 @@ from Products.PageTemplates.PageTemplateFile import PageTemplateFile
 from OFS.SimpleItem import SimpleItem
 from OFS.PropertyManager import PropertyManager
 from AccessControl.Permissions import view
+from persistent.list import PersistentList
 from persistent.mapping import PersistentMapping
 
 from ldap_agent import LdapAgent, editable_org_fields
@@ -31,7 +34,9 @@ def load_template(name, _memo={}):
 def get_template_macro(name):
     return load_template('zpt/orgs_macros.zpt').macros[name]
 
-SESSION_MESSAGES = 'eea.ldapadmin.orgs_editor.messages'
+SESSION_PREFIX = 'eea.ldapadmin.orgs_editor'
+SESSION_MESSAGES = SESSION_PREFIX + '.messages'
+SESSION_FORM_DATA = SESSION_PREFIX + '.form_data'
 
 def _get_session_messages(request):
     session = request.SESSION
@@ -46,8 +51,10 @@ def _set_session_message(request, msg_type, msg):
     session = request.SESSION
     if SESSION_MESSAGES not in session.keys():
         session[SESSION_MESSAGES] = PersistentMapping()
-    # TODO: allow for more than one message of each type
-    session[SESSION_MESSAGES][msg_type] = msg
+    messages = session[SESSION_MESSAGES]
+    if msg_type not in messages:
+        messages[msg_type] = PersistentList()
+    messages[msg_type].append(msg)
 
 
 class OrganisationsEditor(SimpleItem):
@@ -100,7 +107,17 @@ class OrganisationsEditor(SimpleItem):
     def create_organisation_html(self, REQUEST):
         """ view """
         options = {'base_url': self.absolute_url(),
-                   'form_macro': get_template_macro('org_form_fields')}
+                   'form_macro': get_template_macro('org_form_fields'),
+                   'messages': _get_session_messages(REQUEST),
+                   'messages_macro': get_template_macro('messages')}
+
+        session = REQUEST.SESSION
+        if SESSION_FORM_DATA in session.keys():
+            options['org_info'] = session[SESSION_FORM_DATA]
+            del session[SESSION_FORM_DATA]
+        else:
+            options['org_info'] = {}
+
         return self._render_template('zpt/orgs_create.zpt', **options)
 
     security.declareProtected(eionet_edit_orgs, 'create_organisation')
@@ -110,6 +127,17 @@ class OrganisationsEditor(SimpleItem):
         org_info = {}
         for name in editable_org_fields:
             org_info[name] = REQUEST.form.get(name)
+
+        errors = validate_org_info(org_id, org_info)
+        if errors:
+            msg = "Organisation not created. Please correct the errors below."
+            _set_session_message(REQUEST, 'error', msg)
+            for msg in itertools.chain(*errors.values()):
+                _set_session_message(REQUEST, 'error', msg)
+            REQUEST.SESSION[SESSION_FORM_DATA] = dict(org_info, id=org_id)
+            REQUEST.RESPONSE.redirect(self.absolute_url() +
+                                      '/create_organisation_html')
+            return
 
         agent = self._get_ldap_agent()
         agent.perform_bind('uid=_admin,ou=Users,o=EIONET,l=Europe', '_admin')
@@ -124,11 +152,19 @@ class OrganisationsEditor(SimpleItem):
     def edit_organisation_html(self, REQUEST):
         """ view """
         org_id = REQUEST.form['id']
-        org_info = self._get_ldap_agent().org_info(org_id)
 
         options = {'base_url': self.absolute_url(),
                    'form_macro': get_template_macro('org_form_fields'),
-                   'form_data': org_info}
+                   'messages': _get_session_messages(REQUEST),
+                   'messages_macro': get_template_macro('messages')}
+
+        session = REQUEST.SESSION
+        if SESSION_FORM_DATA in session.keys():
+            options['org_info'] = session[SESSION_FORM_DATA]
+            del session[SESSION_FORM_DATA]
+        else:
+            options['org_info'] = self._get_ldap_agent().org_info(org_id)
+
         return self._render_template('zpt/orgs_edit.zpt', **options)
 
     security.declareProtected(eionet_edit_orgs, 'edit_organisation_html')
@@ -138,7 +174,17 @@ class OrganisationsEditor(SimpleItem):
         org_info = {}
         for name in editable_org_fields:
             org_info[name] = REQUEST.form.get(name)
-        # TODO validate values
+
+        errors = validate_org_info(org_id, org_info)
+        if errors:
+            msg = "Organisation not modified. Please correct the errors below."
+            _set_session_message(REQUEST, 'error', msg)
+            for msg in itertools.chain(*errors.values()):
+                _set_session_message(REQUEST, 'error', msg)
+            REQUEST.SESSION[SESSION_FORM_DATA] = dict(org_info, id=org_id)
+            REQUEST.RESPONSE.redirect(self.absolute_url() +
+                                      '/edit_organisation_html?id=' + org_id)
+            return
 
         agent = self._get_ldap_agent()
         agent.perform_bind('uid=_admin,ou=Users,o=EIONET,l=Europe', '_admin')
@@ -245,3 +291,42 @@ class OrganisationsEditor(SimpleItem):
                                   '/members_html?id=' + org_id)
 
 InitializeClass(OrganisationsEditor)
+
+
+id_re = re.compile(r'^[a-z_]+$')
+phone_re = re.compile(r'^\+[\d ]+$')
+postal_code_re = re.compile(r'^[a-zA-Z]{2}[a-zA-Z0-9\- ]+$')
+
+_phone_help = ('Telephone numbers must be in international notation (they '
+               'must start with a "+" followed by digits which may be '
+               'separated using spaces).')
+VALIDATION_ERRORS = {
+    'id': ('Invalid organisation ID. It must contain only '
+                   'lowercase letters and underscores ("_").'),
+    'phone': "Invalid telephone number. " + _phone_help,
+    'fax': "Invalid fax number. " + _phone_help,
+    'postal_code': ('Postal codes must be in international notation (they '
+                    'must start with a two-letter country code followed by a '
+                    'combination of digits, latin letters, dashes and '
+                    'spaces).'),
+}
+
+def validate_org_info(org_id, org_info):
+    errors = {}
+
+    if id_re.match(org_id) is None:
+        errors['id'] = [VALIDATION_ERRORS['id']]
+
+    phone = org_info['phone']
+    if phone and phone_re.match(phone) is None:
+        errors['phone'] = [VALIDATION_ERRORS['phone']]
+
+    fax = org_info['fax']
+    if fax and phone_re.match(fax) is None:
+        errors['fax'] = [VALIDATION_ERRORS['fax']]
+
+    postal_code = org_info['postal_code']
+    if postal_code and postal_code_re.match(postal_code) is None:
+        errors['postal_code'] = [VALIDATION_ERRORS['postal_code']]
+
+    return errors

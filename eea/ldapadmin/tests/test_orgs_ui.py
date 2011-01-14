@@ -1,7 +1,8 @@
 import unittest
 from lxml.html.soupparser import fromstring
-from mock import Mock
+from mock import Mock, patch
 from eea.ldapadmin.orgs_editor import OrganisationsEditor
+from eea.ldapadmin.orgs_editor import validate_org_info, VALIDATION_ERRORS
 
 from test_ldap_agent import org_info_fixture
 
@@ -19,6 +20,13 @@ def mock_request():
     request = Mock()
     request.SESSION = {}
     return request
+
+validation_errors_fixture = {
+    'id': [u"invalid ID"],
+    'phone': [u"invalid PHONE"],
+    'fax': [u"invalid FAX"],
+    'postal_code': [u"invalid POSTAL CODE"],
+}
 
 
 class OrganisationsUITest(unittest.TestCase):
@@ -64,6 +72,43 @@ class OrganisationsUITest(unittest.TestCase):
         self.assertEqual(page.xpath('//div[@class="system-msg"]')[0].text,
                          'Organisation "bridge_club" created successfully.')
 
+    def _verify_org_form_submit_error(self, page, org_info, errors):
+        err_msg = page.xpath('//div[@class="error-msg"]')
+        self.assertEqual(set(err_div.text for err_div in err_msg), errors)
+
+        form = page.xpath('//form')[0]
+        for name, value in org_info.iteritems():
+            if name == 'address':
+                continue
+            if name != 'id':
+                name += ':utf8:ustring'
+            form_input = form.xpath('.//input[@name="%s"]' % name)
+            self.assertEqual(form_input[0].attrib['value'], value)
+        form_input = form.xpath('.//textarea[@name="address:utf8:ustring"]')
+        self.assertEqual(form_input[0].text, org_info['address'])
+
+    @patch('eea.ldapadmin.orgs_editor.validate_org_info')
+    def test_create_org_submit_invalid(self, mock_validator):
+        self.request.form = dict(org_info_fixture, id='bridge_club')
+        mock_validator.return_value = validation_errors_fixture
+
+        self.ui.create_organisation(self.request)
+
+        mock_validator.assert_called_once_with('bridge_club', org_info_fixture)
+        self.assertEqual(self.mock_agent.create_org.call_count, 0)
+        self.request.RESPONSE.redirect.assert_called_with(
+            'URL/create_organisation_html')
+
+        self.request.form = {}
+        page = parse_html(self.ui.create_organisation_html(self.request))
+
+        errors = set(["Organisation not created. "
+                      "Please correct the errors below."])
+        for err_values in validation_errors_fixture.values():
+            errors.update(err_values)
+        org_info = dict(org_info_fixture, id='bridge_club')
+        self._verify_org_form_submit_error(page, org_info, errors)
+
     def test_edit_org_form(self):
         self.request.form = {'id': 'bridge_club'}
         self.mock_agent.org_info.return_value = dict(org_info_fixture,
@@ -100,6 +145,30 @@ class OrganisationsUITest(unittest.TestCase):
         page = parse_html(self.ui.organisation(self.request))
         msg = page.xpath('//div[@class="system-msg"]')[0].text
         self.assertTrue(msg.startswith('Organisation saved'))
+
+    @patch('eea.ldapadmin.orgs_editor.validate_org_info')
+    def test_edit_org_submit_invalid(self, mock_validator):
+        self.request.form = dict(org_info_fixture, id='bridge_club')
+        self.request.form['id'] = 'bridge_club'
+        mock_validator.return_value = validation_errors_fixture
+
+        self.ui.edit_organisation(self.request)
+
+        mock_validator.assert_called_once_with('bridge_club', org_info_fixture)
+        self.assertEqual(self.mock_agent.set_org_info.call_count, 0)
+        self.request.RESPONSE.redirect.assert_called_with(
+            'URL/edit_organisation_html?id=bridge_club')
+
+        self.request.form = {'id': 'bridge_club'}
+        page = parse_html(self.ui.edit_organisation_html(self.request))
+        self.assertEqual(self.mock_agent.org_info.call_count, 0)
+
+        errors = set(["Organisation not modified. "
+                      "Please correct the errors below."])
+        for err_values in validation_errors_fixture.values():
+            errors.update(err_values)
+        org_info = dict(org_info_fixture, id='bridge_club')
+        self._verify_org_form_submit_error(page, org_info, errors)
 
     def test_list_organisations(self):
         self.mock_agent.all_organisations.return_value = {
@@ -267,3 +336,49 @@ class OrganisationsUIMembersTest(unittest.TestCase):
         page = parse_html(self.ui.members_html(self.request))
         self.assertEqual(page.xpath('//div[@class="system-msg"]')[0].text,
                          'Added 1 members to organisation "bridge_club".')
+
+
+class OrganisationsValidationTest(unittest.TestCase):
+    def _test_bad_values(self, name, values, msg):
+        for bad_value in values:
+            org_info = dict(org_info_fixture, **{name: bad_value})
+            err = validate_org_info('myorg', org_info)
+            self.assertEqual(err[name], [msg],
+                             "Missed bad %s %r" % (name, bad_value))
+
+    def _test_good_values(self, name, values):
+        for ok_value in values:
+            org_info = dict(org_info_fixture, **{name: ok_value})
+            err = validate_org_info('myorg', org_info)
+            self.assertTrue(name not in err,
+                            "False positive %r %r" % (name, ok_value))
+
+    def _test_phone(self, name, msg):
+        bad_values = ['asdf', '1234adsf', '555 1234', '+55 3123 asdf']
+        self._test_bad_values(name, bad_values, msg)
+
+        good_values = ['', '+40123456789', '+40 12 34 56 78 9']
+        self._test_good_values(name, good_values)
+
+    def test_phone_number(self):
+        self._test_phone('phone',VALIDATION_ERRORS['phone'])
+
+    def test_fax_number(self):
+        self._test_phone('fax',VALIDATION_ERRORS['fax'])
+
+    def test_postcode(self):
+        bad_values = ['123 456', 'DK_1234 33', u'DK 123\xf8456']
+        self._test_bad_values('postal_code', bad_values,
+                              VALIDATION_ERRORS['postal_code'])
+        self._test_good_values('postal_code', ['', 'DK 1Nu 456', 'ro31-23'])
+
+    def test_id(self):
+        for bad_id in ['', '123', 'asdf123', 'my(org)', u'my_\xf8rg']:
+            err = validate_org_info(bad_id, dict(org_info_fixture))
+            self.assertEqual(err['id'], [VALIDATION_ERRORS['id']],
+                             "Missed bad org_id %r" % (bad_id,))
+
+        for ok_id in ['a', 'my_org', '_myorg', '_', 'yet_another___one']:
+            err = validate_org_info(ok_id, dict(org_info_fixture))
+            self.assertTrue('id' not in err,
+                            "False positive org_id %r" % (ok_id,))

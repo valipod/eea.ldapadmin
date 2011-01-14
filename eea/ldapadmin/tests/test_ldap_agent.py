@@ -466,14 +466,14 @@ class TestRemoveFromRole(unittest.TestCase):
 
 org_info_fixture = {
     'name': u"Ye olde bridge club",
-    'phone': u"555 2222",
-    'fax': u"555 9999",
+    'phone': u"+45 555 2222",
+    'fax': u"+45 555 9999",
     'url': u"http://bridge.example.com/",
     'address': (u"13 Card games road\n"
                 u"K\xf8benhavn, Danmark\n"),
     'street': u"Card games road",
     'po_box': u"123456",
-    'postal_code': u"456789",
+    'postal_code': u"DK 456789",
     'country': u"Denmark",
     'locality': u"K\xf8benhavn",
 }
@@ -487,11 +487,11 @@ class OrganisationsTest(unittest.TestCase):
         bridge_club_dn = 'cn=bridge_club,ou=Organisations,o=EIONET,l=Europe'
         self.mock_conn.search_s.return_value = [(bridge_club_dn, {
             'o': ['Ye olde bridge club'],
-            'telephoneNumber': ['555 2222'],
-            'facsimileTelephoneNumber': ['555 9999'],
+            'telephoneNumber': ['+45 555 2222'],
+            'facsimileTelephoneNumber': ['+45 555 9999'],
             'street': ['Card games road'],
             'postOfficeBox': ['123456'],
-            'postalCode': ['456789'],
+            'postalCode': ['DK 456789'],
             'postalAddress': ['13 Card games road\n'
                               'K\xc3\xb8benhavn, Danmark\n'],
             'st': ['Denmark'],

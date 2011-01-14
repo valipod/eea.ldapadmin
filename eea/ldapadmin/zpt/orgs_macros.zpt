@@ -1,10 +1,10 @@
 <metal:block define-macro="messages">
   <div class="error-msg"
-       tal:condition="python:messages.get('error', False)"
-       tal:content="messages/error"/>
+       tal:repeat="msg python:messages.get('error', [])"
+       tal:content="msg"/>
   <div class="system-msg"
-       tal:condition="python:messages.get('info', False)"
-       tal:content="messages/info"/>
+       tal:repeat="msg python:messages.get('info', [])"
+       tal:content="msg"/>
 </metal:block>
 
 <metal:block define-macro="org_form_fields">

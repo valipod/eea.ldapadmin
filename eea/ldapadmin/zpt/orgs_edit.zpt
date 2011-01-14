@@ -1,10 +1,14 @@
 <h1>Edit organisation</h1>
 
+<tal:block define="messages options/messages">
+  <metal:block use-macro="options/messages_macro"/>
+</tal:block>
+
 <form tal:attributes="action string:${options/base_url}/edit_organisation"
       method="post">
 <table>
 
-  <tal:block define="form_data options/form_data">
+  <tal:block define="form_data options/org_info">
     <metal:block use-macro="options/form_macro" />
   </tal:block>
 
