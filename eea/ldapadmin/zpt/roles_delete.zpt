@@ -1,12 +1,6 @@
-<metal:block use-macro="here/general_tmpl/macros/page">
+<h1>Delete role <tt tal:content="options/role_id" /></h1>
 
-<h1 metal:fill-slot="title">
-    Delete role <tt tal:content="options/role_id" />
-</h1>
-
-<metal:block fill-slot="content">
-
-<form tal:attributes="action string:${here/absolute_url}/delete_role"
+<form tal:attributes="action string:${options/base_url}/delete_role"
       method="post">
     <p>The following roles will be removed:</p>
     <ul>
@@ -16,9 +10,5 @@
     </ul>
     <input type="hidden" name="role_id"
            tal:attributes="value options/role_id" />
-    <input type="hidden" name="confirm" value="yes" />
     <input type="submit" value="Yes, remove them" />
 </form>
-
-</metal:block>
-</metal:block>

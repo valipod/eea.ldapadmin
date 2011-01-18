@@ -165,13 +165,20 @@ class RolesEditor(Folder):
     def can_edit_roles(self, user):
         return bool(user.has_permission(eionet_edit_roles, self))
 
-    security.declareProtected(eionet_edit_roles, 'create_role')
-    create_role = PageTemplateFile('zpt/editor_create_role', globals())
+    security.declareProtected(eionet_edit_roles, 'create_role_html')
+    def create_role_html(self, REQUEST):
+        """ view """
+        options = {'base_url': self.absolute_url(),
+                   'parent_id': REQUEST.form['parent_role_id']}
+        # TODO session messages, buttons bar
+        return self._render_template('zpt/roles_create.zpt', **options)
 
-    security.declareProtected(eionet_edit_roles, 'do_create_role')
-    def do_create_role(self, RESPONSE,
-                    role_id_frag, description, parent_role_id=None):
+    security.declareProtected(eionet_edit_roles, 'create_role')
+    def create_role(self, REQUEST):
         """ add a role """
+        role_id_frag = REQUEST.form['role_id_frag']
+        description = REQUEST.form['description']
+        parent_role_id = REQUEST.form.get('parent_role_id', None)
         assert isinstance(role_id_frag, basestring)
         for ch in role_id_frag:
             assert ch in ascii_lowercase
@@ -180,30 +187,38 @@ class RolesEditor(Folder):
             role_id = role_id_frag
         else:
             role_id = parent_role_id + '-' + role_id_frag
-        agent = self.get_ldap_agent()
+        agent = self._get_ldap_agent()
         agent.perform_bind(*self._login_data())
         agent.create_role(role_id, description)
-        self.add_message("Created role %s %r" % (role_id, description))
-        RESPONSE.redirect(self.absolute_url() + '/?role_id=' + role_id)
+        _set_session_message(REQUEST, 'info',
+                             "Created role %s %r" % (role_id, description))
+        REQUEST.RESPONSE.redirect(self.absolute_url() + '/?role_id=' + role_id)
 
-    _delete_role = PageTemplateFile('zpt/editor_delete_role', globals())
+    security.declareProtected(eionet_edit_roles, 'delete_role_html')
+    def delete_role_html(self, REQUEST):
+        """ view """
+        role_id = REQUEST.form['role_id']
+        agent = self._get_ldap_agent()
+
+        to_remove = map(agent._role_id, agent._sub_roles(role_id))
+        options = {'base_url': self.absolute_url(),
+                   'role_id': role_id,
+                   'roles_to_remove': to_remove}
+        return self._render_template('zpt/roles_delete.zpt', **options)
+
     security.declareProtected(eionet_edit_roles, 'delete_role')
-    def delete_role(self, REQUEST, role_id):
+    def delete_role(self, REQUEST):
         """ remove a role and all its sub-roles """
-        agent = self.get_ldap_agent()
+        role_id = REQUEST.form['role_id']
+        agent = self._get_ldap_agent()
 
-        if REQUEST.form.get('confirm', 'no') == 'yes':
-            agent.perform_bind(*self._login_data())
-            agent.delete_role(role_id)
-            parent_role_id = '-'.join(role_id.split('-')[:-1])
-            self.add_message("Removed role %s" % role_id)
-            REQUEST.RESPONSE.redirect(self.absolute_url() +
-                                      '/?role_id=' + parent_role_id)
+        agent.perform_bind(*self._login_data())
+        agent.delete_role(role_id)
+        parent_role_id = '-'.join(role_id.split('-')[:-1])
+        _set_session_message(REQUEST, 'info', "Removed role %s" % role_id)
+        REQUEST.RESPONSE.redirect(self.absolute_url() +
+                                  '/?role_id=' + parent_role_id)
 
-        else:
-            to_remove = map(agent._role_id, agent._sub_roles(role_id))
-            return self._delete_role(roles_to_remove=to_remove,
-                                     role_id=role_id)
 
     security.declareProtected(eionet_edit_roles, 'search_by_name')
     def search_by_name(self, name):

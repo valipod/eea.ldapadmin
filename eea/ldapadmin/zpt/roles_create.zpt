@@ -1,0 +1,20 @@
+<h1>
+  Create role under
+  <tt tal:content="python:options['parent_id'] or '[root]'"/>
+</h1>
+
+<form tal:attributes="action string:${options/base_url}/create_role"
+      method="post">
+  <label>
+    name:
+    <input type="text" name="role_id_frag"/>
+  </label>
+  <label>
+    description:
+    <input type="text" name="description:utf8:ustring"/>
+  </label>
+  <input tal:condition="options/parent_id"
+         type="hidden" name="parent_role_id"
+         tal:attributes="value options/parent_id"/>
+  <input type="submit" value="Create role"/>
+</form>

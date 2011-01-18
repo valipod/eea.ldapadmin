@@ -289,14 +289,24 @@ class LdapAgentTest(unittest.TestCase):
         self.agent._unpack_user_info.assert_called_with(jsmith_dn, jsmith_info)
         self.assertEqual(results, [self.agent._unpack_user_info.return_value])
 
+    def test_role_info(self):
+        role_dn = self.agent._role_dn('somerole')
+        self.mock_conn.search_s.return_value = [(role_dn, {
+            'description': ['Some r\xc5\x8dle'],
+        })]
+        role_info = self.agent.role_info('somerole')
+        self.mock_conn.search_s.assert_called_once_with(
+            role_dn, ldap.SCOPE_BASE)
+        self.assertEqual(role_info, {'description': u"Some r\u014dle"})
+
 class TestCreateRole(unittest.TestCase):
     def setUp(self):
         self.agent = StubbedLdapAgent(ldap_server='')
         self.mock_conn = self.agent.conn
         self.agent._bound = True
+        self.mock_conn.add_s.return_value=(ldap.RES_ADD, [])
 
     def test_create(self):
-        self.mock_conn.add_s.return_value=(ldap.RES_ADD, [])
         self.agent.create_role('A-B-X', "My new test role")
         self.mock_conn.add_s.assert_called_once_with(
             'cn=A-B-X,cn=A-B,cn=A,ou=Roles,o=EIONET,l=Europe',
@@ -314,7 +324,6 @@ class TestCreateRole(unittest.TestCase):
         self.assertRaises(ValueError, self.agent.create_role, 'A-X-Y', "blah")
 
     def test_empty_description(self):
-        self.mock_conn.add_s.return_value = (ldap.RES_ADD, [])
         self.agent.create_role('A-B-Z', "")
         self.mock_conn.add_s.assert_called_once_with(
             'cn=A-B-Z,cn=A-B,cn=A,ou=Roles,o=EIONET,l=Europe',
@@ -324,7 +333,6 @@ class TestCreateRole(unittest.TestCase):
              ('uniqueMember', [''])])
 
     def test_create_top_role(self):
-        self.mock_conn.add_s.return_value = (ldap.RES_ADD, [])
         self.agent.create_role('T', "top role")
         self.mock_conn.add_s.assert_called_once_with(
             'cn=T,ou=Roles,o=EIONET,l=Europe',
@@ -332,6 +340,15 @@ class TestCreateRole(unittest.TestCase):
              ('ou', ['T']),
              ('uniqueMember', ['']),
              ('description', ['top role']),])
+
+    def test_unicode(self):
+        self.agent.create_role('r', u"Some r\u014dle")
+        self.mock_conn.add_s.assert_called_once_with(
+            'cn=r,ou=Roles,o=EIONET,l=Europe',
+            [('objectClass', ['top', 'groupOfUniqueNames']),
+             ('ou', ['r']),
+             ('uniqueMember', ['']),
+             ('description', ['Some r\xc5\x8dle']),])
 
 class TestAddToRole(unittest.TestCase):
     def setUp(self):

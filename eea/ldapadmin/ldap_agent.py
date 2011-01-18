@@ -237,7 +237,8 @@ class LdapAgent(object):
         assert len(result) == 1
         dn, attr = result[0]
         assert dn == query_dn
-        return {'description': attr.get('description', [""])[0]}
+        description = attr.get('description', [""])[0].decode(self._encoding)
+        return {'description': description}
 
     def perform_bind(self, login_dn, login_pw):
         result = self.conn.simple_bind_s(login_dn, login_pw)
@@ -349,7 +350,7 @@ class LdapAgent(object):
             ('uniqueMember', ['']),
         ]
         if description:
-            attrs.append( ('description', [description]) )
+            attrs.append(('description', [description.encode(self._encoding)]))
 
         role_dn = self._role_dn(role_id)
 
