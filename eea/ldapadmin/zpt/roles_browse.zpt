@@ -16,6 +16,8 @@
 </ul>
 </div>
 
+<tal:block content="structure options/buttons_html"/>
+
 <h1 tal:define="name python:(options['role_info']['description'].strip()
                              or 'Role %s' % options['role_id'])"
     tal:content="name"></h1>

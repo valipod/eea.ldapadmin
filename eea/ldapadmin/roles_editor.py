@@ -55,6 +55,10 @@ def _set_session_message(request, msg_type, msg):
 def _session_messages_html(request):
     return SessionMessages(request, SESSION_MESSAGES).html()
 
+def _buttons_bar(base_url, current):
+    tmpl = load_template('zpt/roles_buttons.zpt')
+    return tmpl(base_url=base_url, current=current)
+
 
 class RolesEditor(Folder):
     meta_type = 'Eionet Roles Editor'
@@ -136,6 +140,7 @@ class RolesEditor(Folder):
             'user_info_macro': _general_tmpl.macros['user-info'],
             'org_info_macro': _general_tmpl.macros['org-info'],
             'messages_html': _session_messages_html(REQUEST),
+            'buttons_html': _buttons_bar(self.absolute_url(), 'browse'),
         }
         return self._render_template('zpt/roles_browse.zpt', **options)
 
