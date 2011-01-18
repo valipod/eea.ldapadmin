@@ -189,3 +189,98 @@ class CreateDeleteRolesTest(unittest.TestCase):
         self.mock_agent.delete_role.assert_called_once_with('places-bank')
         self.request.RESPONSE.redirect.assert_called_with(
             'URL/?role_id=places')
+
+class AddRemoveRoleMembersTest(unittest.TestCase):
+    def setUp(self):
+        self.ui = StubbedRolesEditor({})
+        self.mock_agent = Mock()
+        self.ui._get_ldap_agent = Mock(return_value=self.mock_agent)
+        self.request = mock_request()
+        user = self.request.AUTHENTICATED_USER
+        user.getRoles.return_value = ['Authenticated']
+
+    def test_links(self):
+        self.mock_agent.members_in_role.return_value = {'users':[], 'orgs':[]}
+        self.mock_agent.role_names_in_role.return_value = {}
+        self.mock_agent.role_info.return_value = {
+            'description': "Various places",
+        }
+        self.request.form = {'role_id': 'places'}
+
+        page = parse_html(self.ui.index_html(self.request))
+
+        add_url = "URL/add_to_role_html?role_id=places"
+        add_links = page.xpath('//a[@href="%s"]' % add_url)
+        self.assertEqual(len(add_links), 1)
+        self.assertEqual(add_links[0].text, "Add new members")
+
+    def test_add_user_html(self):
+        self.request.form = {'role_id': 'places'}
+
+        page = parse_html(self.ui.add_to_role_html(self.request))
+
+        self.assertEqual(self.mock_agent.search_by_name.call_count, 0)
+        self.assertEqual(plaintext(page.xpath('//h1')[0]),
+                         "Add users to role places")
+
+    def test_add_user_search_html(self):
+        self.request.form = {'role_id': 'places', 'name': 'smith'}
+        self.mock_agent.search_by_name.return_value = [user_info_fixture]
+
+        page = parse_html(self.ui.add_to_role_html(self.request))
+
+        self.mock_agent.search_by_name.assert_called_once_with('smith')
+        name = plaintext(page.xpath('//ul/li/span[@class="user-name"]')[0])
+        self.assertEqual(name, "Joe Smith")
+        form = page.xpath('//form[@name="add-user"]')[0]
+        self.assertEqual(form.attrib['action'], 'URL/add_to_role')
+
+    def test_add_user_search_html_no_results(self):
+        self.request.form = {'role_id': 'places', 'name': 'smith'}
+        self.mock_agent.search_by_name.return_value = []
+
+        page = parse_html(self.ui.add_to_role_html(self.request))
+
+        self.assertEqual(plaintext(page.xpath('//p[@class="no-results"]')[0]),
+                         "Found no users matching smith.")
+
+    def test_add_user_submit(self):
+        self.request.form = {'role_id': 'places', 'user_id': 'jsmith'}
+
+        self.ui.add_to_role(self.request)
+
+        self.mock_agent.add_to_role.assert_called_once_with(
+            'places', 'user', 'jsmith')
+        self.request.RESPONSE.redirect.assert_called_with(
+            'URL/?role_id=places')
+        msg = "User 'jsmith' added to role 'places'"
+        self.assertEqual(session_messages(self.request), {'info': [msg]})
+
+    def test_remove_user_html(self):
+        self.mock_agent.members_in_role.return_value = {'users':['jsmith'],
+                                                        'orgs':[]}
+        self.mock_agent.role_names_in_role.return_value = {}
+        self.mock_agent.role_info.return_value = {
+            'description': "Various places",
+        }
+        self.mock_agent.user_info.return_value = dict(user_info_fixture,
+                                                      id='jsmith')
+        self.request.form = {'role_id': 'places'}
+
+        page = parse_html(self.ui.index_html(self.request))
+
+        remove_form = page.xpath('//form[@name="remove-users"]')[0]
+        user_li = remove_form.xpath('.//ul[@class="role-members"]/li')[0]
+        user_checkbox = user_li.xpath('input[@name="user_id_list:list"]')[0]
+        self.assertEqual(user_checkbox.attrib['value'], 'jsmith')
+
+    def test_remove_user_submit(self):
+        self.request.form = {'role_id': 'places', 'user_id_list': ['jsmith'],
+                             'confirm': 'yes'} # TODO remove `confirm` argument
+
+        self.ui.remove_from_role(self.request)
+
+        self.request.RESPONSE.redirect.assert_called_with(
+            'URL/?role_id=places')
+        msg = "Users ['jsmith'] removed from role 'places'"
+        self.assertEqual(session_messages(self.request), {'info': [msg]})

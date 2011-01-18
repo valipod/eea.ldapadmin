@@ -224,37 +224,60 @@ class RolesEditor(Folder):
     def search_by_name(self, name):
         return self.get_ldap_agent().search_by_name(name)
 
-    security.declareProtected(eionet_edit_roles, 'add_to_role')
-    add_to_role = PageTemplateFile('zpt/editor_add_to_role', globals())
+    security.declareProtected(eionet_edit_roles, 'add_to_role_html')
+    def add_to_role_html(self, REQUEST):
+        """ view """
+        role_id = REQUEST.form['role_id']
+        search_name = REQUEST.form.get('name', '')
+        if search_name:
+            search_results = self._get_ldap_agent().search_by_name(search_name)
+        else:
+            search_results = []
+        _general_tmpl = load_template('zpt/editor_general_tmpl.zpt')
+        options = {
+            'base_url': self.absolute_url(),
+            'role_id': role_id,
+            'search_name': search_name,
+            'search_results': search_results,
+            'user_info_macro': _general_tmpl.macros['user-info'],
+        }
+        return self._render_template('zpt/roles_add_user.zpt', **options)
 
-    security.declareProtected(eionet_edit_roles, 'do_add_to_role')
-    def do_add_to_role(self, RESPONSE, role_id, user_id):
+    security.declareProtected(eionet_edit_roles, 'add_to_role')
+    def add_to_role(self, REQUEST):
         """ Add user `user_id` to role `role_id` """
-        agent = self.get_ldap_agent()
+        role_id = REQUEST.form['role_id']
+        user_id = REQUEST.form['user_id']
+        agent = self._get_ldap_agent()
         agent.perform_bind(*self._login_data())
         agent.add_to_role(role_id, 'user', user_id)
-        self.add_message("User %r added to role %r" % (user_id, role_id))
-        RESPONSE.redirect(self.absolute_url() + '/?role_id=' + role_id)
+        _set_session_message(REQUEST, 'info',
+                             "User %r added to role %r" % (user_id, role_id))
+        REQUEST.RESPONSE.redirect(self.absolute_url() + '/?role_id=' + role_id)
 
     _remove_from_role_html = PageTemplateFile('zpt/editor_remove_from_role',
                                               globals())
     security.declareProtected(eionet_edit_roles, 'remove_from_role')
-    def remove_from_role(self, REQUEST, role_id, user_id_list):
+    def remove_from_role(self, REQUEST):
         """ Remove user `user_id` from role `role_id` """
-        agent = self.get_ldap_agent()
+        role_id = REQUEST.form['role_id']
+        user_id_list = REQUEST.form['user_id_list']
+        agent = self._get_ldap_agent()
 
         if REQUEST.form.get('confirm', 'no') == 'yes':
             agent.perform_bind(*self._login_data())
             for user_id in user_id_list:
                 agent.remove_from_role(role_id, 'user', user_id)
-            self.add_message("Users %r removed from role %r" %
-                             (user_id_list, role_id))
+
+            msg = "Users %r removed from role %r" % (user_id_list, role_id)
+            _set_session_message(REQUEST, 'info', msg)
 
             redirect_default = self.absolute_url()+'/?role_id='+role_id
             REQUEST.RESPONSE.redirect(REQUEST.form.get('redirect_to',
                                                        redirect_default))
 
         else:
+            # TODO split into a separate view
             return self._remove_from_role_html()
 
     security.declareProtected(eionet_edit_roles, 'search_users')
