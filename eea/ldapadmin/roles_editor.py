@@ -220,10 +220,6 @@ class RolesEditor(Folder):
                                   '/?role_id=' + parent_role_id)
 
 
-    security.declareProtected(eionet_edit_roles, 'search_by_name')
-    def search_by_name(self, name):
-        return self.get_ldap_agent().search_by_name(name)
-
     security.declareProtected(eionet_edit_roles, 'add_to_role_html')
     def add_to_role_html(self, REQUEST):
         """ view """
@@ -255,37 +251,86 @@ class RolesEditor(Folder):
                              "User %r added to role %r" % (user_id, role_id))
         REQUEST.RESPONSE.redirect(self.absolute_url() + '/?role_id=' + role_id)
 
-    _remove_from_role_html = PageTemplateFile('zpt/editor_remove_from_role',
-                                              globals())
     security.declareProtected(eionet_edit_roles, 'remove_from_role')
     def remove_from_role(self, REQUEST):
-        """ Remove user `user_id` from role `role_id` """
+        """ Remove user several users from a role """
         role_id = REQUEST.form['role_id']
         user_id_list = REQUEST.form['user_id_list']
         agent = self._get_ldap_agent()
 
-        if REQUEST.form.get('confirm', 'no') == 'yes':
-            agent.perform_bind(*self._login_data())
-            for user_id in user_id_list:
-                agent.remove_from_role(role_id, 'user', user_id)
+        agent.perform_bind(*self._login_data())
+        for user_id in user_id_list:
+            agent.remove_from_role(role_id, 'user', user_id)
 
-            msg = "Users %r removed from role %r" % (user_id_list, role_id)
-            _set_session_message(REQUEST, 'info', msg)
+        msg = "Users %r removed from role %r" % (user_id_list, role_id)
+        _set_session_message(REQUEST, 'info', msg)
 
-            redirect_default = self.absolute_url()+'/?role_id='+role_id
-            REQUEST.RESPONSE.redirect(REQUEST.form.get('redirect_to',
-                                                       redirect_default))
+        redirect_default = self.absolute_url()+'/?role_id='+role_id
+        REQUEST.RESPONSE.redirect(REQUEST.form.get('redirect_to',
+                                                   redirect_default))
 
-        else:
-            # TODO split into a separate view
-            return self._remove_from_role_html()
+    security.declareProtected(eionet_edit_roles, 'remove_user_from_role_html')
+    def remove_user_from_role_html(self, REQUEST):
+        """ view """
+        role_id = REQUEST.form['role_id']
+        user_id = REQUEST.form['user_id']
+        agent = self._get_ldap_agent()
+        options = {
+            'base_url': self.absolute_url(),
+            'role_id': role_id,
+            'user_id': user_id,
+            'role_id_list': self._subroles_of_user(user_id, role_id, agent),
+        }
+
+        return self._render_template('zpt/roles_remove_user.zpt', **options)
+
+    def _subroles_of_user(self, user_id, role_id, agent):
+        # TODO _sub_roles needs to have its own nice API in LdapAgent
+        user_roles = agent.list_member_roles('user', user_id)
+        sub_roles = map(agent._role_id, agent._sub_roles(role_id))
+        return sorted(set(user_roles) & set(sub_roles))
+
+    security.declareProtected(eionet_edit_roles, 'remove_user_from_role')
+    def remove_user_from_role(self, REQUEST):
+        """ Remove a single user from the role """
+        role_id = REQUEST.form['role_id']
+        user_id = REQUEST.form['user_id']
+
+        agent = self._get_ldap_agent()
+        agent.perform_bind(*self._login_data())
+        agent.remove_from_role(role_id, 'user', user_id)
+
+        role_id_list = self._subroles_of_user(user_id, role_id, agent)
+        roles_msg = ', '.join(repr(r) for r in role_id_list)
+        msg = "User %r removed from roles %s." % (user_id, roles_msg)
+        _set_session_message(REQUEST, 'info', msg)
+
+        REQUEST.RESPONSE.redirect(self.absolute_url() +
+                                  '/search_users?user_id=' + user_id)
 
     security.declareProtected(eionet_edit_roles, 'search_users')
-    search_users = PageTemplateFile('zpt/editor_search_users', globals())
+    def search_users(self, REQUEST):
+        """ view """
+        search_name = REQUEST.form.get('name', '')
+        user_id = REQUEST.form.get('user_id', None)
+        options = {
+            'base_url': self.absolute_url(),
+            'search_name': search_name,
+            'user_id': user_id,
+            'messages_html': _session_messages_html(REQUEST),
+        }
 
-    security.declareProtected(eionet_edit_roles, 'list_user_roles')
-    def list_user_roles(self, user_id):
-        return self.get_ldap_agent().list_member_roles('user', user_id)
+        if search_name:
+            agent = self._get_ldap_agent()
+            options['search_results'] = agent.search_by_name(search_name)
+            _general_tmpl = load_template('zpt/editor_general_tmpl.zpt')
+            options['user_info_macro'] = _general_tmpl.macros['user-info']
+
+        if user_id is not None:
+            agent = self._get_ldap_agent()
+            options['user_roles'] = agent.list_member_roles('user', user_id)
+
+        return self._render_template('zpt/roles_search_users.zpt', **options)
 
     security.declareProtected(view_management_screens, 'manage_add_query_html')
     manage_add_query_html = manage_add_query_html

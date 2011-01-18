@@ -275,12 +275,102 @@ class AddRemoveRoleMembersTest(unittest.TestCase):
         self.assertEqual(user_checkbox.attrib['value'], 'jsmith')
 
     def test_remove_user_submit(self):
-        self.request.form = {'role_id': 'places', 'user_id_list': ['jsmith'],
-                             'confirm': 'yes'} # TODO remove `confirm` argument
+        self.request.form = {'role_id': 'places', 'user_id_list': ['jsmith']}
 
         self.ui.remove_from_role(self.request)
 
         self.request.RESPONSE.redirect.assert_called_with(
             'URL/?role_id=places')
         msg = "Users ['jsmith'] removed from role 'places'"
+        self.assertEqual(session_messages(self.request), {'info': [msg]})
+
+class UserSearchTest(unittest.TestCase):
+    def setUp(self):
+        self.ui = StubbedRolesEditor({})
+        self.mock_agent = Mock()
+        self.ui._get_ldap_agent = Mock(return_value=self.mock_agent)
+        self.request = mock_request()
+        user = self.request.AUTHENTICATED_USER
+        user.getRoles.return_value = ['Authenticated']
+
+    def test_plain(self):
+        self.request.form = {}
+        page = parse_html(self.ui.search_users(self.request))
+
+        form = page.xpath('//form[@name="search-users"]')[0]
+        self.assertEqual(len(form.xpath('.//input[@name="name"]')), 1)
+
+    def test_results(self):
+        self.request.form = {'name': 'smith'}
+        self.mock_agent.search_by_name.return_value = [user_info_fixture]
+
+        page = parse_html(self.ui.search_users(self.request))
+
+        self.mock_agent.search_by_name.assert_called_once_with('smith')
+        name = plaintext(page.xpath('//ul/li/span[@class="user-name"]')[0])
+        self.assertEqual(name, "Joe Smith")
+
+    def test_no_result(self):
+        self.request.form = {'name': 'smith'}
+        self.mock_agent.search_by_name.return_value = []
+
+        page = parse_html(self.ui.search_users(self.request))
+
+        self.assertEqual(plaintext(page.xpath('//p[@class="no-results"]')[0]),
+                         "Found no users matching smith.")
+
+    def test_user_roles_html(self):
+        self.request.form = {'user_id': 'jsmith'}
+        self.mock_agent.list_member_roles.return_value = ['places-bank',
+                                                          'places-bank-branch']
+
+        page = parse_html(self.ui.search_users(self.request))
+
+        roles_div = page.xpath('//div[@class="user-roles"]')[0]
+        self.assertEqual(plaintext(roles_div.xpath('h2')[0]),
+                         "User jsmith is a member of:")
+        self.mock_agent.list_member_roles.assert_called_once_with(
+            'user', 'jsmith')
+        self.assertEqual([plaintext(li) for li in roles_div.xpath('ul/li')],
+                         ['places-bank', 'places-bank-branch'])
+
+    def _mock_for_user_roles(self):
+        self.mock_agent._sub_roles.return_value = [
+            'test-dn:places-bank',
+            'test-dn:places-bank-central',
+            'test-dn:places-bank-branch',
+        ]
+        self.mock_agent.list_member_roles.return_value = [
+            'places', 'places-bank', 'places-bank-central']
+        def agent_role_id(role_dn):
+            assert role_dn.startswith('test-dn:')
+            return role_dn[len('test-dn:'):]
+        self.mock_agent._role_id = agent_role_id
+
+    def test_user_remove_from_role_html(self):
+        self.request.form = {'role_id': 'places', 'user_id': 'jsmith'}
+        self._mock_for_user_roles()
+
+        page = parse_html(self.ui.remove_user_from_role_html(self.request))
+
+        self.assertEqual(plaintext(page.xpath('//h1')[0]), "Revoke membership")
+        self.assertEqual(page.xpath('//form')[0].attrib['action'],
+                         'URL/remove_user_from_role')
+        self.assertEqual(plaintext(page.xpath('//form//p')[0]),
+                         "Remove jsmith from the following roles:")
+        self.assertEqual([plaintext(li) for li in page.xpath('//form/ul/li')],
+                         ['places-bank', 'places-bank-central'])
+
+    def test_user_remove_from_role_submit(self):
+        self.request.form = {'role_id': 'places', 'user_id': 'jsmith'}
+        self._mock_for_user_roles()
+
+        self.ui.remove_user_from_role(self.request)
+
+        self.mock_agent.remove_from_role.assert_called_once_with(
+            'places', 'user', 'jsmith')
+        self.request.RESPONSE.redirect.assert_called_with(
+             'URL/search_users?user_id=jsmith')
+        msg = ("User 'jsmith' removed from roles "
+               "'places-bank', 'places-bank-central'.")
         self.assertEqual(session_messages(self.request), {'info': [msg]})
