@@ -59,6 +59,28 @@ def _buttons_bar(base_url, current):
     tmpl = load_template('zpt/roles_buttons.zpt')
     return tmpl(base_url=base_url, current=current)
 
+def filter_roles(agent, pattern):
+    out = {}
+    for role_id in agent.filter_roles(pattern):
+        members = agent.members_in_role(role_id)
+        # TODO catch individual errors when showing useres
+        out[role_id] = {
+            'users': [agent.user_info(user_id)
+                      for user_id in members['users']],
+            'orgs': [],
+        }
+    return out
+
+def filter_result_html(agent, pattern, is_authenticated):
+    _general_tmpl = load_template('zpt/roles_macros.zpt')
+    options = {
+        'is_authenticated': is_authenticated,
+        'results': filter_roles(agent, pattern),
+        'user_info_macro': _general_tmpl.macros['user-info'],
+        'org_info_macro': _general_tmpl.macros['org-info'],
+    }
+    return load_template('zpt/roles_filter_result.zpt')(**options)
+
 
 class RolesEditor(Folder):
     meta_type = 'Eionet Roles Editor'
@@ -156,7 +178,17 @@ class RolesEditor(Folder):
     def _get_ldap_agent(self):
         return LdapAgent(**dict(self.config))
 
-    filter = PageTemplateFile('zpt/editor_filter', globals())
+    security.declareProtected(view, 'filter')
+    def filter(self, REQUEST):
+        """ view """
+        pattern = REQUEST.form.get('pattern', '')
+        options = {'pattern': pattern}
+        if pattern:
+            agent = self._get_ldap_agent()
+            is_authenticated = _is_authenticated(REQUEST)
+            results_html = filter_result_html(agent, pattern, is_authenticated)
+            options['results_html'] = results_html
+        return self._render_template('zpt/roles_filter.zpt', **options)
 
     security.declareProtected(view, 'can_edit_roles')
     def can_edit_roles(self, user):

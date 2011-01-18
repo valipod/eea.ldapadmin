@@ -1,0 +1,14 @@
+<h1>Filter roles</h1>
+
+<p>
+  Enter a search pattern, e.g. <tt>eea-staff</tt> or <tt>eionet-*-*-*-dk</tt>.
+</p>
+
+<form name="filter">
+  <input type="search" name="pattern" size="30"
+         tal:attributes="value pattern|nothing" />
+  <input type="submit" value="Filter roles" />
+</form>
+
+<tal:block condition="options/pattern"
+           content="structure options/results_html"/>

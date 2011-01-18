@@ -1,4 +1,5 @@
 import unittest
+from copy import deepcopy
 from mock import Mock
 from eea.ldapadmin.roles_editor import RolesEditor
 from eea.ldapadmin.ui_common import load_template
@@ -23,14 +24,26 @@ def mock_request():
     request.SESSION = {}
     return request
 
-user_info_fixture = {
-    'id': "jsmith",
-    'name': "Joe Smith",
-    'email': u"jsmith@example.com",
-    'phone': u"555 1234",
-    'fax': u"555 6789",
-    'organisation': "My company",
+user_map_fixture = {
+    'jsmith': {
+        'id': "jsmith",
+        'name': "Joe Smith",
+        'email': u"jsmith@example.com",
+        'phone': u"555 1234",
+        'fax': u"555 6789",
+        'organisation': "My company",
+    },
+    'anne': {
+        'id': "anne",
+        'name': "Anne Tester",
+        'email': u"anne@example.com",
+        'phone': u"555 32879",
+        'fax': u"",
+        'organisation': "Some Agency",
+    },
 }
+
+user_info_fixture = user_map_fixture['jsmith']
 
 def session_messages(request):
     return request.SESSION.get('eea.ldapadmin.roles_editor.messages')
@@ -375,3 +388,46 @@ class UserSearchTest(unittest.TestCase):
         msg = ("User 'jsmith' removed from roles "
                "'places-bank', 'places-bank-central'.")
         self.assertEqual(session_messages(self.request), {'info': [msg]})
+
+class FilterTest(unittest.TestCase):
+    def setUp(self):
+        self.ui = StubbedRolesEditor({})
+        self.mock_agent = Mock()
+        self.ui._get_ldap_agent = Mock(return_value=self.mock_agent)
+        self.request = mock_request()
+        user = self.request.AUTHENTICATED_USER
+        user.getRoles.return_value = ['Authenticated']
+
+        org_membership = {
+            'places-bank': {'users': sorted(user_map_fixture.keys()),
+                            'orgs': []},
+            'places-shiny': {'users': [], 'orgs': []},
+        }
+        self.mock_agent.filter_roles.return_value = org_membership.keys()
+        self.mock_agent.members_in_role.side_effect = org_membership.get
+        self.mock_agent.user_info.side_effect = deepcopy(user_map_fixture).get
+
+    def check_query_results(self, page):
+        role_ids = [tt.text for tt in page.xpath('//h3/tt')]
+        self.assertEqual(role_ids, ['places-bank'])
+        # TODO we should also list places-shiny somehow
+        user_ids = [tt.text for tt in page.xpath('//tt[@class="user-id"]')]
+        self.assertEqual(user_ids, ['anne', 'jsmith'])
+
+    def test_filter_html(self):
+        self.request.form = {'pattern': 'places-*'}
+
+        page = parse_html(self.ui.filter(self.request))
+
+        self.check_query_results(page)
+
+    def test_saved_query_html(self):
+        from eea.ldapadmin.query import Query
+        query_ob = Query()
+        query_ob.pattern = 'places-*'
+        query_ob._get_ldap_agent = lambda: self.mock_agent
+        query_ob._render_template = self.ui._render_template
+
+        page = parse_html(query_ob.index_html(self.request))
+
+        self.check_query_results(page)

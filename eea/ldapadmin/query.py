@@ -3,6 +3,9 @@ from OFS.SimpleItem import SimpleItem
 from OFS.PropertyManager import PropertyManager
 from Products.PageTemplates.PageTemplateFile import PageTemplateFile
 
+import roles_editor
+from ui_common import Zope3TemplateInZope2
+
 manage_add_query_html = PageTemplateFile('zpt/query_manage_add', globals())
 
 def manage_add_query(parent, id, title, pattern, REQUEST=None):
@@ -31,4 +34,19 @@ class Query(SimpleItem, PropertyManager):
         {'id':'pattern', 'type': 'string', 'mode':'w', 'label': 'Pattern'},
     )
 
-    index_html = PageTemplateFile('zpt/query_index', globals())
+    _render_template = Zope3TemplateInZope2()
+
+    def _get_ldap_agent(self):
+        return self.aq_parent._get_ldap_agent()
+
+    def index_html(self, REQUEST):
+        """ view """
+        agent = self._get_ldap_agent()
+        is_authenticated = roles_editor._is_authenticated(REQUEST)
+        results_html = roles_editor.filter_result_html(agent, self.pattern,
+                                                       is_authenticated)
+        options = {
+            'pattern': self.pattern,
+            'results_html': results_html,
+        }
+        return self._render_template('zpt/query_index.zpt', **options)
