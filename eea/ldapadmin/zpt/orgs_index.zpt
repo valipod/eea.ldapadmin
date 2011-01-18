@@ -1,6 +1,4 @@
-<tal:block define="messages options/messages">
-  <metal:block use-macro="options/messages_macro"/>
-</tal:block>
+<tal:block content="structure options/messages_html"/>
 
 <div id="operations">
   <h2>Operations</h2>

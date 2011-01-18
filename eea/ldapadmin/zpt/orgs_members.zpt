@@ -13,9 +13,7 @@
   <tal:block content="options/organisation/name"/>
 </h1>
 
-<tal:block define="messages options/messages">
-  <metal:block use-macro="options/messages_macro"/>
-</tal:block>
+<tal:block content="structure options/messages_html"/>
 
 <form method="post" tal:condition="options/org_members"
       tal:attributes="action string:${options/base_url}/remove_members">

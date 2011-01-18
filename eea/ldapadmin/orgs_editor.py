@@ -9,10 +9,9 @@ from Products.PageTemplates.PageTemplateFile import PageTemplateFile
 from OFS.SimpleItem import SimpleItem
 from OFS.PropertyManager import PropertyManager
 from AccessControl.Permissions import view
-from persistent.list import PersistentList
-from persistent.mapping import PersistentMapping
 
 from ldap_agent import LdapAgent, editable_org_fields
+from ui_common import load_template, SessionMessages
 
 eionet_edit_orgs = 'Eionet edit organisations'
 
@@ -25,12 +24,6 @@ def manage_add_organisations_editor(parent, id, REQUEST=None):
         REQUEST.RESPONSE.redirect(parent.absolute_url() + '/manage_workspace')
 
 
-def load_template(name, _memo={}):
-    if name not in _memo:
-        from zope.pagetemplate.pagetemplatefile import PageTemplateFile
-        _memo[name] = PageTemplateFile(name, globals())
-    return _memo[name]
-
 def get_template_macro(name):
     return load_template('zpt/orgs_macros.zpt').macros[name]
 
@@ -38,24 +31,11 @@ SESSION_PREFIX = 'eea.ldapadmin.orgs_editor'
 SESSION_MESSAGES = SESSION_PREFIX + '.messages'
 SESSION_FORM_DATA = SESSION_PREFIX + '.form_data'
 
-def _get_session_messages(request):
-    session = request.SESSION
-    if SESSION_MESSAGES in session.keys():
-        msgs = dict(session[SESSION_MESSAGES])
-        del session[SESSION_MESSAGES]
-    else:
-        msgs = {}
-    return msgs
-
 def _set_session_message(request, msg_type, msg):
-    session = request.SESSION
-    if SESSION_MESSAGES not in session.keys():
-        session[SESSION_MESSAGES] = PersistentMapping()
-    messages = session[SESSION_MESSAGES]
-    if msg_type not in messages:
-        messages[msg_type] = PersistentList()
-    messages[msg_type].append(msg)
+    SessionMessages(request, SESSION_MESSAGES).add(msg_type, msg)
 
+def _session_messages_html(request):
+    return SessionMessages(request, SESSION_MESSAGES).html()
 
 class OrganisationsEditor(SimpleItem):
     meta_type = 'Eionet Organisations Editor'
@@ -88,8 +68,7 @@ class OrganisationsEditor(SimpleItem):
         orgs.sort(key=operator.itemgetter('name'))
         options = {'base_url': self.absolute_url(),
                    'sorted_organisations': orgs,
-                   'messages': _get_session_messages(REQUEST),
-                   'messages_macro': get_template_macro('messages')}
+                   'messages_html': _session_messages_html(REQUEST)}
         return self._render_template('zpt/orgs_index.zpt', **options)
 
     security.declareProtected(view, 'organisation')
@@ -99,8 +78,7 @@ class OrganisationsEditor(SimpleItem):
         agent = self._get_ldap_agent()
         options = {'base_url': self.absolute_url(),
                    'organisation': agent.org_info(org_id),
-                   'messages': _get_session_messages(REQUEST),
-                   'messages_macro': get_template_macro('messages')}
+                   'messages_html': _session_messages_html(REQUEST)}
         return self._render_template('zpt/orgs_view.zpt', **options)
 
     security.declareProtected(eionet_edit_orgs, 'create_organisation_html')
@@ -108,8 +86,7 @@ class OrganisationsEditor(SimpleItem):
         """ view """
         options = {'base_url': self.absolute_url(),
                    'form_macro': get_template_macro('org_form_fields'),
-                   'messages': _get_session_messages(REQUEST),
-                   'messages_macro': get_template_macro('messages')}
+                   'messages_html': _session_messages_html(REQUEST)}
 
         session = REQUEST.SESSION
         if SESSION_FORM_DATA in session.keys():
@@ -155,8 +132,7 @@ class OrganisationsEditor(SimpleItem):
 
         options = {'base_url': self.absolute_url(),
                    'form_macro': get_template_macro('org_form_fields'),
-                   'messages': _get_session_messages(REQUEST),
-                   'messages_macro': get_template_macro('messages')}
+                   'messages_html': _session_messages_html(REQUEST)}
 
         session = REQUEST.SESSION
         if SESSION_FORM_DATA in session.keys():
@@ -226,8 +202,7 @@ class OrganisationsEditor(SimpleItem):
         options = {'base_url': self.absolute_url(),
                    'organisation': agent.org_info(org_id),
                    'org_members': org_members,
-                   'messages': _get_session_messages(REQUEST),
-                   'messages_macro': get_template_macro('messages')}
+                   'messages_html': _session_messages_html(REQUEST)}
         return self._render_template('zpt/orgs_members.zpt', **options)
 
     security.declareProtected(eionet_edit_orgs, 'remove_members')
