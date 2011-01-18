@@ -10,11 +10,11 @@ from persistent.list import PersistentList
 
 from ldap_agent import LdapAgent
 from query import Query, manage_add_query, manage_add_query_html
-from ui_common import load_template, SessionMessages
+from ui_common import load_template, SessionMessages, Zope3TemplateInZope2
 
 eionet_edit_roles = 'Eionet edit roles'
 
-manage_add_editor_html = PageTemplateFile('zpt/editor_manage_add', globals())
+manage_add_editor_html = PageTemplateFile('zpt/roles_manage_add', globals())
 manage_add_editor_html.properties_form_fields = lambda: \
     RolesEditor.manage_edit.pt_macros()['properties_form_fields']
 
@@ -73,10 +73,7 @@ class RolesEditor(Folder):
         {'label':'Configure', 'action':'manage_edit'},
     ) + Folder.manage_options[2:]
 
-    _zope2_wrapper = PageTemplateFile('zpt/zope2_wrapper.zpt', globals())
-    def _render_template(self, name, **options):
-        tmpl = load_template(name)
-        return self._zope2_wrapper(body_html=tmpl(**options))
+    _render_template = Zope3TemplateInZope2()
 
     security.declareProtected(view_management_screens, 'get_config')
     def get_config(self):
@@ -94,10 +91,10 @@ class RolesEditor(Folder):
         })
 
     security.declareProtected(view, 'general_tmpl')
-    general_tmpl = PageTemplateFile('zpt/editor_general_tmpl', globals())
+    general_tmpl = PageTemplateFile('zpt/roles_macros', globals())
 
     security.declareProtected(view_management_screens, 'manage_edit')
-    manage_edit = PageTemplateFile('zpt/editor_manage_edit', globals())
+    manage_edit = PageTemplateFile('zpt/roles_manage_edit', globals())
 
     security.declareProtected(view_management_screens, 'manage_edit_save')
     def manage_edit_save(self, REQUEST):
@@ -123,7 +120,7 @@ class RolesEditor(Folder):
         role_id = REQUEST.form.get('role_id', None)
         agent = self._get_ldap_agent()
         user_ids = agent.members_in_role(role_id)['users']
-        _general_tmpl = load_template('zpt/editor_general_tmpl.zpt')
+        _general_tmpl = load_template('zpt/roles_macros.zpt')
         options = {
             'base_url': self.absolute_url(),
             'role_id': role_id,
@@ -229,7 +226,7 @@ class RolesEditor(Folder):
             search_results = self._get_ldap_agent().search_by_name(search_name)
         else:
             search_results = []
-        _general_tmpl = load_template('zpt/editor_general_tmpl.zpt')
+        _general_tmpl = load_template('zpt/roles_macros.zpt')
         options = {
             'base_url': self.absolute_url(),
             'role_id': role_id,
@@ -323,7 +320,7 @@ class RolesEditor(Folder):
         if search_name:
             agent = self._get_ldap_agent()
             options['search_results'] = agent.search_by_name(search_name)
-            _general_tmpl = load_template('zpt/editor_general_tmpl.zpt')
+            _general_tmpl = load_template('zpt/roles_macros.zpt')
             options['user_info_macro'] = _general_tmpl.macros['user-info']
 
         if user_id is not None:

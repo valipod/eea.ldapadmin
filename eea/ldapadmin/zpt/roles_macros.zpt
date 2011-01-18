@@ -1,0 +1,36 @@
+<!-- user-info: requires variable `user_info` -->
+<metal:block define-macro="user-info">
+    <span class="user-name" tal:content="user_info/name" />
+
+    <tal:block condition="is_authenticated">
+        (<tt class="user-id" tal:content="user_info/id" />)
+
+        <a tal:condition="user_info/email"
+           tal:attributes="href string:mailto:${user_info/email}"
+           tal:content="user_info/email"
+           class="user-email"></a>
+        <br />
+
+        <tal:block condition="user_info/phone">
+            Tel: <span class="user-phone"
+                       tal:content="user_info/phone" />
+        </tal:block>
+
+        <tal:block condition="user_info/fax">
+            Fax: <span class="user-phone"
+                       tal:content="user_info/fax" />
+        </tal:block>
+
+        <tal:block condition="user_info/organisation">
+            <span class="user-organisation"
+                  tal:content="user_info/organisation" />
+        </tal:block>
+
+    </tal:block>
+</metal:block>
+
+<metal:block define-macro="org-info">
+    <span class="org-name" tal:content="org_info/name" />
+    <a tal:condition="org_info/url"
+       tal:attributes="href org_info/url" tal:content="org_info/url"></a>
+</metal:block>

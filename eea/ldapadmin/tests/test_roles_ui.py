@@ -1,6 +1,7 @@
 import unittest
 from mock import Mock
 from eea.ldapadmin.roles_editor import RolesEditor
+from eea.ldapadmin.ui_common import load_template
 
 def plaintext(element):
     import re
@@ -11,8 +12,8 @@ def parse_html(html):
     return fromstring(html)
 
 class StubbedRolesEditor(RolesEditor):
-    def _zope2_wrapper(self, body_html):
-        return "<html>%s</html>" % body_html
+    def _render_template(self, name, **options):
+        return "<html>%s</html>" % load_template(name)(**options)
 
     def absolute_url(self):
         return "URL"

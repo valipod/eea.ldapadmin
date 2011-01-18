@@ -11,7 +11,7 @@ from OFS.PropertyManager import PropertyManager
 from AccessControl.Permissions import view
 
 from ldap_agent import LdapAgent, editable_org_fields
-from ui_common import load_template, SessionMessages
+from ui_common import load_template, SessionMessages, Zope3TemplateInZope2
 
 eionet_edit_orgs = 'Eionet edit organisations'
 
@@ -49,10 +49,7 @@ class OrganisationsEditor(SimpleItem):
     def __init__(self, id):
         self.id = id
 
-    _zope2_wrapper = PageTemplateFile('zpt/zope2_wrapper.zpt', globals())
-    def _render_template(self, name, **options):
-        tmpl = load_template(name)
-        return self._zope2_wrapper(body_html=tmpl(**options))
+    _render_template = Zope3TemplateInZope2()
 
     def _get_ldap_agent(self):
         return LdapAgent(ldap_server='pivo.edw.ro:22389',

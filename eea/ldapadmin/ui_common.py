@@ -1,10 +1,13 @@
-from zope.pagetemplate.pagetemplatefile import PageTemplateFile
+from Acquisition import Implicit
+from zope.pagetemplate.pagetemplatefile import PageTemplateFile as Z3Template
 from persistent.list import PersistentList
 from persistent.mapping import PersistentMapping
+from Products.PageTemplates.PageTemplateFile import PageTemplateFile\
+                                                 as Z2Template
 
 def load_template(name, _memo={}):
     if name not in _memo:
-        _memo[name] = PageTemplateFile(name, globals())
+        _memo[name] = Z3Template(name, globals())
     return _memo[name]
 
 class SessionMessages(object):
@@ -30,3 +33,10 @@ class SessionMessages(object):
             messages = {}
         tmpl = load_template('zpt/session_messages.zpt')
         return tmpl(messages=messages)
+
+zope2_wrapper = Z2Template('zpt/zope2_wrapper.zpt', globals())
+class Zope3TemplateInZope2(Implicit):
+    def __call__(self, name, **options):
+        tmpl = load_template(name)
+        zope2_tmpl = zope2_wrapper.__of__(self.aq_parent)
+        return zope2_tmpl(body_html=tmpl(**options))

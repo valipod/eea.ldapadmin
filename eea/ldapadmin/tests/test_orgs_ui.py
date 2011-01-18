@@ -3,6 +3,7 @@ from lxml.html.soupparser import fromstring
 from mock import Mock, patch
 from eea.ldapadmin.orgs_editor import OrganisationsEditor
 from eea.ldapadmin.orgs_editor import validate_org_info, VALIDATION_ERRORS
+from eea.ldapadmin.ui_common import load_template
 
 from test_ldap_agent import org_info_fixture
 
@@ -10,8 +11,8 @@ def parse_html(html):
     return fromstring(html)
 
 class StubbedOrganisationsEditor(OrganisationsEditor):
-    def _zope2_wrapper(self, body_html):
-        return "<html>%s</html>" % body_html
+    def _render_template(self, name, **options):
+        return "<html>%s</html>" % load_template(name)(**options)
 
     def absolute_url(self):
         return "URL"
