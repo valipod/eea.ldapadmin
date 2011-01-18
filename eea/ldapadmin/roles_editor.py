@@ -10,6 +10,7 @@ from persistent.list import PersistentList
 
 from ldap_agent import LdapAgent
 from query import Query, manage_add_query, manage_add_query_html
+from ui_common import load_template, SessionMessages
 
 eionet_edit_roles = 'Eionet edit roles'
 
@@ -33,11 +34,27 @@ def manage_add_editor(parent, id, REQUEST=None):
         url = parent.absolute_url() + '/manage_workspace'
         return REQUEST.RESPONSE.redirect(url)
 
-def _get_session_messages(request):
-    session = request.SESSION
-    if 'messages' not in session.keys():
-        session['messages'] = PersistentList()
-    return session['messages']
+def _is_authenticated(request):
+    return ('Authenticated' in request.AUTHENTICATED_USER.getRoles())
+
+def _role_parents(role_id):
+    if role_id is None:
+        return []
+    parents = [role_id]
+    while '-' in role_id:
+        role_id = role_id.rsplit('-', 1)[0]
+        parents.append(role_id)
+    return reversed(parents)
+
+SESSION_PREFIX = 'eea.ldapadmin.roles_editor'
+SESSION_MESSAGES = SESSION_PREFIX + '.messages'
+
+def _set_session_message(request, msg_type, msg):
+    SessionMessages(request, SESSION_MESSAGES).add(msg_type, msg)
+
+def _session_messages_html(request):
+    return SessionMessages(request, SESSION_MESSAGES).html()
+
 
 class RolesEditor(Folder):
     meta_type = 'Eionet Roles Editor'
@@ -51,6 +68,11 @@ class RolesEditor(Folder):
     manage_options = Folder.manage_options[:2] + (
         {'label':'Configure', 'action':'manage_edit'},
     ) + Folder.manage_options[2:]
+
+    _zope2_wrapper = PageTemplateFile('zpt/zope2_wrapper.zpt', globals())
+    def _render_template(self, name, **options):
+        tmpl = load_template(name)
+        return self._zope2_wrapper(body_html=tmpl(**options))
 
     security.declareProtected(view_management_screens, 'get_config')
     def get_config(self):
@@ -92,24 +114,45 @@ class RolesEditor(Folder):
         return (self.config['login_dn'], self.config['login_pw'])
 
     security.declareProtected(view, 'index_html')
-    index_html = PageTemplateFile('zpt/editor_browse', globals())
+    def index_html(self, REQUEST):
+        """ view """
+        role_id = REQUEST.form.get('role_id', None)
+        agent = self._get_ldap_agent()
+        user_ids = agent.members_in_role(role_id)['users']
+        _general_tmpl = load_template('zpt/editor_general_tmpl.zpt')
+        options = {
+            'base_url': self.absolute_url(),
+            'role_id': role_id,
+            'role_info': agent.role_info(role_id),
+            'role_names': agent.role_names_in_role(role_id),
+            'role_parents': _role_parents(role_id),
+            'role_members': {
+                'users': dict((user_id, agent.user_info(user_id))
+                              for user_id in user_ids),
+                'orgs': {},
+            },
+            'can_edit': self.can_edit_roles(REQUEST.AUTHENTICATED_USER),
+            'is_authenticated': _is_authenticated(REQUEST),
+            'user_info_macro': _general_tmpl.macros['user-info'],
+            'org_info_macro': _general_tmpl.macros['org-info'],
+            'messages_html': _session_messages_html(REQUEST),
+        }
+        return self._render_template('zpt/roles_browse.zpt', **options)
 
-    messages_box = PageTemplateFile('zpt/messages_box', globals())
+    def messages_box(self):
+        return _session_messages_html(self.REQUEST)
 
     security.declarePrivate('add_message')
     def add_message(self, msg):
-        _get_session_messages(self.REQUEST).append(msg)
-
-    security.declareProtected(view, 'get_messages')
-    def get_messages(self):
-        messages = _get_session_messages(self.REQUEST)
-        messages_list = list(messages)
-        messages[:] = []
-        return messages_list
+        _set_session_message(self.REQUEST, 'info', msg)
 
     security.declareProtected(view, 'get_ldap_agent')
     def get_ldap_agent(self):
+        # deprecated; templates have no business talking to the LDAP agent
         return Zope2LdapAgent(**dict(self.config)).__of__(self)
+
+    def _get_ldap_agent(self):
+        return LdapAgent(**dict(self.config))
 
     filter = PageTemplateFile('zpt/editor_filter', globals())
 

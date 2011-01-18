@@ -1,3 +1,0 @@
-<tal:block repeat="msg here/get_messages">
-    <div class="system-msg" tal:content="msg"></div>
-</tal:block>
