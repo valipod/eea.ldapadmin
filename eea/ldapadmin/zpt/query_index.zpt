@@ -1,3 +1,5 @@
+<tal:block content="structure options/buttons_html"/>
+
 <h1>Filter roles &mdash; <tt tal:content="options/pattern" /></h1>
 
 <tal:block content="structure options/results_html"/>

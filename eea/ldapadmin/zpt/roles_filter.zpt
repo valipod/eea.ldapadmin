@@ -1,3 +1,5 @@
+<tal:block content="structure options/buttons_html"/>
+
 <h1>Filter roles</h1>
 
 <p>

@@ -48,5 +48,7 @@ class Query(SimpleItem, PropertyManager):
         options = {
             'pattern': self.pattern,
             'results_html': results_html,
+            'buttons_html': roles_editor.buttons_bar(self.absolute_url(),
+                                                     'filter'),
         }
         return self._render_template('zpt/query_index.zpt', **options)

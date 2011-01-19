@@ -55,7 +55,7 @@ def _set_session_message(request, msg_type, msg):
 def _session_messages_html(request):
     return SessionMessages(request, SESSION_MESSAGES).html()
 
-def _buttons_bar(base_url, current):
+def buttons_bar(base_url, current):
     tmpl = load_template('zpt/roles_buttons.zpt')
     return tmpl(base_url=base_url, current=current)
 
@@ -159,7 +159,7 @@ class RolesEditor(Folder):
             'user_info_macro': _general_tmpl.macros['user-info'],
             'org_info_macro': _general_tmpl.macros['org-info'],
             'messages_html': _session_messages_html(REQUEST),
-            'buttons_html': _buttons_bar(self.absolute_url(), 'browse'),
+            'buttons_html': buttons_bar(self.absolute_url(), 'browse'),
         }
         return self._render_template('zpt/roles_browse.zpt', **options)
 
@@ -182,7 +182,10 @@ class RolesEditor(Folder):
     def filter(self, REQUEST):
         """ view """
         pattern = REQUEST.form.get('pattern', '')
-        options = {'pattern': pattern}
+        options = {
+            'pattern': pattern,
+            'buttons_html': buttons_bar(self.absolute_url(), 'filter'),
+        }
         if pattern:
             agent = self._get_ldap_agent()
             is_authenticated = _is_authenticated(REQUEST)
@@ -197,9 +200,11 @@ class RolesEditor(Folder):
     security.declareProtected(eionet_edit_roles, 'create_role_html')
     def create_role_html(self, REQUEST):
         """ view """
-        options = {'base_url': self.absolute_url(),
-                   'parent_id': REQUEST.form['parent_role_id']}
-        # TODO session messages, buttons bar
+        options = {
+            'base_url': self.absolute_url(),
+            'parent_id': REQUEST.form['parent_role_id'],
+            'buttons_html': buttons_bar(self.absolute_url(), 'browse'),
+        }
         return self._render_template('zpt/roles_create.zpt', **options)
 
     security.declareProtected(eionet_edit_roles, 'create_role')
@@ -230,9 +235,12 @@ class RolesEditor(Folder):
         agent = self._get_ldap_agent()
 
         to_remove = map(agent._role_id, agent._sub_roles(role_id))
-        options = {'base_url': self.absolute_url(),
-                   'role_id': role_id,
-                   'roles_to_remove': to_remove}
+        options = {
+            'base_url': self.absolute_url(),
+            'role_id': role_id,
+            'roles_to_remove': to_remove,
+            'buttons_html': buttons_bar(self.absolute_url(), 'browse'),
+        }
         return self._render_template('zpt/roles_delete.zpt', **options)
 
     security.declareProtected(eionet_edit_roles, 'delete_role')
@@ -265,6 +273,7 @@ class RolesEditor(Folder):
             'search_name': search_name,
             'search_results': search_results,
             'user_info_macro': _general_tmpl.macros['user-info'],
+            'buttons_html': buttons_bar(self.absolute_url(), 'browse'),
         }
         return self._render_template('zpt/roles_add_user.zpt', **options)
 
@@ -309,6 +318,7 @@ class RolesEditor(Folder):
             'role_id': role_id,
             'user_id': user_id,
             'role_id_list': self._subroles_of_user(user_id, role_id, agent),
+            'buttons_html': buttons_bar(self.absolute_url(), 'search'),
         }
 
         return self._render_template('zpt/roles_remove_user.zpt', **options)
@@ -347,6 +357,7 @@ class RolesEditor(Folder):
             'search_name': search_name,
             'user_id': user_id,
             'messages_html': _session_messages_html(REQUEST),
+            'buttons_html': buttons_bar(self.absolute_url(), 'search'),
         }
 
         if search_name:

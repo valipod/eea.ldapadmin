@@ -1,3 +1,5 @@
+<tal:block content="structure options/buttons_html"/>
+
 <h1>Delete role <tt tal:content="options/role_id" /></h1>
 
 <form tal:attributes="action string:${options/base_url}/delete_role"

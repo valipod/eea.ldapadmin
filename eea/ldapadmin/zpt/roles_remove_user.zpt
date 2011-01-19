@@ -1,3 +1,5 @@
+<tal:block content="structure options/buttons_html"/>
+
 <h1>Revoke membership</h1>
 
 <form tal:attributes="action string:${options/base_url}/remove_user_from_role"

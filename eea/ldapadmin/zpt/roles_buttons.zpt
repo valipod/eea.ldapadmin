@@ -1,6 +1,6 @@
 <div class="buttons-bar"
      tal:define="current options/current; css_cls string:selected">
-  [<a tal:attributes="href string:${options/base_url};
+  [<a tal:attributes="href string:${options/base_url}/;
                       class python:css_cls if current == 'browse' else None"
       >browse roles</a>]
   [<a tal:attributes="href string:${options/base_url}/filter;

@@ -1,3 +1,5 @@
+<tal:block content="structure options/buttons_html"/>
+
 <h1>Search users</h1>
 
 <tal:block content="structure options/messages_html"/>

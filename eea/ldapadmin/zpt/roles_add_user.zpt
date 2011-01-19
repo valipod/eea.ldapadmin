@@ -1,3 +1,5 @@
+<tal:block content="structure options/buttons_html"/>
+
 <h1>Add users to role <tt tal:content="options/role_id" /></h1>
 
 
