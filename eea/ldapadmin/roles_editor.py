@@ -48,6 +48,7 @@ def _role_parents(role_id):
 
 SESSION_PREFIX = 'eea.ldapadmin.roles_editor'
 SESSION_MESSAGES = SESSION_PREFIX + '.messages'
+SESSION_FORM_DATA = SESSION_PREFIX + '.form_data'
 
 def _set_session_message(request, msg_type, msg):
     SessionMessages(request, SESSION_MESSAGES).add(msg_type, msg)
@@ -82,6 +83,10 @@ def filter_result_html(agent, pattern, is_authenticated):
     }
     return load_template('zpt/roles_filter_result.zpt')(**options)
 
+
+class RoleCreationError(Exception):
+    def __init__(self, messages):
+        self.messages = messages
 
 class RolesEditor(Folder):
     meta_type = 'Eionet Roles Editor'
@@ -205,29 +210,63 @@ class RolesEditor(Folder):
             'base_url': self.absolute_url(),
             'parent_id': REQUEST.form['parent_role_id'],
             'buttons_html': buttons_bar(self.absolute_url(), 'browse'),
+            'messages_html': _session_messages_html(REQUEST),
         }
+        session = REQUEST.SESSION
+        if SESSION_FORM_DATA in session.keys():
+            options['form_data'] = session[SESSION_FORM_DATA]
+            del session[SESSION_FORM_DATA]
         return self._render_template('zpt/roles_create.zpt', **options)
+
+    def _make_role(self, slug, parent_role_id, description):
+        assert isinstance(slug, basestring)
+        if not slug:
+            raise RoleCreationError(["Role name is required."])
+        for ch in slug:
+            if ch not in ascii_lowercase:
+                msg = ("Invalid role name, it must contain only lowercase "
+                       "latin letters.")
+                raise RoleCreationError([msg])
+
+        if parent_role_id is None:
+            role_id = slug
+        else:
+            role_id = parent_role_id + '-' + slug
+
+        agent = self._get_ldap_agent()
+        agent.perform_bind(*self._login_data())
+        try:
+            agent.create_role(str(role_id), description)
+        except ValueError, e:
+            msg = unicode(e)
+            if 'DN already exists' in msg:
+                msg = 'Role "%s" already exists.' % slug
+            raise RoleCreationError([msg])
+
+        return role_id
 
     security.declareProtected(eionet_edit_roles, 'create_role')
     def create_role(self, REQUEST):
         """ add a role """
-        role_id_frag = REQUEST.form['role_id_frag']
+        slug = REQUEST.form['slug']
         description = REQUEST.form['description']
         parent_role_id = REQUEST.form.get('parent_role_id', None)
-        assert isinstance(role_id_frag, basestring)
-        for ch in role_id_frag:
-            assert ch in ascii_lowercase
 
-        if parent_role_id is None:
-            role_id = role_id_frag
+        try:
+            role_id = self._make_role(slug, parent_role_id, description)
+        except RoleCreationError, e:
+            for msg in e.messages:
+                _set_session_message(REQUEST, 'error', msg)
+            REQUEST.RESPONSE.redirect(self.absolute_url() +
+                                      '/create_role_html?parent_role_id=' +
+                                      parent_role_id)
+            form_data = {'slug': slug, 'description': description}
+            REQUEST.SESSION[SESSION_FORM_DATA] = form_data
         else:
-            role_id = parent_role_id + '-' + role_id_frag
-        agent = self._get_ldap_agent()
-        agent.perform_bind(*self._login_data())
-        agent.create_role(role_id, description)
-        _set_session_message(REQUEST, 'info',
-                             "Created role %s %r" % (role_id, description))
-        REQUEST.RESPONSE.redirect(self.absolute_url() + '/?role_id=' + role_id)
+            msg = "Created role %s %r" % (role_id, description)
+            _set_session_message(REQUEST, 'info', msg)
+            REQUEST.RESPONSE.redirect(self.absolute_url() +
+                                      '/?role_id=' + role_id)
 
     security.declareProtected(eionet_edit_roles, 'delete_role_html')
     def delete_role_html(self, REQUEST):
@@ -294,15 +333,17 @@ class RolesEditor(Folder):
     def remove_from_role(self, REQUEST):
         """ Remove user several users from a role """
         role_id = REQUEST.form['role_id']
-        user_id_list = REQUEST.form['user_id_list']
-        agent = self._get_ldap_agent()
+        user_id_list = REQUEST.form.get('user_id_list', [])
+        assert type(user_id_list) is list
 
-        agent.perform_bind(*self._login_data())
-        for user_id in user_id_list:
-            agent.remove_from_role(role_id, 'user', user_id)
+        if user_id_list:
+            agent = self._get_ldap_agent()
+            agent.perform_bind(*self._login_data())
+            for user_id in user_id_list:
+                agent.remove_from_role(role_id, 'user', user_id)
 
-        msg = "Users %r removed from role %r" % (user_id_list, role_id)
-        _set_session_message(REQUEST, 'info', msg)
+            msg = "Users %r removed from role %r" % (user_id_list, role_id)
+            _set_session_message(REQUEST, 'info', msg)
 
         redirect_default = self.absolute_url()+'/?role_id='+role_id
         REQUEST.RESPONSE.redirect(REQUEST.form.get('redirect_to',

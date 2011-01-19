@@ -155,8 +155,7 @@ class CreateDeleteRolesTest(unittest.TestCase):
         self.assertEqual(len(page.xpath(input_desc_xpath)), 1)
 
     def test_create_role_submit(self):
-        self.request.form = {'parent_role_id': 'places',
-                             'role_id_frag': 'shiny',
+        self.request.form = {'parent_role_id': 'places', 'slug': 'shiny',
                              'description': "Shiny new role"}
 
         self.ui.create_role(self.request)
@@ -170,14 +169,34 @@ class CreateDeleteRolesTest(unittest.TestCase):
         self.assertEqual(session_messages(self.request), {'info': [msg]})
 
     def test_create_role_submit_unicode(self):
-        self.request.form = {'parent_role_id': 'places',
-                             'role_id_frag': 'shiny',
-                             'description': "Shiny new role"}
+        self.request.form = {'parent_role_id': 'places', 'slug': 'shiny',
+                             'description': u"Shiny new r\u014dle"}
         self.ui.create_role(self.request)
         self.mock_agent.create_role.assert_called_once_with(
-            'places-shiny', "Shiny new role")
+            'places-shiny', u"Shiny new r\u014dle")
 
-    # TODO test add with bad role_id_frag
+    def test_create_role_submit_invalid(self):
+        self.request.form = {'parent_role_id': 'places', 'slug': 'SHINY',
+                             'description': "Shiny new role"}
+        self.ui.create_role(self.request)
+        self.assertEqual(self.mock_agent.create_role.call_count, 0)
+
+        self.request.RESPONSE.redirect.assert_called_with(
+            'URL/create_role_html?parent_role_id=places')
+
+        msg = ("Invalid role name, it must contain only lowercase "
+               "latin letters.")
+        self.assertEqual(session_messages(self.request), {'error': [msg]})
+
+        self.request.form = {'parent_role_id': 'places'}
+        #print self.ui.create_role_html(self.request)
+        page = parse_html(self.ui.create_role_html(self.request))
+
+        role_id_xp = '//form//input[@name="slug:utf8:ustring"]'
+        role_desc_xp = '//form//input[@name="description:utf8:ustring"]'
+        self.assertEqual(page.xpath(role_id_xp)[0].attrib['value'], 'SHINY')
+        self.assertEqual(page.xpath(role_desc_xp)[0].attrib['value'],
+                         "Shiny new role")
 
     def test_delete_role_html(self):
         self.request.form = {'role_id': 'places-bank'}
@@ -297,6 +316,16 @@ class AddRemoveRoleMembersTest(unittest.TestCase):
             'URL/?role_id=places')
         msg = "Users ['jsmith'] removed from role 'places'"
         self.assertEqual(session_messages(self.request), {'info': [msg]})
+
+    def test_remove_user_submit_nothing(self):
+        self.request.form = {'role_id': 'places'}
+
+        self.ui.remove_from_role(self.request)
+
+        self.request.RESPONSE.redirect.assert_called_with(
+            'URL/?role_id=places')
+        self.assertEqual(session_messages(self.request), None)
+
 
 class UserSearchTest(unittest.TestCase):
     def setUp(self):

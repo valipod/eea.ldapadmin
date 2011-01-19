@@ -5,15 +5,19 @@
   <tt tal:content="python:options['parent_id'] or '[root]'"/>
 </h1>
 
+<tal:block content="structure options/messages_html"/>
+
 <form tal:attributes="action string:${options/base_url}/create_role"
       method="post">
   <label>
     name:
-    <input type="text" name="role_id_frag"/>
+    <input type="text" name="slug:utf8:ustring"
+           tal:attributes="value options/form_data/slug|nothing"/>
   </label>
   <label>
     description:
-    <input type="text" name="description:utf8:ustring"/>
+    <input type="text" name="description:utf8:ustring"
+           tal:attributes="value options/form_data/description|nothing"/>
   </label>
   <input tal:condition="options/parent_id"
          type="hidden" name="parent_role_id"
