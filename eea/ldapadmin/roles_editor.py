@@ -75,6 +75,7 @@ def filter_result_html(agent, pattern, is_authenticated):
     _general_tmpl = load_template('zpt/roles_macros.zpt')
     options = {
         'is_authenticated': is_authenticated,
+        'pattern': pattern,
         'results': filter_roles(agent, pattern),
         'user_info_macro': _general_tmpl.macros['user-info'],
         'org_info_macro': _general_tmpl.macros['org-info'],

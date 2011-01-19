@@ -25,3 +25,8 @@
   </tal:block>
 
 </tal:block>
+
+<p tal:condition="python:options['pattern'] and not options['results']"
+   class="no-results">
+  No roles found matching <tt tal:content="options/pattern"/>.
+</p>

@@ -7,10 +7,10 @@
 </p>
 
 <form name="filter">
-  <input type="search" name="pattern" size="30"
-         tal:attributes="value pattern|nothing" />
+  <input type="search" name="pattern:utf8:ustring" size="30"
+         tal:attributes="value options/pattern|nothing"
+         autofocus="autofocus"/>
   <input type="submit" value="Filter roles" />
 </form>
 
-<tal:block condition="options/pattern"
-           content="structure options/results_html"/>
+<tal:block content="structure options/results_html|nothing"/>

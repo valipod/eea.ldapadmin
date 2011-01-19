@@ -419,6 +419,8 @@ class FilterTest(unittest.TestCase):
 
         page = parse_html(self.ui.filter(self.request))
 
+        pattern_input = page.xpath('//form/input[@type="search"]')[0]
+        self.assertEqual(pattern_input.attrib['value'], 'places-*')
         self.check_query_results(page)
 
     def test_saved_query_html(self):
@@ -431,3 +433,12 @@ class FilterTest(unittest.TestCase):
         page = parse_html(query_ob.index_html(self.request))
 
         self.check_query_results(page)
+
+    def test_no_results(self):
+        self.request.form = {'pattern': 'places-*'}
+        self.mock_agent.filter_roles.return_value = []
+
+        page = parse_html(self.ui.filter(self.request))
+
+        self.assertEqual(plaintext(page.xpath('//p[@class="no-results"]')[0]),
+                         "No roles found matching places-*.")
