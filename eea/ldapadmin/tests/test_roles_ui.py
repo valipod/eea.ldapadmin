@@ -278,15 +278,16 @@ class AddRemoveRoleMembersTest(unittest.TestCase):
                          "Found no users matching smith.")
 
     def test_add_user_submit(self):
-        self.request.form = {'role_id': 'places', 'user_id': 'jsmith'}
+        self.request.form = {'role_id': 'places-bank', 'user_id': 'jsmith'}
+        self.mock_agent.add_to_role.return_value = ['places', 'places-bank']
 
         self.ui.add_to_role(self.request)
 
         self.mock_agent.add_to_role.assert_called_once_with(
-            'places', 'user', 'jsmith')
+            'places-bank', 'user', 'jsmith')
         self.request.RESPONSE.redirect.assert_called_with(
-            'URL/?role_id=places')
-        msg = "User 'jsmith' added to role 'places'"
+            'URL/?role_id=places-bank')
+        msg = "User 'jsmith' added to roles 'places', 'places-bank'."
         self.assertEqual(session_messages(self.request), {'info': [msg]})
 
     def test_remove_user_html(self):
@@ -406,7 +407,8 @@ class UserSearchTest(unittest.TestCase):
 
     def test_user_remove_from_role_submit(self):
         self.request.form = {'role_id': 'places', 'user_id': 'jsmith'}
-        self._mock_for_user_roles()
+        role_ids = ['places-bank', 'places-bank-central']
+        self.mock_agent.remove_from_role.return_value = role_ids
 
         self.ui.remove_user_from_role(self.request)
 

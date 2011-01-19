@@ -324,9 +324,10 @@ class RolesEditor(Folder):
         user_id = REQUEST.form['user_id']
         agent = self._get_ldap_agent()
         agent.perform_bind(*self._login_data())
-        agent.add_to_role(role_id, 'user', user_id)
-        _set_session_message(REQUEST, 'info',
-                             "User %r added to role %r" % (user_id, role_id))
+        role_id_list = agent.add_to_role(role_id, 'user', user_id)
+        roles_msg = ', '.join(repr(r) for r in role_id_list)
+        msg = "User %r added to roles %s." % (user_id, roles_msg)
+        _set_session_message(REQUEST, 'info', msg)
         REQUEST.RESPONSE.redirect(self.absolute_url() + '/?role_id=' + role_id)
 
     security.declareProtected(eionet_edit_roles, 'remove_from_role')
@@ -379,9 +380,8 @@ class RolesEditor(Folder):
 
         agent = self._get_ldap_agent()
         agent.perform_bind(*self._login_data())
-        agent.remove_from_role(role_id, 'user', user_id)
+        role_id_list = agent.remove_from_role(role_id, 'user', user_id)
 
-        role_id_list = self._subroles_of_user(user_id, role_id, agent)
         roles_msg = ', '.join(repr(r) for r in role_id_list)
         msg = "User %r removed from roles %s." % (user_id, roles_msg)
         _set_session_message(REQUEST, 'info', msg)

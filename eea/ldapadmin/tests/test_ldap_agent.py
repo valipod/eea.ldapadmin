@@ -395,7 +395,7 @@ class TestAddToRole(unittest.TestCase):
                                return_value=[(role_dn('K-N-O'), {})])
 
         modify_recorder = self.mock_conn.modify_s.side_effect = Recorder()
-        for r in 'K-N-O', 'K-N', 'K', None:
+        for r in 'K-N-O', 'K-N', 'K':
             dn = user_dn('userone')
             args_add = ()
             modify_recorder.expect(role_dn(r),
@@ -490,11 +490,11 @@ class TestRemoveFromRole(unittest.TestCase):
                                                   user_dn('userone'))
 
         recorder.assert_end()
-        assert mock_rm.call_args_list == [
-            ((user_dn('userone'), role_dn('K-N-P-Q')), {}),
-            ((user_dn('userone'), role_dn('K-N-P')), {}),
-            ((user_dn('userone'), role_dn('K-N-O')), {}),
-            ((user_dn('userone'), role_dn('K-N')), {})]
+        self.assertEqual(mock_rm.call_args_list, [
+            ((role_dn('K-N-P-Q'), user_dn('userone')), {}),
+            ((role_dn('K-N-P'), user_dn('userone')), {}),
+            ((role_dn('K-N-O'), user_dn('userone')), {}),
+            ((role_dn('K-N'), user_dn('userone')), {})])
 
 org_info_fixture = {
     'name': u"Ye olde bridge club",
@@ -662,6 +662,7 @@ class OrganisationsTest(unittest.TestCase):
 class OrganisationEditTest(unittest.TestCase):
     def setUp(self):
         self.agent = StubbedLdapAgent(ldap_server='')
+        self.agent._bound = True
         self.mock_conn = self.agent.conn
         self.mock_conn.search_s.return_value = [
             ('cn=bridge_club,ou=Organisations,o=EIONET,l=Europe', {
