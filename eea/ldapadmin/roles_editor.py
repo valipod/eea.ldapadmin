@@ -68,7 +68,8 @@ def filter_roles(agent, pattern):
         out[role_id] = {
             'users': [agent.user_info(user_id)
                       for user_id in members['users']],
-            'orgs': [],
+            'orgs': [agent.org_info(org_id)
+                     for org_id in members['orgs']],
         }
     return out
 
@@ -147,7 +148,7 @@ class RolesEditor(Folder):
         """ view """
         role_id = REQUEST.form.get('role_id', None)
         agent = self._get_ldap_agent()
-        user_ids = agent.members_in_role(role_id)['users']
+        members = agent.members_in_role(role_id)
         _general_tmpl = load_template('zpt/roles_macros.zpt')
         options = {
             'base_url': self.absolute_url(),
@@ -157,8 +158,9 @@ class RolesEditor(Folder):
             'role_parents': _role_parents(role_id),
             'role_members': {
                 'users': dict((user_id, agent.user_info(user_id))
-                              for user_id in user_ids),
-                'orgs': {},
+                              for user_id in members['users']),
+                'orgs': dict((org_id, agent.org_info(org_id))
+                             for org_id in members['orgs']),
             },
             'can_edit': self.can_edit_roles(REQUEST.AUTHENTICATED_USER),
             'is_authenticated': _is_authenticated(REQUEST),

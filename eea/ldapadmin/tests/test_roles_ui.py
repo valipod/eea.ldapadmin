@@ -43,7 +43,22 @@ user_map_fixture = {
     },
 }
 
+org_map_fixture = {
+    'bridge_club': {
+        'id': 'bridge_club',
+        'name': u"Ye olde bridge club",
+        'url': u"http://bridge-club.example.com/",
+    },
+    'poker_club': {
+        'id': 'poker_club',
+        'name': u"P\xf8ker club",
+        'url': u"http://poker-club.example.com/",
+    },
+}
+
 user_info_fixture = user_map_fixture['jsmith']
+
+from test_ldap_agent import org_info_fixture
 
 def session_messages(request):
     return request.SESSION.get('eea.ldapadmin.roles_editor.messages')
@@ -84,7 +99,7 @@ class BrowseTest(unittest.TestCase):
         self.assertEqual(page.xpath('//h1')[0].text, "Various places")
         self.mock_agent.role_info.assert_called_once_with('places')
 
-    def test_members_info(self):
+    def test_user_info(self):
         self.mock_agent.members_in_role.return_value = {
             'users': ['jsmith'], 'orgs': [],
         }
@@ -96,7 +111,7 @@ class BrowseTest(unittest.TestCase):
         self.mock_agent.user_info.assert_called_once_with('jsmith')
 
         txt = lambda xp, ctx=page: ctx.xpath(xp)[0].text_content().strip()
-        user_li = page.xpath('//ul[@class="role-members"]/li')[0]
+        user_li = page.xpath('//ul[@class="role-users"]/li')[0]
         self.assertEqual(txt('tt[@class="user-id"]', user_li), 'jsmith')
         self.assertEqual(txt('span[@class="user-name"]', user_li),
                          user_info_fixture['name'])
@@ -106,6 +121,25 @@ class BrowseTest(unittest.TestCase):
                          user_info_fixture['phone'])
         self.assertEqual(txt('span[@class="user-organisation"]', user_li),
                          user_info_fixture['organisation'])
+
+    def test_org_info(self):
+        self.mock_agent.members_in_role.return_value = {
+            'users': [], 'orgs': ['bridge-club'],
+        }
+        self.mock_agent.org_info.return_value = dict(org_info_fixture,
+                                                     id='bridge-club')
+
+        page = parse_html(self.ui.index_html(self.request))
+
+        self.mock_agent.members_in_role.assert_called_once_with('places')
+        self.mock_agent.org_info.assert_called_once_with('bridge-club')
+
+        org_li = page.xpath('//ul[@class="role-orgs"]/li')[0]
+        self.assertEqual(plaintext(org_li.xpath('span[@class="org-name"]')[0]),
+                         org_info_fixture['name'])
+        self.assertEqual(plaintext(org_li.xpath('a')[0]),
+                         org_info_fixture['url'])
+
 
 class CreateDeleteRolesTest(unittest.TestCase):
     def setUp(self):
@@ -304,7 +338,7 @@ class AddRemoveRoleMembersTest(unittest.TestCase):
         page = parse_html(self.ui.index_html(self.request))
 
         remove_form = page.xpath('//form[@name="remove-users"]')[0]
-        user_li = remove_form.xpath('.//ul[@class="role-members"]/li')[0]
+        user_li = remove_form.xpath('.//ul[@class="role-users"]/li')[0]
         user_checkbox = user_li.xpath('input[@name="user_id_list:list"]')[0]
         self.assertEqual(user_checkbox.attrib['value'], 'jsmith')
 
@@ -429,21 +463,31 @@ class FilterTest(unittest.TestCase):
         user = self.request.AUTHENTICATED_USER
         user.getRoles.return_value = ['Authenticated']
 
-        org_membership = {
+        role_membership = {
             'places-bank': {'users': sorted(user_map_fixture.keys()),
-                            'orgs': []},
+                            'orgs': sorted(org_map_fixture.keys())},
             'places-shiny': {'users': [], 'orgs': []},
         }
-        self.mock_agent.filter_roles.return_value = org_membership.keys()
-        self.mock_agent.members_in_role.side_effect = org_membership.get
+        self.mock_agent.filter_roles.return_value = role_membership.keys()
+        self.mock_agent.members_in_role.side_effect = role_membership.get
         self.mock_agent.user_info.side_effect = deepcopy(user_map_fixture).get
+        self.mock_agent.org_info.side_effect = deepcopy(org_map_fixture).get
 
     def check_query_results(self, page):
-        role_ids = [tt.text for tt in page.xpath('//h3/tt')]
-        self.assertEqual(role_ids, ['places-bank'])
+        self.assertEqual([plaintext(tt) for tt in page.xpath('//h3')],
+                         ["Users in places-bank",
+                          "Organisations in places-bank"])
         # TODO we should also list places-shiny somehow
-        user_ids = [tt.text for tt in page.xpath('//tt[@class="user-id"]')]
-        self.assertEqual(user_ids, ['anne', 'jsmith'])
+
+        user_names = [s.text for s in page.xpath('//span[@class="user-name"]')]
+        expected_user_names = [user_map_fixture[user_id]['name']
+                               for user_id in sorted(user_map_fixture)]
+        self.assertEqual(user_names, expected_user_names)
+
+        org_names = [s.text for s in page.xpath('//span[@class="org-name"]')]
+        expected_org_names = [org_map_fixture[org_id]['name']
+                              for org_id in sorted(org_map_fixture)]
+        self.assertEqual(org_names, expected_org_names)
 
     def test_filter_html(self):
         self.request.form = {'pattern': 'places-*'}

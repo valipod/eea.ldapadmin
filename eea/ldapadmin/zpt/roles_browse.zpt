@@ -53,7 +53,7 @@
           style="display: inline">
     <input type="hidden" name="role_id"
            tal:attributes="value role_id" />
-    <ul class="role-members">
+    <ul class="role-users">
         <tal:block repeat="user_id python:sorted(role_members['users'])">
         <li tal:define="user_info python:role_members['users'][user_id];
                         is_authenticated options/is_authenticated">
@@ -64,8 +64,8 @@
         </li>
         </tal:block>
     </ul>
-    <input type="hidden" name="confirm" value="yes" />
-    <input tal:condition="options/can_edit" type="submit" value="Remove members" />
+    <input tal:condition="options/can_edit"
+           type="submit" value="Remove users" />
     </form>
     </tal:block>
 
@@ -76,19 +76,18 @@
           style="display: inline">
     <input type="hidden" name="role_id"
            tal:attributes="value role_id" />
-    <ul class="role-members">
+    <ul class="role-orgs">
         <tal:block repeat="org_id python:sorted(role_members['orgs'])">
         <li tal:define="org_info python:role_members['orgs'][org_id]">
             <input tal:condition="options/can_edit"
                    type="checkbox" name="org_id_list:list"
                    tal:attributes="value org_id" />
-            <span class="user-id" tal:content="org_id" />
             <metal:block use-macro="options/org_info_macro" />
         </li>
         </tal:block>
     </ul>
-    <input type="hidden" name="confirm" value="yes" />
-    <input type="submit" value="Remove members" />
+    <input tal:condition="options/can_edit"
+           type="submit" value="Remove organisations" />
     </form>
     </tal:block>
 
