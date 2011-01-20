@@ -13,6 +13,10 @@
            tal:condition="options/role_id"
            tal:attributes="href string:${add_url}?role_id=${options/role_id}"
            >Add members (users)</a>
+    <li><a tal:define="add_url string:${options/base_url}/add_org_html"
+           tal:condition="options/role_id"
+           tal:attributes="href string:${add_url}?role_id=${options/role_id}"
+           >Add members (organisations)</a>
 </ul>
 </div>
 

@@ -289,6 +289,21 @@ class LdapAgentTest(unittest.TestCase):
         self.agent._unpack_user_info.assert_called_with(jsmith_dn, jsmith_info)
         self.assertEqual(results, [self.agent._unpack_user_info.return_value])
 
+    def test_search_org(self):
+        self.agent._unpack_org_info = Mock()
+        club_dn = self.agent._org_dn('bridge_club')
+        club_info = Mock()
+        self.mock_conn.search_s.return_value = [ (club_dn, club_info) ]
+
+        results = self.agent.search_org(u'Br\u012bdGe')
+
+        self.mock_conn.search_s.assert_called_once_with(
+            self.agent._org_dn_suffix, ldap.SCOPE_ONELEVEL,
+            filterstr=('(&(objectClass=organizationGroup)'
+                         '(|(cn=*br\xc4\xabdge*)(o=*br\xc4\xabdge*)))'))
+        self.agent._unpack_org_info.assert_called_with(club_dn, club_info)
+        self.assertEqual(results, [self.agent._unpack_org_info.return_value])
+
     def test_role_info(self):
         role_dn = self.agent._role_dn('somerole')
         self.mock_conn.search_s.return_value = [(role_dn, {

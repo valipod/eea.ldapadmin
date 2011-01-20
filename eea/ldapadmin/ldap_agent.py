@@ -403,13 +403,23 @@ class LdapAgent(object):
 
     def search_user(self, name):
         query = name.lower().encode(self._encoding)
-        query_filter = ldap.filter.filter_format(
-            '(&(objectClass=person)(|(uid=*%s*)(cn=*%s*)))', (query, query))
+        pattern = '(&(objectClass=person)(|(uid=*%s*)(cn=*%s*)))'
+        query_filter = ldap.filter.filter_format(pattern,(query, query))
 
         result = self.conn.search_s(self._user_dn_suffix, ldap.SCOPE_ONELEVEL,
                                     filterstr=query_filter)
 
         return [self._unpack_user_info(dn, attr) for (dn, attr) in result]
+
+    def search_org(self, name):
+        query = name.lower().encode(self._encoding)
+        pattern = '(&(objectClass=organizationGroup)(|(cn=*%s*)(o=*%s*)))'
+        query_filter = ldap.filter.filter_format(pattern, (query, query))
+
+        result = self.conn.search_s(self._org_dn_suffix, ldap.SCOPE_ONELEVEL,
+                                    filterstr=query_filter)
+
+        return [self._unpack_org_info(dn, attr) for (dn, attr) in result]
 
     def _member_dn(self, member_type, member_id):
         if member_type == 'user':

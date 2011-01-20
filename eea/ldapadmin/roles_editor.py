@@ -368,6 +368,76 @@ class RolesEditor(Folder):
 
         return self._render_template('zpt/roles_remove_user.zpt', **options)
 
+    security.declareProtected(eionet_edit_roles, 'add_org_html')
+    def add_org_html(self, REQUEST):
+        """ view """
+        role_id = REQUEST.form['role_id']
+        search_name = REQUEST.form.get('name', '')
+        if search_name:
+            search_results = self._get_ldap_agent().search_org(search_name)
+        else:
+            search_results = []
+        _general_tmpl = load_template('zpt/roles_macros.zpt')
+        options = {
+            'base_url': self.absolute_url(),
+            'role_id': role_id,
+            'search_name': search_name,
+            'search_results': search_results,
+            'org_info_macro': _general_tmpl.macros['org-info'],
+            'buttons_html': buttons_bar(self.absolute_url(), 'browse'),
+        }
+        return self._render_template('zpt/roles_add_org.zpt', **options)
+
+    security.declareProtected(eionet_edit_roles, 'add_org')
+    def add_org(self, REQUEST):
+        """ Add org `org_id` to role `role_id` """
+        role_id = REQUEST.form['role_id']
+        org_id = REQUEST.form['org_id']
+        agent = self._get_ldap_agent()
+        agent.perform_bind(*self._login_data())
+        role_id_list = agent.add_to_role(role_id, 'org', org_id)
+        roles_msg = ', '.join(repr(r) for r in role_id_list)
+        msg = "Organisation %r added to roles %s." % (org_id, roles_msg)
+        _set_session_message(REQUEST, 'info', msg)
+        REQUEST.RESPONSE.redirect(self.absolute_url() + '/?role_id=' + role_id)
+
+    security.declareProtected(eionet_edit_roles, 'remove_orgs')
+    def remove_orgs(self, REQUEST):
+        """ Remove organisation from a role """
+        role_id = REQUEST.form['role_id']
+        org_id_list = REQUEST.form.get('org_id_list', [])
+        assert type(org_id_list) is list
+
+        if org_id_list:
+            agent = self._get_ldap_agent()
+            agent.perform_bind(*self._login_data())
+            for org_id in org_id_list:
+                agent.remove_from_role(role_id, 'org', org_id)
+
+            msg = ("Organisations %r removed from role %r" %
+                   (org_id_list, role_id))
+            _set_session_message(REQUEST, 'info', msg)
+
+        REQUEST.RESPONSE.redirect(self.absolute_url()+'/?role_id='+role_id)
+
+    security.declareProtected(eionet_edit_roles, 'remove_org_html')
+    def remove_org_html(self, REQUEST):
+        """ view """
+        role_id = REQUEST.form['role_id']
+        org_id = REQUEST.form['org_id']
+        agent = self._get_ldap_agent()
+        org_roles = agent.list_member_roles('org', org_id)
+        options = {
+            'base_url': self.absolute_url(),
+            'role_id': role_id,
+            'org_id': org_id,
+            'role_id_list': sorted(r for r in org_roles
+                                   if agent.is_subrole(r, role_id)),
+            'buttons_html': buttons_bar(self.absolute_url(), 'search'),
+        }
+
+        return self._render_template('zpt/roles_remove_org.zpt', **options)
+
     security.declareProtected(eionet_edit_roles, 'remove_user_from_role')
     def remove_user_from_role(self, REQUEST):
         """ Remove a single user from the role """
