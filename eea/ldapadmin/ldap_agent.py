@@ -391,6 +391,9 @@ class LdapAgent(object):
 
         return sub_roles
 
+    def is_subrole(self, subrole_id, role_id):
+        return subrole_id.startswith(role_id)
+
     def delete_role(self, role_id):
         assert self._bound, "call `perform_bind` before `delete_role`"
         for dn in self._sub_roles(role_id):
@@ -398,7 +401,7 @@ class LdapAgent(object):
             result = self.conn.delete_s(dn)
             assert result == (ldap.RES_DELETE, [])
 
-    def search_by_name(self, name):
+    def search_user(self, name):
         query = name.lower().encode(self._encoding)
         query_filter = ldap.filter.filter_format(
             '(&(objectClass=person)(|(uid=*%s*)(cn=*%s*)))', (query, query))

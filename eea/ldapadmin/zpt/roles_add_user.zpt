@@ -27,7 +27,7 @@
         <metal:block use-macro="options/user_info_macro" />
       </tal:block>
 
-      <form tal:attributes="action string:${options/base_url}/add_to_role"
+      <form tal:attributes="action string:${options/base_url}/add_user"
             name="add-user" method="post" style="display: inline">
 
         <input type="hidden" name="role_id"
