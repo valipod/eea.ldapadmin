@@ -1,5 +1,6 @@
 import logging
 from string import ascii_lowercase
+from functools import wraps
 import ldap, ldap.filter
 
 log = logging.getLogger(__name__)
@@ -29,6 +30,16 @@ org_attr_map = {
 
 editable_org_fields = list(org_attr_map)
 
+def log_ldap_exceptions(func):
+    @wraps(func)
+    def wrapper(*args, **kwargs):
+        try:
+            return func(*args, **kwargs)
+        except ldap.LDAPError:
+            log.exception("Uncaught exception from LDAP")
+            raise
+    return wrapper
+
 class LdapAgent(object):
     def __init__(self, **config):
         self.conn = self.connect(config['ldap_server'])
@@ -41,6 +52,7 @@ class LdapAgent(object):
                                           "ou=Roles,o=EIONET,l=Europe")
         self._bound = False
 
+    @log_ldap_exceptions
     def connect(self, server):
         conn = ldap.initialize('ldap://' + server)
         conn.protocol_version = ldap.VERSION3
@@ -118,6 +130,7 @@ class LdapAgent(object):
                 out[name] = u""
         return out
 
+    @log_ldap_exceptions
     def role_names_in_role(self, role_id):
         """
         Returns a mapping of `sub_role_id` to `description` for subroles
@@ -135,6 +148,7 @@ class LdapAgent(object):
             out[self._role_id(dn)] = values[0].decode(self._encoding)
         return out
 
+    @log_ldap_exceptions
     def filter_roles(self, pattern):
         query_dn = self._role_dn_suffix
         result = self.conn.search_s(query_dn, ldap.SCOPE_SUBTREE,
@@ -162,6 +176,7 @@ class LdapAgent(object):
     def _query(self, dn):
         return self.conn.search_s(dn, ldap.SCOPE_BASE)[0][1]
 
+    @log_ldap_exceptions
     def members_in_role(self, role_id):
         """
         Returns a dictionary with 'user' and 'org' as keys, and lists of
@@ -202,6 +217,7 @@ class LdapAgent(object):
             out[member_type].append(member_id)
         return out
 
+    @log_ldap_exceptions
     def user_info(self, user_id):
         """
         Returns a dictionary of user information for user `user_id`.
@@ -216,6 +232,7 @@ class LdapAgent(object):
         assert dn == query_dn
         return self._unpack_user_info(dn, attr)
 
+    @log_ldap_exceptions
     def org_info(self, org_id):
         """
         Returns a dictionary of organisation information for `org_id`.
@@ -229,6 +246,7 @@ class LdapAgent(object):
         assert dn == query_dn
         return self._unpack_org_info(dn, attr)
 
+    @log_ldap_exceptions
     def role_info(self, role_id):
         """
         Returns a dictionary describing the role `role_id`.
@@ -243,6 +261,7 @@ class LdapAgent(object):
         description = attr.get('description', [""])[0].decode(self._encoding)
         return {'description': description}
 
+    @log_ldap_exceptions
     def perform_bind(self, bind_dn, bind_pw):
         result = self.conn.simple_bind_s(bind_dn, bind_pw)
         # may throw ldap.INVALID_CREDENTIALS
@@ -270,6 +289,7 @@ class LdapAgent(object):
             elif old_value != new_value:
                 yield (ldap.MOD_REPLACE, ldap_name, pack(new_value))
 
+    @log_ldap_exceptions
     def create_org(self, org_id, org_info):
         """ Create a new organisation with attributes from `org_info` """
         assert self._bound, "call `perform_bind` before `create_org`"
@@ -292,6 +312,7 @@ class LdapAgent(object):
         result = self.conn.add_s(self._org_dn(org_id), attrs)
         assert result == (ldap.RES_ADD, [])
 
+    @log_ldap_exceptions
     def set_org_info(self, org_id, new_info):
         assert self._bound, "call `perform_bind` before `set_org_info`"
         log.info("Changing organisation information for %r to %r",
@@ -304,6 +325,7 @@ class LdapAgent(object):
         result = self.conn.modify_s(org_dn, changes)
         assert result == (ldap.RES_MODIFY, [])
 
+    @log_ldap_exceptions
     def members_in_org(self, org_id):
         query_dn = self._org_dn(org_id)
         result = self.conn.search_s(query_dn, ldap.SCOPE_BASE,
@@ -312,6 +334,7 @@ class LdapAgent(object):
         dn, attr = result[0]
         return [self._user_id(dn) for dn in attr['uniqueMember'] if dn != '']
 
+    @log_ldap_exceptions
     def add_to_org(self, org_id, user_id_list):
         assert self._bound, "call `perform_bind` before `add_to_org`"
         log.info("Adding users %r to organisation %r", user_id_list, org_id)
@@ -326,6 +349,7 @@ class LdapAgent(object):
         result = self.conn.modify_s(self._org_dn(org_id), changes)
         assert result == (ldap.RES_MODIFY, [])
 
+    @log_ldap_exceptions
     def remove_from_org(self, org_id, user_id_list):
         assert self._bound, "call `perform_bind` before `remove_from_org`"
         log.info("Removing users %r from organisation %r",
@@ -341,6 +365,7 @@ class LdapAgent(object):
         result = self.conn.modify_s(self._org_dn(org_id), changes)
         assert result == (ldap.RES_MODIFY, [])
 
+    @log_ldap_exceptions
     def delete_org(self, org_id):
         """ Remove the organisation `org_id` """
         assert self._bound, "call `perform_bind` before `delete_org`"
@@ -348,6 +373,7 @@ class LdapAgent(object):
         result = self.conn.delete_s(self._org_dn(org_id))
         assert result == (ldap.RES_DELETE, [])
 
+    @log_ldap_exceptions
     def create_role(self, role_id, description):
         """
         Create the specified role.
@@ -394,6 +420,7 @@ class LdapAgent(object):
     def is_subrole(self, subrole_id, role_id):
         return subrole_id.startswith(role_id)
 
+    @log_ldap_exceptions
     def delete_role(self, role_id):
         assert self._bound, "call `perform_bind` before `delete_role`"
         for dn in self._sub_roles(role_id):
@@ -401,6 +428,7 @@ class LdapAgent(object):
             result = self.conn.delete_s(dn)
             assert result == (ldap.RES_DELETE, [])
 
+    @log_ldap_exceptions
     def search_user(self, name):
         query = name.lower().encode(self._encoding)
         pattern = '(&(objectClass=person)(|(uid=*%s*)(cn=*%s*)))'
@@ -411,6 +439,7 @@ class LdapAgent(object):
 
         return [self._unpack_user_info(dn, attr) for (dn, attr) in result]
 
+    @log_ldap_exceptions
     def search_org(self, name):
         query = name.lower().encode(self._encoding)
         pattern = '(&(objectClass=organizationGroup)(|(cn=*%s*)(o=*%s*)))'
@@ -468,6 +497,7 @@ class LdapAgent(object):
         roles.reverse()
         return roles
 
+    @log_ldap_exceptions
     def add_to_role(self, role_id, member_type, member_id):
         assert self._bound, "call `perform_bind` before `add_to_role`"
         log.info("Adding %r member %r to role %r",
@@ -527,6 +557,7 @@ class LdapAgent(object):
 
         return roles
 
+    @log_ldap_exceptions
     def remove_from_role(self, role_id, member_type, member_id):
         """
         Remove a role member. We must remove the member from any sub-roles too.
@@ -548,6 +579,7 @@ class LdapAgent(object):
         role_dn_list = self._remove_member_dn_from_role_dn(role_dn, member_dn)
         return map(self._role_id, role_dn_list)
 
+    @log_ldap_exceptions
     def list_member_roles(self, member_type, member_id):
         """
         List the role IDs where this user/organisation is a member.
@@ -557,6 +589,7 @@ class LdapAgent(object):
         return [self._role_id(role_dn) for role_dn in
                 self._sub_roles_with_member(self._role_dn(None), member_dn)]
 
+    @log_ldap_exceptions
     def all_organisations(self):
         result = self.conn.search_s(self._org_dn_suffix, ldap.SCOPE_ONELEVEL,
                     filterstr='(objectClass=organizationGroup)',
