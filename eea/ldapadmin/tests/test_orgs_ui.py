@@ -12,7 +12,7 @@ def parse_html(html):
 
 class StubbedOrganisationsEditor(OrganisationsEditor):
     def __init__(self, id):
-        super(StubbedOrganisationsEditor, self).__init__(id)
+        super(StubbedOrganisationsEditor, self).__init__()
         self._render_template = TemplateRenderer(CommonTemplateLogic)
         self._render_template.wrap = lambda html: "<html>%s</html>" % html
 

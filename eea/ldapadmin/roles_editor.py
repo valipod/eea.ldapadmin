@@ -9,29 +9,27 @@ from persistent.mapping import PersistentMapping
 from persistent.list import PersistentList
 
 from ldap_agent import LdapAgent
+import ldap_config
 from ui_common import load_template, SessionMessages, TemplateRenderer
 
 eionet_edit_roles = 'Eionet edit roles'
 
-manage_add_editor_html = PageTemplateFile('zpt/roles_manage_add', globals())
-manage_add_editor_html.properties_form_fields = lambda: \
-    RolesEditor.manage_edit.pt_macros()['properties_form_fields']
+manage_add_roles_editor_html = PageTemplateFile('zpt/roles_manage_add',
+                                                globals())
+manage_add_roles_editor_html.ldap_config_edit_macro = ldap_config.edit_macro
+manage_add_roles_editor_html.config_defaults = lambda: ldap_config.defaults
 
-def manage_add_editor(parent, id, REQUEST=None):
+def manage_add_roles_editor(parent, id, REQUEST=None):
     """ Create a new RolesEditor object """
-    if REQUEST is not None:
-        config = REQUEST.form
-    else:
-        config = {}
+    form = (REQUEST.form if REQUEST is not None else {})
+    config = ldap_config.read_form(form)
     obj = RolesEditor(config)
-    obj.title = config.get('title', id)
-    obj.ldap_server = 'ldap2.eionet.europa.eu'
+    obj.title = form.get('title', id)
     obj._setId(id)
     parent._setObject(id, obj)
 
     if REQUEST is not None:
-        url = parent.absolute_url() + '/manage_workspace'
-        return REQUEST.RESPONSE.redirect(url)
+        REQUEST.RESPONSE.redirect(parent.absolute_url() + '/manage_workspace')
 
 def _is_authenticated(request):
     return ('Authenticated' in request.AUTHENTICATED_USER.getRoles())
@@ -117,41 +115,26 @@ class RolesEditor(Folder):
 
     _render_template = TemplateRenderer(CommonTemplateLogic)
 
+    def __init__(self, config={}):
+        super(RolesEditor, self).__init__()
+        self._config = PersistentMapping(config)
+
     security.declareProtected(view_management_screens, 'get_config')
     def get_config(self):
-        return dict(self.config)
-
-    def __init__(self, config):
-        super(RolesEditor, self).__init__()
-        self.config = PersistentMapping({
-            'login_dn': config.get('login_dn', ''),
-            'login_pw': config.get('login_pw', ''),
-            'ldap_server': config.get('ldap_server', ''),
-            'users_dn': config.get('users_dn', ''),
-            'orgs_dn': config.get('orgs_dn', ''),
-            'roles_dn': config.get('roles_dn', ''),
-        })
+        return dict(self._config)
 
     security.declareProtected(view_management_screens, 'manage_edit')
     manage_edit = PageTemplateFile('zpt/roles_manage_edit', globals())
+    manage_edit.ldap_config_edit_macro = ldap_config.edit_macro
 
     security.declareProtected(view_management_screens, 'manage_edit_save')
     def manage_edit_save(self, REQUEST):
         """ save changes to configuration """
-        self.config.update({
-            'login_dn': REQUEST.form['login_dn'],
-            'ldap_server': REQUEST.form['ldap_server'],
-            'users_dn': REQUEST.form['users_dn'],
-            'orgs_dn': REQUEST.form['orgs_dn'],
-            'roles_dn': REQUEST.form['roles_dn'],
-        })
-        if REQUEST.form['login_pw']:
-            self.config['login_pw'] = REQUEST.form['login_pw']
-
+        self._config.update(ldap_config.read_form(REQUEST.form, edit=True))
         REQUEST.RESPONSE.redirect(self.absolute_url() + '/manage_edit')
 
-    def _login_data(self):
-        return (self.config['login_dn'], self.config['login_pw'])
+    def _get_ldap_agent(self, bind=False):
+        return ldap_config.ldap_agent_with_config(self._config, bind)
 
     security.declareProtected(view, 'index_html')
     def index_html(self, REQUEST):
@@ -176,9 +159,6 @@ class RolesEditor(Folder):
             'org_info_macro': _general_tmpl.macros['org-info'],
         }
         return self._render_template('zpt/roles_browse.zpt', **options)
-
-    def _get_ldap_agent(self):
-        return LdapAgent(**dict(self.config))
 
     security.declareProtected(view, 'filter')
     def filter(self, REQUEST):
@@ -225,8 +205,7 @@ class RolesEditor(Folder):
         else:
             role_id = parent_role_id + '-' + slug
 
-        agent = self._get_ldap_agent()
-        agent.perform_bind(*self._login_data())
+        agent = self._get_ldap_agent(bind=True)
         try:
             agent.create_role(str(role_id), description)
         except ValueError, e:
@@ -277,9 +256,7 @@ class RolesEditor(Folder):
     def delete_role(self, REQUEST):
         """ remove a role and all its sub-roles """
         role_id = REQUEST.form['role_id']
-        agent = self._get_ldap_agent()
-
-        agent.perform_bind(*self._login_data())
+        agent = self._get_ldap_agent(bind=True)
         agent.delete_role(role_id)
         parent_role_id = '-'.join(role_id.split('-')[:-1])
         _set_session_message(REQUEST, 'info', "Removed role %s" % role_id)
@@ -310,8 +287,7 @@ class RolesEditor(Folder):
         """ Add user `user_id` to role `role_id` """
         role_id = REQUEST.form['role_id']
         user_id = REQUEST.form['user_id']
-        agent = self._get_ldap_agent()
-        agent.perform_bind(*self._login_data())
+        agent = self._get_ldap_agent(bind=True)
         role_id_list = agent.add_to_role(role_id, 'user', user_id)
         roles_msg = ', '.join(repr(r) for r in role_id_list)
         msg = "User %r added to roles %s." % (user_id, roles_msg)
@@ -326,8 +302,7 @@ class RolesEditor(Folder):
         assert type(user_id_list) is list
 
         if user_id_list:
-            agent = self._get_ldap_agent()
-            agent.perform_bind(*self._login_data())
+            agent = self._get_ldap_agent(bind=True)
             for user_id in user_id_list:
                 agent.remove_from_role(role_id, 'user', user_id)
 
@@ -375,8 +350,7 @@ class RolesEditor(Folder):
         """ Add org `org_id` to role `role_id` """
         role_id = REQUEST.form['role_id']
         org_id = REQUEST.form['org_id']
-        agent = self._get_ldap_agent()
-        agent.perform_bind(*self._login_data())
+        agent = self._get_ldap_agent(bind=True)
         role_id_list = agent.add_to_role(role_id, 'org', org_id)
         roles_msg = ', '.join(repr(r) for r in role_id_list)
         msg = "Organisation %r added to roles %s." % (org_id, roles_msg)
@@ -391,8 +365,7 @@ class RolesEditor(Folder):
         assert type(org_id_list) is list
 
         if org_id_list:
-            agent = self._get_ldap_agent()
-            agent.perform_bind(*self._login_data())
+            agent = self._get_ldap_agent(bind=True)
             for org_id in org_id_list:
                 agent.remove_from_role(role_id, 'org', org_id)
 
@@ -408,8 +381,7 @@ class RolesEditor(Folder):
         role_id = REQUEST.form['role_id']
         user_id = REQUEST.form['user_id']
 
-        agent = self._get_ldap_agent()
-        agent.perform_bind(*self._login_data())
+        agent = self._get_ldap_agent(bind=True)
         role_id_list = agent.remove_from_role(role_id, 'user', user_id)
 
         roles_msg = ', '.join(repr(r) for r in role_id_list)

@@ -19,7 +19,7 @@ def stubbed_renderer():
 
 class StubbedRolesEditor(RolesEditor):
     def __init__(self):
-        super(StubbedRolesEditor, self).__init__({})
+        super(StubbedRolesEditor, self).__init__()
         self._render_template = stubbed_renderer()
 
     def absolute_url(self):
@@ -592,7 +592,7 @@ class FilterTest(unittest.TestCase):
         from eea.ldapadmin.query import Query
         query_ob = Query()
         query_ob.pattern = 'places-*'
-        query_ob._get_ldap_agent = lambda: self.mock_agent
+        query_ob._get_ldap_agent = Mock(return_value=self.mock_agent)
         query_ob.REQUEST = self.request
         query_ob._render_template = stubbed_renderer()
 

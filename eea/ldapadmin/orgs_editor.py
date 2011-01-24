@@ -8,18 +8,28 @@ from App.class_init import InitializeClass
 from Products.PageTemplates.PageTemplateFile import PageTemplateFile
 from OFS.SimpleItem import SimpleItem
 from OFS.PropertyManager import PropertyManager
-from AccessControl.Permissions import view
+from AccessControl.Permissions import view, view_management_screens
+from persistent.mapping import PersistentMapping
 
 from ldap_agent import LdapAgent, editable_org_fields
+import ldap_config
 from ui_common import load_template, SessionMessages, TemplateRenderer
 
 eionet_edit_orgs = 'Eionet edit organisations'
 
-manage_add_organisations_editor_html = PageTemplateFile('zpt/orgs_manage_add',
-                                                        globals())
-def manage_add_organisations_editor(parent, id, REQUEST=None):
+manage_add_orgs_editor_html = PageTemplateFile('zpt/orgs_manage_add', globals())
+manage_add_orgs_editor_html.ldap_config_edit_macro = ldap_config.edit_macro
+manage_add_orgs_editor_html.config_defaults = lambda: ldap_config.defaults
+
+def manage_add_orgs_editor(parent, id, REQUEST=None):
     """ Adds a new Eionet Organisations Editor object """
-    parent._setObject(id, OrganisationsEditor(id))
+    form = (REQUEST.form if REQUEST is not None else {})
+    config = ldap_config.read_form(form)
+    obj = OrganisationsEditor(config)
+    obj.title = form.get('title', id)
+    obj._setId(id)
+    parent._setObject(id, obj)
+
     if REQUEST is not None:
         REQUEST.RESPONSE.redirect(parent.absolute_url() + '/manage_workspace')
 
@@ -54,14 +64,28 @@ class OrganisationsEditor(SimpleItem):
         {'label':'View', 'action':''},
     ) + SimpleItem.manage_options[1:]
 
-    def __init__(self, id):
-        self.id = id
-
     _render_template = TemplateRenderer(CommonTemplateLogic)
 
-    def _get_ldap_agent(self):
-        return LdapAgent(ldap_server='pivo.edw.ro:22389',
-                         orgs_dn='ou=Organisations,o=EIONET,l=Europe')
+    def __init__(self, config={}):
+        super(OrganisationsEditor, self).__init__()
+        self._config = PersistentMapping(config)
+
+    security.declareProtected(view_management_screens, 'get_config')
+    def get_config(self):
+        return dict(self._config)
+
+    security.declareProtected(view_management_screens, 'manage_edit')
+    manage_edit = PageTemplateFile('zpt/orgs_manage_edit', globals())
+    manage_edit.ldap_config_edit_macro = ldap_config.edit_macro
+
+    security.declareProtected(view_management_screens, 'manage_edit_save')
+    def manage_edit_save(self, REQUEST):
+        """ save changes to configuration """
+        self._config.update(ldap_config.read_form(REQUEST.form, edit=True))
+        REQUEST.RESPONSE.redirect(self.absolute_url() + '/manage_edit')
+
+    def _get_ldap_agent(self, bind=False):
+        return ldap_config.ldap_agent_with_config(self._config, bind)
 
     security.declareProtected(view, 'index_html')
     def index_html(self, REQUEST):
@@ -121,8 +145,7 @@ class OrganisationsEditor(SimpleItem):
                                       '/create_organisation_html')
             return
 
-        agent = self._get_ldap_agent()
-        agent.perform_bind('uid=_admin,ou=Users,o=EIONET,l=Europe', '_admin')
+        agent = self._get_ldap_agent(bind=True)
         agent.create_org(org_id, org_info)
 
         msg = 'Organisation "%s" created successfully.' % org_id
@@ -167,8 +190,7 @@ class OrganisationsEditor(SimpleItem):
                                       '/edit_organisation_html?id=' + org_id)
             return
 
-        agent = self._get_ldap_agent()
-        agent.perform_bind('uid=_admin,ou=Users,o=EIONET,l=Europe', '_admin')
+        agent = self._get_ldap_agent(bind=True)
         agent.set_org_info(org_id, org_info)
 
         when = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
@@ -189,8 +211,7 @@ class OrganisationsEditor(SimpleItem):
     def remove_organisation(self, REQUEST):
         """ view """
         org_id = REQUEST.form['id']
-        agent = self._get_ldap_agent()
-        agent.perform_bind('uid=_admin,ou=Users,o=EIONET,l=Europe', '_admin')
+        agent = self._get_ldap_agent(bind=True)
         agent.delete_org(org_id)
 
         _set_session_message(REQUEST, 'info',
@@ -221,8 +242,7 @@ class OrganisationsEditor(SimpleItem):
         for user_id in user_id_list:
             assert type(user_id) is str
 
-        agent = self._get_ldap_agent()
-        agent.perform_bind('uid=_admin,ou=Users,o=EIONET,l=Europe', '_admin')
+        agent = self._get_ldap_agent(bind=True)
         agent.remove_from_org(org_id, user_id_list)
 
         _set_session_message(REQUEST, 'info',
@@ -262,8 +282,7 @@ class OrganisationsEditor(SimpleItem):
         for user_id in user_id_list:
             assert type(user_id) is str
 
-        agent = self._get_ldap_agent()
-        agent.perform_bind('uid=_admin,ou=Users,o=EIONET,l=Europe', '_admin')
+        agent = self._get_ldap_agent(bind=True)
         agent.add_to_org(org_id, user_id_list)
 
         _set_session_message(REQUEST, 'info',

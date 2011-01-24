@@ -2,7 +2,7 @@
 <tal:block content="structure here/manage_tabs" />
 
 <style>
-    form.edit-roles-editor label {
+    form.edit-orgs-editor label {
         display: inline-block;
         width: 10em;
     }
@@ -11,7 +11,7 @@
 <br />
 <form tal:define="config here/get_config|python:{}"
       tal:attributes="action string:${here/absolute_url}/manage_edit_save"
-      class="edit-roles-editor" method="post">
+      class="edit-orgs-editor" method="post">
 
     <metal:block use-macro="template/ldap_config_edit_macro" />
 

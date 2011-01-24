@@ -243,8 +243,8 @@ class LdapAgent(object):
         description = attr.get('description', [""])[0].decode(self._encoding)
         return {'description': description}
 
-    def perform_bind(self, login_dn, login_pw):
-        result = self.conn.simple_bind_s(login_dn, login_pw)
+    def perform_bind(self, bind_dn, bind_pw):
+        result = self.conn.simple_bind_s(bind_dn, bind_pw)
         # may throw ldap.INVALID_CREDENTIALS
         assert result == (ldap.RES_BIND, [])
         self._bound = True
