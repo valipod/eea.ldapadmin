@@ -1,8 +1,8 @@
-<tal:block content="structure options/buttons_html"/>
+<tal:block content="structure python:common.buttons_bar('search')"/>
 
 <h1>Search users</h1>
 
-<tal:block content="structure options/messages_html"/>
+<tal:block content="structure common/message_boxes"/>
 
 <form name="search-users">
   <label>
@@ -36,7 +36,7 @@
     <li tal:repeat="role_id python:options['user_roles']">
       <tal:block content="role_id" />
       <form style="display: inline" method="get"
-            tal:attributes="action string:${options/base_url}/remove_user_from_role_html">
+            tal:attributes="action string:${common/base_url}/remove_user_from_role_html">
         <input type="hidden" name="role_id"
                tal:attributes="value role_id" />
         <input type="hidden" name="user_id"

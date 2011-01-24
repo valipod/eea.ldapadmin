@@ -9,8 +9,7 @@ from persistent.mapping import PersistentMapping
 from persistent.list import PersistentList
 
 from ldap_agent import LdapAgent
-from query import Query, manage_add_query, manage_add_query_html
-from ui_common import load_template, SessionMessages, Zope3TemplateInZope2
+from ui_common import load_template, SessionMessages, TemplateRenderer
 
 eionet_edit_roles = 'Eionet edit roles'
 
@@ -53,13 +52,6 @@ SESSION_FORM_DATA = SESSION_PREFIX + '.form_data'
 def _set_session_message(request, msg_type, msg):
     SessionMessages(request, SESSION_MESSAGES).add(msg_type, msg)
 
-def _session_messages_html(request):
-    return SessionMessages(request, SESSION_MESSAGES).html()
-
-def buttons_bar(base_url, current):
-    tmpl = load_template('zpt/roles_buttons.zpt')
-    return tmpl(base_url=base_url, current=current)
-
 def filter_roles(agent, pattern):
     out = {}
     for role_id in agent.filter_roles(pattern):
@@ -73,21 +65,42 @@ def filter_roles(agent, pattern):
         }
     return out
 
-def filter_result_html(agent, pattern, is_authenticated):
+def filter_result_html(agent, pattern, renderer):
     _general_tmpl = load_template('zpt/roles_macros.zpt')
     options = {
-        'is_authenticated': is_authenticated,
         'pattern': pattern,
         'results': filter_roles(agent, pattern),
         'user_info_macro': _general_tmpl.macros['user-info'],
         'org_info_macro': _general_tmpl.macros['org-info'],
     }
-    return load_template('zpt/roles_filter_result.zpt')(**options)
+    return renderer.render('zpt/roles_filter_result.zpt', **options)
+
+class CommonTemplateLogic(object):
+    def __init__(self, context):
+        self.context = context
+
+    def _get_request(self):
+        return self.context.REQUEST
+
+    def base_url(self):
+        return self.context.absolute_url()
+
+    def buttons_bar(self, current_name):
+        tmpl = load_template('zpt/roles_buttons.zpt')
+        return tmpl(base_url=self.context.absolute_url(), current=current_name)
+
+    def message_boxes(self):
+        return SessionMessages(self._get_request(), SESSION_MESSAGES).html()
+
+    def is_authenticated(self):
+        return _is_authenticated(self._get_request())
 
 
 class RoleCreationError(Exception):
     def __init__(self, messages):
         self.messages = messages
+
+import query
 
 class RolesEditor(Folder):
     meta_type = 'Eionet Roles Editor'
@@ -95,14 +108,14 @@ class RolesEditor(Folder):
     icon = '++resource++eea.ldapadmin-roles_editor.gif'
 
     meta_types = (
-        {'name': Query.meta_type, 'action': 'manage_add_query_html'},
+        {'name': query.Query.meta_type, 'action': 'manage_add_query_html'},
     )
 
     manage_options = Folder.manage_options[:2] + (
         {'label':'Configure', 'action':'manage_edit'},
     ) + Folder.manage_options[2:]
 
-    _render_template = Zope3TemplateInZope2()
+    _render_template = TemplateRenderer(CommonTemplateLogic)
 
     security.declareProtected(view_management_screens, 'get_config')
     def get_config(self):
@@ -151,7 +164,6 @@ class RolesEditor(Folder):
         members = agent.members_in_role(role_id)
         _general_tmpl = load_template('zpt/roles_macros.zpt')
         options = {
-            'base_url': self.absolute_url(),
             'role_id': role_id,
             'role_info': agent.role_info(role_id),
             'role_names': agent.role_names_in_role(role_id),
@@ -163,11 +175,8 @@ class RolesEditor(Folder):
                              for org_id in members['orgs']),
             },
             'can_edit': self.can_edit_roles(REQUEST.AUTHENTICATED_USER),
-            'is_authenticated': _is_authenticated(REQUEST),
             'user_info_macro': _general_tmpl.macros['user-info'],
             'org_info_macro': _general_tmpl.macros['org-info'],
-            'messages_html': _session_messages_html(REQUEST),
-            'buttons_html': buttons_bar(self.absolute_url(), 'browse'),
         }
         return self._render_template('zpt/roles_browse.zpt', **options)
 
@@ -192,12 +201,11 @@ class RolesEditor(Folder):
         pattern = REQUEST.form.get('pattern', '')
         options = {
             'pattern': pattern,
-            'buttons_html': buttons_bar(self.absolute_url(), 'filter'),
         }
         if pattern:
             agent = self._get_ldap_agent()
-            is_authenticated = _is_authenticated(REQUEST)
-            results_html = filter_result_html(agent, pattern, is_authenticated)
+            results_html = filter_result_html(agent, pattern,
+                                              self._render_template)
             options['results_html'] = results_html
         return self._render_template('zpt/roles_filter.zpt', **options)
 
@@ -209,10 +217,7 @@ class RolesEditor(Folder):
     def create_role_html(self, REQUEST):
         """ view """
         options = {
-            'base_url': self.absolute_url(),
             'parent_id': REQUEST.form['parent_role_id'],
-            'buttons_html': buttons_bar(self.absolute_url(), 'browse'),
-            'messages_html': _session_messages_html(REQUEST),
         }
         session = REQUEST.SESSION
         if SESSION_FORM_DATA in session.keys():
@@ -278,10 +283,8 @@ class RolesEditor(Folder):
 
         to_remove = map(agent._role_id, agent._sub_roles(role_id))
         options = {
-            'base_url': self.absolute_url(),
             'role_id': role_id,
             'roles_to_remove': to_remove,
-            'buttons_html': buttons_bar(self.absolute_url(), 'browse'),
         }
         return self._render_template('zpt/roles_delete.zpt', **options)
 
@@ -310,12 +313,10 @@ class RolesEditor(Folder):
             search_results = []
         _general_tmpl = load_template('zpt/roles_macros.zpt')
         options = {
-            'base_url': self.absolute_url(),
             'role_id': role_id,
             'search_name': search_name,
             'search_results': search_results,
             'user_info_macro': _general_tmpl.macros['user-info'],
-            'buttons_html': buttons_bar(self.absolute_url(), 'browse'),
         }
         return self._render_template('zpt/roles_add_user.zpt', **options)
 
@@ -358,12 +359,10 @@ class RolesEditor(Folder):
         agent = self._get_ldap_agent()
         user_roles = agent.list_member_roles('user', user_id)
         options = {
-            'base_url': self.absolute_url(),
             'role_id': role_id,
             'user_id': user_id,
             'role_id_list': sorted(r for r in user_roles
                                    if agent.is_subrole(r, role_id)),
-            'buttons_html': buttons_bar(self.absolute_url(), 'search'),
         }
 
         return self._render_template('zpt/roles_remove_user.zpt', **options)
@@ -379,12 +378,10 @@ class RolesEditor(Folder):
             search_results = []
         _general_tmpl = load_template('zpt/roles_macros.zpt')
         options = {
-            'base_url': self.absolute_url(),
             'role_id': role_id,
             'search_name': search_name,
             'search_results': search_results,
             'org_info_macro': _general_tmpl.macros['org-info'],
-            'buttons_html': buttons_bar(self.absolute_url(), 'browse'),
         }
         return self._render_template('zpt/roles_add_org.zpt', **options)
 
@@ -461,11 +458,8 @@ class RolesEditor(Folder):
         search_name = REQUEST.form.get('name', '')
         user_id = REQUEST.form.get('user_id', None)
         options = {
-            'base_url': self.absolute_url(),
             'search_name': search_name,
             'user_id': user_id,
-            'messages_html': _session_messages_html(REQUEST),
-            'buttons_html': buttons_bar(self.absolute_url(), 'search'),
         }
 
         if search_name:
@@ -481,10 +475,10 @@ class RolesEditor(Folder):
         return self._render_template('zpt/roles_search_users.zpt', **options)
 
     security.declareProtected(view_management_screens, 'manage_add_query_html')
-    manage_add_query_html = manage_add_query_html
+    manage_add_query_html = query.manage_add_query_html
 
     security.declareProtected(view_management_screens, 'manage_add_query')
-    manage_add_query = manage_add_query
+    manage_add_query = query.manage_add_query
 
     def get_roles_editor(self):
         return self

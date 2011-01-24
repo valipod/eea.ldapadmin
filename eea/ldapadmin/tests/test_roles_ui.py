@@ -1,8 +1,8 @@
 import unittest
 from copy import deepcopy
 from mock import Mock
-from eea.ldapadmin.roles_editor import RolesEditor
-from eea.ldapadmin.ui_common import load_template
+from eea.ldapadmin.roles_editor import RolesEditor, CommonTemplateLogic
+from eea.ldapadmin.ui_common import TemplateRenderer
 
 def plaintext(element):
     import re
@@ -12,9 +12,15 @@ def parse_html(html):
     from lxml.html.soupparser import fromstring
     return fromstring(html)
 
+def stubbed_renderer():
+    renderer = TemplateRenderer(CommonTemplateLogic)
+    renderer.wrap = lambda html: "<html>%s</html>" % html
+    return renderer
+
 class StubbedRolesEditor(RolesEditor):
-    def _render_template(self, name, **options):
-        return "<html>%s</html>" % load_template(name)(**options)
+    def __init__(self):
+        super(StubbedRolesEditor, self).__init__({})
+        self._render_template = stubbed_renderer()
 
     def absolute_url(self):
         return "URL"
@@ -66,11 +72,12 @@ def session_messages(request):
 
 class BrowseTest(unittest.TestCase):
     def setUp(self):
-        self.ui = StubbedRolesEditor({})
+        self.ui = StubbedRolesEditor()
         self.mock_agent = Mock()
         self.ui._get_ldap_agent = Mock(return_value=self.mock_agent)
         self.request = mock_request()
         self.request.form = {'role_id': 'places'}
+        self.ui.REQUEST = self.request
         user = self.request.AUTHENTICATED_USER
         user.getRoles.return_value = ['Authenticated']
         self.mock_agent.members_in_role.return_value = {'users':[], 'orgs':[]}
@@ -143,12 +150,13 @@ class BrowseTest(unittest.TestCase):
 
 class CreateDeleteRolesTest(unittest.TestCase):
     def setUp(self):
-        self.ui = StubbedRolesEditor({})
+        self.ui = StubbedRolesEditor()
         self.mock_agent = Mock()
         self.ui._get_ldap_agent = Mock(return_value=self.mock_agent)
         self.request = mock_request()
         user = self.request.AUTHENTICATED_USER
         user.getRoles.return_value = ['Authenticated']
+        self.ui.REQUEST = self.request
         def agent_role_id(role_dn):
             assert role_dn.startswith('test-dn:')
             return role_dn[len('test-dn:'):]
@@ -259,12 +267,13 @@ class CreateDeleteRolesTest(unittest.TestCase):
 
 class AddRemoveRoleMembersTest(unittest.TestCase):
     def setUp(self):
-        self.ui = StubbedRolesEditor({})
+        self.ui = StubbedRolesEditor()
         self.mock_agent = Mock()
         self.ui._get_ldap_agent = Mock(return_value=self.mock_agent)
         self.request = mock_request()
         user = self.request.AUTHENTICATED_USER
         user.getRoles.return_value = ['Authenticated']
+        self.ui.REQUEST = self.request
 
     def test_links(self):
         self.mock_agent.members_in_role.return_value = {'users':[], 'orgs':[]}
@@ -454,13 +463,14 @@ class AddRemoveRoleMembersTest(unittest.TestCase):
 
 class UserSearchTest(unittest.TestCase):
     def setUp(self):
-        self.ui = StubbedRolesEditor({})
+        self.ui = StubbedRolesEditor()
         self.mock_agent = Mock()
         self.mock_agent.is_subrole = lambda r1, r2: r1.startswith(r2)
         self.ui._get_ldap_agent = Mock(return_value=self.mock_agent)
         self.request = mock_request()
         user = self.request.AUTHENTICATED_USER
         user.getRoles.return_value = ['Authenticated']
+        self.ui.REQUEST = self.request
 
     def test_plain(self):
         self.request.form = {}
@@ -535,12 +545,13 @@ class UserSearchTest(unittest.TestCase):
 
 class FilterTest(unittest.TestCase):
     def setUp(self):
-        self.ui = StubbedRolesEditor({})
+        self.ui = StubbedRolesEditor()
         self.mock_agent = Mock()
         self.ui._get_ldap_agent = Mock(return_value=self.mock_agent)
         self.request = mock_request()
         user = self.request.AUTHENTICATED_USER
         user.getRoles.return_value = ['Authenticated']
+        self.ui.REQUEST = self.request
 
         role_membership = {
             'places-bank': {'users': sorted(user_map_fixture.keys()),
@@ -582,7 +593,8 @@ class FilterTest(unittest.TestCase):
         query_ob = Query()
         query_ob.pattern = 'places-*'
         query_ob._get_ldap_agent = lambda: self.mock_agent
-        query_ob._render_template = self.ui._render_template
+        query_ob.REQUEST = self.request
+        query_ob._render_template = stubbed_renderer()
 
         page = parse_html(query_ob.index_html(self.request))
 

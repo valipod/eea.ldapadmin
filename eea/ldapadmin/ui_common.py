@@ -35,8 +35,21 @@ class SessionMessages(object):
         return tmpl(messages=messages)
 
 zope2_wrapper = Z2Template('zpt/zope2_wrapper.zpt', globals())
-class Zope3TemplateInZope2(Implicit):
+class TemplateRenderer(Implicit):
+    def __init__(self, common_factory=lambda ctx: {}):
+        self.common_factory = common_factory
+
+    def render(self, name, **options):
+        context = self.aq_parent
+        template = load_template(name)
+        namespace = template.pt_getContext((), options)
+        namespace['common'] = self.common_factory(context)
+        return template.pt_render(namespace)
+
+    def wrap(self, body_html):
+        context = self.aq_parent
+        zope2_tmpl = zope2_wrapper.__of__(context)
+        return zope2_tmpl(body_html=body_html)
+
     def __call__(self, name, **options):
-        tmpl = load_template(name)
-        zope2_tmpl = zope2_wrapper.__of__(self.aq_parent)
-        return zope2_tmpl(body_html=tmpl(**options))
+        return self.wrap(self.render(name, **options))

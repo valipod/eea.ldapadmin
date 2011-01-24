@@ -2,7 +2,7 @@
   <h2>Operations</h2>
   <ul>
     <li>
-      <a tal:attributes="href string:${options/base_url}/add_members_html?id=${org_info/id}"
+      <a tal:attributes="href string:${common/base_url}/add_members_html?id=${org_info/id}"
          >Add members</a>
     </li>
   </ul>
@@ -13,10 +13,10 @@
   <tal:block content="options/organisation/name"/>
 </h1>
 
-<tal:block content="structure options/messages_html"/>
+<tal:block content="structure common/message_boxes"/>
 
 <form method="post" tal:condition="options/org_members"
-      tal:attributes="action string:${options/base_url}/remove_members">
+      tal:attributes="action string:${common/base_url}/remove_members">
 
   <input type="hidden" name="id"
          tal:attributes="value options/organisation/id"/>

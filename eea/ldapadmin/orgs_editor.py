@@ -11,7 +11,7 @@ from OFS.PropertyManager import PropertyManager
 from AccessControl.Permissions import view
 
 from ldap_agent import LdapAgent, editable_org_fields
-from ui_common import load_template, SessionMessages, Zope3TemplateInZope2
+from ui_common import load_template, SessionMessages, TemplateRenderer
 
 eionet_edit_orgs = 'Eionet edit organisations'
 
@@ -34,8 +34,16 @@ SESSION_FORM_DATA = SESSION_PREFIX + '.form_data'
 def _set_session_message(request, msg_type, msg):
     SessionMessages(request, SESSION_MESSAGES).add(msg_type, msg)
 
-def _session_messages_html(request):
-    return SessionMessages(request, SESSION_MESSAGES).html()
+class CommonTemplateLogic(object):
+    def __init__(self, context):
+        self.context = context
+
+    def base_url(self):
+        return self.context.absolute_url()
+
+    def message_boxes(self):
+        return SessionMessages(self.context.REQUEST, SESSION_MESSAGES).html()
+
 
 class OrganisationsEditor(SimpleItem):
     meta_type = 'Eionet Organisations Editor'
@@ -49,7 +57,7 @@ class OrganisationsEditor(SimpleItem):
     def __init__(self, id):
         self.id = id
 
-    _render_template = Zope3TemplateInZope2()
+    _render_template = TemplateRenderer(CommonTemplateLogic)
 
     def _get_ldap_agent(self):
         return LdapAgent(ldap_server='pivo.edw.ro:22389',
@@ -63,9 +71,9 @@ class OrganisationsEditor(SimpleItem):
         orgs = [{'name': name, 'id': org_id}
                 for org_id, name in orgs_by_id.iteritems()]
         orgs.sort(key=operator.itemgetter('name'))
-        options = {'base_url': self.absolute_url(),
-                   'sorted_organisations': orgs,
-                   'messages_html': _session_messages_html(REQUEST)}
+        options = {
+            'sorted_organisations': orgs,
+        }
         return self._render_template('zpt/orgs_index.zpt', **options)
 
     security.declareProtected(view, 'organisation')
@@ -73,17 +81,17 @@ class OrganisationsEditor(SimpleItem):
         """ view """
         org_id = REQUEST.form['id']
         agent = self._get_ldap_agent()
-        options = {'base_url': self.absolute_url(),
-                   'organisation': agent.org_info(org_id),
-                   'messages_html': _session_messages_html(REQUEST)}
+        options = {
+            'organisation': agent.org_info(org_id),
+        }
         return self._render_template('zpt/orgs_view.zpt', **options)
 
     security.declareProtected(eionet_edit_orgs, 'create_organisation_html')
     def create_organisation_html(self, REQUEST):
         """ view """
-        options = {'base_url': self.absolute_url(),
-                   'form_macro': get_template_macro('org_form_fields'),
-                   'messages_html': _session_messages_html(REQUEST)}
+        options = {
+            'form_macro': get_template_macro('org_form_fields'),
+        }
 
         session = REQUEST.SESSION
         if SESSION_FORM_DATA in session.keys():
@@ -127,9 +135,9 @@ class OrganisationsEditor(SimpleItem):
         """ view """
         org_id = REQUEST.form['id']
 
-        options = {'base_url': self.absolute_url(),
-                   'form_macro': get_template_macro('org_form_fields'),
-                   'messages_html': _session_messages_html(REQUEST)}
+        options = {
+            'form_macro': get_template_macro('org_form_fields'),
+        }
 
         session = REQUEST.SESSION
         if SESSION_FORM_DATA in session.keys():
@@ -172,8 +180,9 @@ class OrganisationsEditor(SimpleItem):
     def remove_organisation_html(self, REQUEST):
         """ view """
         org_id = REQUEST.form['id']
-        options = {'base_url': self.absolute_url(),
-                   'org_info': self._get_ldap_agent().org_info(org_id)}
+        options = {
+            'org_info': self._get_ldap_agent().org_info(org_id),
+        }
         return self._render_template('zpt/orgs_remove.zpt', **options)
 
     security.declareProtected(eionet_edit_orgs, 'remove_organisation')
@@ -196,10 +205,10 @@ class OrganisationsEditor(SimpleItem):
         org_members = [agent.user_info(user_id)
                        for user_id in agent.members_in_org(org_id)]
         org_members.sort(key=operator.itemgetter('name'))
-        options = {'base_url': self.absolute_url(),
-                   'organisation': agent.org_info(org_id),
-                   'org_members': org_members,
-                   'messages_html': _session_messages_html(REQUEST)}
+        options = {
+            'organisation': agent.org_info(org_id),
+            'org_members': org_members,
+        }
         return self._render_template('zpt/orgs_members.zpt', **options)
 
     security.declareProtected(eionet_edit_orgs, 'remove_members')
@@ -236,10 +245,11 @@ class OrganisationsEditor(SimpleItem):
         else:
             found_users = []
 
-        options = {'base_url': self.absolute_url(),
-                   'org_id': org_id,
-                   'search_query': search_query,
-                   'found_users': found_users}
+        options = {
+            'org_id': org_id,
+            'search_query': search_query,
+            'found_users': found_users,
+        }
         return self._render_template('zpt/orgs_add_members.zpt', **options)
 
     security.declareProtected(eionet_edit_orgs, 'remove_members')

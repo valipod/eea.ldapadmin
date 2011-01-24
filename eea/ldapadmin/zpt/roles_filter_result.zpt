@@ -1,4 +1,4 @@
-<tal:block define="is_authenticated options/is_authenticated"
+<tal:block define="is_authenticated common/is_authenticated"
            repeat="role_id options/results">
   <tal:block define="role_members python:options['results'][role_id]">
 

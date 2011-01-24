@@ -2,15 +2,15 @@
   <h2>Operations</h2>
   <ul>
     <li>
-      <a tal:attributes="href string:${options/base_url}/edit_organisation_html?id=${org_info/id}"
+      <a tal:attributes="href string:${common/base_url}/edit_organisation_html?id=${org_info/id}"
          >Edit <tal:block content="org_info/id"/></a>
     </li>
     <li>
-      <a tal:attributes="href string:${options/base_url}/remove_organisation_html?id=${org_info/id}"
+      <a tal:attributes="href string:${common/base_url}/remove_organisation_html?id=${org_info/id}"
          >Delete <tal:block content="org_info/id"/></a>
     </li>
     <li>
-      <a tal:attributes="href string:${options/base_url}/members_html?id=${org_info/id}"
+      <a tal:attributes="href string:${common/base_url}/members_html?id=${org_info/id}"
          >Members</a>
     </li>
   </ul>
@@ -21,7 +21,7 @@
   <tal:block content="options/organisation/name"/>
 </h1>
 
-<tal:block content="structure options/messages_html"/>
+<tal:block content="structure common/message_boxes"/>
 
 <table tal:define="org_info options/organisation">
 

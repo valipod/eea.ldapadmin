@@ -1,4 +1,4 @@
-<tal:block content="structure options/buttons_html"/>
+<tal:block content="structure python:common.buttons_bar('browse')"/>
 
 <h1>Add users to role <tt tal:content="options/role_id" /></h1>
 
@@ -27,7 +27,7 @@
         <metal:block use-macro="options/user_info_macro" />
       </tal:block>
 
-      <form tal:attributes="action string:${options/base_url}/add_user"
+      <form tal:attributes="action string:${common/base_url}/add_user"
             name="add-user" method="post" style="display: inline">
 
         <input type="hidden" name="role_id"

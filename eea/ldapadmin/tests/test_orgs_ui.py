@@ -1,9 +1,9 @@
 import unittest
 from lxml.html.soupparser import fromstring
 from mock import Mock, patch
-from eea.ldapadmin.orgs_editor import OrganisationsEditor
+from eea.ldapadmin.orgs_editor import OrganisationsEditor, CommonTemplateLogic
 from eea.ldapadmin.orgs_editor import validate_org_info, VALIDATION_ERRORS
-from eea.ldapadmin.ui_common import load_template
+from eea.ldapadmin.ui_common import TemplateRenderer
 
 from test_ldap_agent import org_info_fixture
 
@@ -11,8 +11,10 @@ def parse_html(html):
     return fromstring(html)
 
 class StubbedOrganisationsEditor(OrganisationsEditor):
-    def _render_template(self, name, **options):
-        return "<html>%s</html>" % load_template(name)(**options)
+    def __init__(self, id):
+        super(StubbedOrganisationsEditor, self).__init__(id)
+        self._render_template = TemplateRenderer(CommonTemplateLogic)
+        self._render_template.wrap = lambda html: "<html>%s</html>" % html
 
     def absolute_url(self):
         return "URL"
@@ -37,6 +39,7 @@ class OrganisationsUITest(unittest.TestCase):
         self.mock_agent.all_organisations.return_value = {}
         self.ui._get_ldap_agent = Mock(return_value=self.mock_agent)
         self.request = mock_request()
+        self.ui.REQUEST = self.request
 
     def test_create_org_form(self):
         page = parse_html(self.ui.create_organisation_html(self.request))
@@ -248,6 +251,7 @@ class OrganisationsUIMembersTest(unittest.TestCase):
         self.mock_agent = Mock()
         self.ui._get_ldap_agent = Mock(return_value=self.mock_agent)
         self.request = mock_request()
+        self.ui.REQUEST = self.request
 
         user_list = {
             'anne': {'id': 'anne', 'name': "Anne Tester"},

@@ -1,8 +1,8 @@
-<tal:block content="structure options/buttons_html"/>
+<tal:block content="structure python:common.buttons_bar('search')"/>
 
 <h1>Revoke membership</h1>
 
-<form tal:attributes="action string:${options/base_url}/remove_user_from_role"
+<form tal:attributes="action string:${common/base_url}/remove_user_from_role"
       method="post">
 
   <p>Remove <tt tal:content="options/user_id"/> from the following roles:</p>

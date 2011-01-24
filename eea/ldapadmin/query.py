@@ -3,8 +3,7 @@ from OFS.SimpleItem import SimpleItem
 from OFS.PropertyManager import PropertyManager
 from Products.PageTemplates.PageTemplateFile import PageTemplateFile
 
-import roles_editor
-from ui_common import Zope3TemplateInZope2
+from ui_common import TemplateRenderer
 
 manage_add_query_html = PageTemplateFile('zpt/query_manage_add', globals())
 
@@ -20,6 +19,8 @@ def manage_add_query(parent, id, title, pattern, REQUEST=None):
         url = parent.absolute_url() + '/manage_workspace'
         return REQUEST.RESPONSE.redirect(url)
 
+import roles_editor
+
 class Query(SimpleItem, PropertyManager):
     meta_type = 'Eionet Roles Editor Query'
     security = ClassSecurityInfo()
@@ -34,7 +35,7 @@ class Query(SimpleItem, PropertyManager):
         {'id':'pattern', 'type': 'string', 'mode':'w', 'label': 'Pattern'},
     )
 
-    _render_template = Zope3TemplateInZope2()
+    _render_template = TemplateRenderer(roles_editor.CommonTemplateLogic)
 
     def _get_ldap_agent(self):
         return self.aq_parent._get_ldap_agent()
@@ -44,11 +45,9 @@ class Query(SimpleItem, PropertyManager):
         agent = self._get_ldap_agent()
         is_authenticated = roles_editor._is_authenticated(REQUEST)
         results_html = roles_editor.filter_result_html(agent, self.pattern,
-                                                       is_authenticated)
+                                                       self._render_template)
         options = {
             'pattern': self.pattern,
             'results_html': results_html,
-            'buttons_html': roles_editor.buttons_bar(self.absolute_url(),
-                                                     'filter'),
         }
         return self._render_template('zpt/query_index.zpt', **options)

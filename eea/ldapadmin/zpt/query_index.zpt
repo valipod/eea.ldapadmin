@@ -1,4 +1,4 @@
-<tal:block content="structure options/buttons_html"/>
+<tal:block content="structure python:common.buttons_bar('filter')"/>
 
 <h1>Filter roles &mdash; <tt tal:content="options/pattern" /></h1>
 
