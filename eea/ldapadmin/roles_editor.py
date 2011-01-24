@@ -132,9 +132,6 @@ class RolesEditor(Folder):
             'roles_dn': config.get('roles_dn', ''),
         })
 
-    security.declareProtected(view, 'general_tmpl')
-    general_tmpl = PageTemplateFile('zpt/roles_macros', globals())
-
     security.declareProtected(view_management_screens, 'manage_edit')
     manage_edit = PageTemplateFile('zpt/roles_manage_edit', globals())
 
@@ -179,18 +176,6 @@ class RolesEditor(Folder):
             'org_info_macro': _general_tmpl.macros['org-info'],
         }
         return self._render_template('zpt/roles_browse.zpt', **options)
-
-    def messages_box(self):
-        return _session_messages_html(self.REQUEST)
-
-    security.declarePrivate('add_message')
-    def add_message(self, msg):
-        _set_session_message(self.REQUEST, 'info', msg)
-
-    security.declareProtected(view, 'get_ldap_agent')
-    def get_ldap_agent(self):
-        # deprecated; templates have no business talking to the LDAP agent
-        return Zope2LdapAgent(**dict(self.config)).__of__(self)
 
     def _get_ldap_agent(self):
         return LdapAgent(**dict(self.config))
@@ -417,24 +402,6 @@ class RolesEditor(Folder):
 
         REQUEST.RESPONSE.redirect(self.absolute_url()+'/?role_id='+role_id)
 
-    security.declareProtected(eionet_edit_roles, 'remove_org_html')
-    def remove_org_html(self, REQUEST):
-        """ view """
-        role_id = REQUEST.form['role_id']
-        org_id = REQUEST.form['org_id']
-        agent = self._get_ldap_agent()
-        org_roles = agent.list_member_roles('org', org_id)
-        options = {
-            'base_url': self.absolute_url(),
-            'role_id': role_id,
-            'org_id': org_id,
-            'role_id_list': sorted(r for r in org_roles
-                                   if agent.is_subrole(r, role_id)),
-            'buttons_html': buttons_bar(self.absolute_url(), 'search'),
-        }
-
-        return self._render_template('zpt/roles_remove_org.zpt', **options)
-
     security.declareProtected(eionet_edit_roles, 'remove_user_from_role')
     def remove_user_from_role(self, REQUEST):
         """ Remove a single user from the role """
@@ -483,11 +450,4 @@ class RolesEditor(Folder):
     def get_roles_editor(self):
         return self
 
-
-from Acquisition import Implicit
-class Zope2LdapAgent(Implicit, LdapAgent):
-    security = ClassSecurityInfo()
-    for name in ('role_names_in_role', 'filter_roles', 'members_in_role',
-                 'user_info', 'org_info', 'role_info'):
-        security.declareProtected(view, name)
-InitializeClass(Zope2LdapAgent)
+InitializeClass(RolesEditor)
