@@ -28,13 +28,41 @@
                    role_members options/role_members">
     <tal:block condition="role_names">
     <h2 tal:condition="role_id">Sub-roles in <tt tal:content="role_id"/></h2>
-    <ul class="sub-roles">
+    
+    <table class="account-datatable">
+        <thead>
+            <tr>
+                <td>
+                    User ID
+                </td>
+                
+                <td>
+                    Organisation
+                </td>
+            </tr>
+        </thead>
+        
+        <tbody>
+            <tr tal:repeat="sub_role_id python:sorted(role_names)"
+                tal:attributes="class python:'odd' if path('repeat/sub_role_id/odd') else 'even'">
+                <td>
+                    <a tal:attributes="href string:?role_id=${sub_role_id}"
+                        tal:content="sub_role_id"></a>
+                </td>
+                <td>
+                    <span tal:content="python: role_names[sub_role_id]" />
+                </td>
+            </tr>
+        </tbody>
+    </table>
+    
+    <!--<ul class="sub-roles">
         <li tal:repeat="sub_role_id python:sorted(role_names)">
             <a tal:attributes="href string:?role_id=${sub_role_id}"
                tal:content="sub_role_id"></a>
             <span tal:content="python: role_names[sub_role_id]" />
         </li>
-    </ul>
+    </ul>-->
     </tal:block>
 
     <tal:block condition="role_members/users">
