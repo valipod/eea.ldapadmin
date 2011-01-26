@@ -57,20 +57,63 @@
     <input id="search-roles-input" type="search" name="pattern:utf8:ustring"
            class="text-input large" autofocus="autofocus"
            tal:attributes="value options/pattern|nothing"/>
-    
-
     <input type="submit" value="Search roles" name="submit"
            class="primary-button" />
-  </form>
-  
-</metal:block>
 
-<tal:block condition="options/predefined_filters|nothing">
-    <h4>Preferined queries</h4>
-    <ul>
-      <li tal:repeat="fil options/predefined_filters">
-        <a tal:attributes="href fil/absolute_url"
-           tal:content="fil/title_or_id"></a>
+  <tal:block condition="options/predefined_filters|nothing">
+    <p>
+      OR you can search by one of the
+      <a href="javascript:void(0); "
+         onclick="toggleView('#predefined-queries'); ">
+        predefined queries</a>.
+    </p>
+    
+    <table class="account-datatable hidden" id="predefined-queries">
+      <thead>
+        <tr>
+          <td>
+            Query name
+          </td>
+          
+          <td>
+            Query pattern
+          </td>
+          
+          <td class="center">
+            Action
+          </td>
+        </tr>
+      </thead>
+      
+      <tbody>
+        <tr tal:repeat="fil options/predefined_filters">
+          <td>
+            <a tal:attributes="href fil/absolute_url"
+              tal:content="fil/title_or_id"></a>
+          </td>
+          
+          <td>
+            <span tal:content="fil/pattern" />
+          </td>
+          
+          <td class="center">
+            <div class="clear">&nbsp;</div>
+            <a tal:attributes="href fil/absolute_url" class="button clear">
+              Search
+            </a>
+            <br />
+            <div class="clear">&nbsp;</div>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+    
+    <!--<ul>
+      <li class="inline" tal:repeat="fil options/predefined_filters">
+        &middot;&nbsp;<a tal:attributes="href fil/absolute_url"
+           tal:content="fil/pattern"></a>
       </li>
-    </ul>
-    </tal:block>
+    </ul>-->
+  </tal:block>
+  </form>
+</metal:block>

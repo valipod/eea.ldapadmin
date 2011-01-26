@@ -500,3 +500,7 @@ div.filter-section table.account-table:hover {
 .role-parents {
 	font-size: 12px;
 }
+
+.inline {
+	display: inline;
+}

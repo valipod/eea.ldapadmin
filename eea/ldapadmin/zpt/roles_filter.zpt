@@ -1,9 +1,14 @@
-<div id="operations">
-  <h2>Search</h2>
-  <metal:block use-macro="common/macros/filter-form"/>
+<div class="role-parents">
+  You are here: <a href="">All roles</a>
+  &raquo; Search &raquo; dk
 </div>
 
 <h1>Search roles</h1>
 
+<div class="roles-search-form">
+  <metal:block use-macro="common/macros/filter-form"/>
+</div>
+
+<div class="clear">&nbsp;</div>
 
 <tal:block content="structure options/results_html|nothing"/>
