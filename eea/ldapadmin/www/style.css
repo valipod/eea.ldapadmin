@@ -414,3 +414,57 @@ div.filter-section table.account-table:hover {
 .hidden-loading {
 	display: none;
 }
+
+.search-form {
+	width: 600px;
+}
+
+.search-form img {
+	margin-right: 1em;
+}
+
+/**
+ * Sections
+*/
+
+.right-box {
+	float: right;
+	background-color: white;
+	width: 20em;
+	padding-left: 1em;
+}
+
+.left-box {
+	float: left;
+	
+}
+
+.roles-search-form {
+	font-size: 12px;
+	width: 600px;
+}
+
+.roles-search-form form {
+	background-color: #EFEFEF;
+	padding: 0px 15px;
+	background-color: #F2F2F2 !important;
+	color: #666666 !important;
+	padding: 0.5em !important;
+	background: -moz-linear-gradient(top, #EFEFEF, #E4E5E5);
+	background: -webkit-gradient(linear,
+		left top, left bottom, from(#F7F7F7), to(#E4E5E5));
+	filter: progid:DXImageTransform.Microsoft.Gradient(
+		StartColorStr='#F7F7F7', EndColorStr='#E4E5E5', GradientType=0);
+	border: 1px solid #D6D6D6;
+}
+
+.search-help-text {
+	font-size: 12px;
+	font-weight: bold;
+	margin-left: 15px;
+}
+
+.search-help-text span {
+	font-style: italic;
+	font-weight: normal;
+}

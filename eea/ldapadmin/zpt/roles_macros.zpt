@@ -36,16 +36,34 @@
 </metal:block>
 
 <metal:block define-macro="filter-form">
+    
   <form name="search"
         tal:define="filter_url string:${common/base_url}/filter"
         tal:attributes="action filter_url">
-    <label for="search-roles-input" style="display:none">Roles pattern</label>
+    <label for="search-roles-input" style="display: none;">
+        <strong>
+        Roles pattern
+        </strong>
+    </label>
     <input id="search-roles-input" type="search" name="pattern:utf8:ustring"
-           size="30" autofocus="autofocus"
+           class="text-input large" autofocus="autofocus"
            tal:attributes="value options/pattern|nothing"/>
-    <input type="submit" value="Search roles"/>
-    <p>examples: <tt>staff</tt>, <tt>eionet-*-dk</tt></p>
-    <tal:block condition="options/predefined_filters|nothing">
+    <input type="submit" value="Search roles" name="submit"
+           class="primary-button" />
+    <span class="search-help-text">
+        e.g. <span class="help-trigger">
+        staff
+        </span>,
+        <span class="help-trigger">
+            eionet-*-dk
+        </span>
+        tedasiop dioasudioau idusioau daiodu asudiouaio duasiou
+    </span>
+  </form>
+  
+</metal:block>
+
+<tal:block condition="options/predefined_filters|nothing">
     <h4>Preferined queries</h4>
     <ul>
       <li tal:repeat="fil options/predefined_filters">
@@ -54,5 +72,3 @@
       </li>
     </ul>
     </tal:block>
-  </form>
-</metal:block>
