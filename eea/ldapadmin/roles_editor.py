@@ -84,15 +84,15 @@ class CommonTemplateLogic(object):
     def base_url(self):
         return self.context.absolute_url()
 
-    def buttons_bar(self, current_name):
-        tmpl = load_template('zpt/roles_buttons.zpt')
-        return tmpl(base_url=self.context.absolute_url(), current=current_name)
-
     def message_boxes(self):
         return SessionMessages(self._get_request(), SESSION_MESSAGES).html()
 
     def is_authenticated(self):
         return _is_authenticated(self._get_request())
+
+    @property
+    def macros(self):
+        return load_template('zpt/roles_macros.zpt').macros
 
 
 class RoleCreationError(Exception):
@@ -155,7 +155,6 @@ class RolesEditor(Folder):
         """ view """
         role_id = REQUEST.form.get('role_id', None)
         agent = self._get_ldap_agent()
-        _general_tmpl = load_template('zpt/roles_macros.zpt')
         options = {
             'role_id': role_id,
             'role_info': agent.role_info(role_id),
@@ -163,9 +162,6 @@ class RolesEditor(Folder):
             'role_parents': _role_parents(role_id),
             'role_members': role_members(agent, role_id),
             'can_edit': self.can_edit_roles(REQUEST.AUTHENTICATED_USER),
-            'user_info_macro': _general_tmpl.macros['user-info'],
-            'org_info_macro': _general_tmpl.macros['org-info'],
-            'filter_form_macro': _general_tmpl.macros['filter-form'],
             'predefined_filters': self._predefined_filters(),
         }
         return self._render_template('zpt/roles_browse.zpt', **options)
@@ -174,10 +170,8 @@ class RolesEditor(Folder):
     def filter(self, REQUEST):
         """ view """
         pattern = REQUEST.form.get('pattern', '')
-        _general_tmpl = load_template('zpt/roles_macros.zpt')
         options = {
             'pattern': pattern,
-            'filter_form_macro': _general_tmpl.macros['filter-form'],
             'predefined_filters': self._predefined_filters(),
         }
         if pattern:
@@ -282,13 +276,10 @@ class RolesEditor(Folder):
         """ view """
         role_id = REQUEST.form['role_id']
         search_name = REQUEST.form.get('name', '')
-        _general_tmpl = load_template('zpt/roles_macros.zpt')
         options = {
             'role_id': role_id,
             'search_name': search_name,
             'search_results': None,
-            'user_info_macro': _general_tmpl.macros['user-info'],
-            'org_info_macro': _general_tmpl.macros['org-info'],
         }
         if search_name:
             agent = self._get_ldap_agent()
@@ -407,8 +398,6 @@ class RolesEditor(Folder):
         if search_name:
             agent = self._get_ldap_agent()
             options['search_results'] = agent.search_user(search_name)
-            _general_tmpl = load_template('zpt/roles_macros.zpt')
-            options['user_info_macro'] = _general_tmpl.macros['user-info']
 
         if user_id is not None:
             agent = self._get_ldap_agent()

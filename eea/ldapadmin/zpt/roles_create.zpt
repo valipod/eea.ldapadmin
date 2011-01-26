@@ -1,5 +1,3 @@
-<tal:block content="structure python:common.buttons_bar('browse')"/>
-
 <h1>
   Create role under
   <tt tal:content="python:options['parent_id'] or '[root]'"/>

@@ -1,5 +1,3 @@
-<tal:block content="structure python:common.buttons_bar('browse')"/>
-
 <h1>Delete role <tt tal:content="options/role_id" /></h1>
 
 <form tal:attributes="action string:${common/base_url}/delete_role"

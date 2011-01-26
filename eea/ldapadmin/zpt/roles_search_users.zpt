@@ -1,5 +1,3 @@
-<tal:block content="structure python:common.buttons_bar('search')"/>
-
 <h1>Search users</h1>
 
 <tal:block content="structure common/message_boxes"/>
@@ -17,7 +15,7 @@
   <ul tal:condition="options/search_results">
     <li tal:repeat="user_info options/search_results">
       <tal:block define="is_authenticated python:True">
-        <metal:block use-macro="options/user_info_macro" />
+        <metal:block use-macro="common/macros/user-info" />
       </tal:block>
       [<a tal:attributes="href string:?user_id=${user_info/id}">roles</a>]
     </li>

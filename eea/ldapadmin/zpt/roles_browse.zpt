@@ -1,6 +1,6 @@
 <div id="operations">
   <h2>Search</h2>
-  <metal:block use-macro="options/filter_form_macro"/>
+  <metal:block use-macro="common/macros/filter-form"/>
 
   <tal:block condition="options/can_edit">
   <h2>Operations</h2>
@@ -60,7 +60,7 @@
         <tal:block repeat="user_id python:sorted(role_members['users'])">
         <li tal:define="user_info python:role_members['users'][user_id];
                         is_authenticated common/is_authenticated">
-            <metal:block use-macro="options/user_info_macro" />
+            <metal:block use-macro="common/macros/user-info" />
         </li>
         </tal:block>
     </ul>
@@ -71,7 +71,7 @@
     <ul class="role-orgs">
         <tal:block repeat="org_id python:sorted(role_members['orgs'])">
         <li tal:define="org_info python:role_members['orgs'][org_id]">
-            <metal:block use-macro="options/org_info_macro" />
+            <metal:block use-macro="common/macros/org-info" />
         </li>
         </tal:block>
     </ul>

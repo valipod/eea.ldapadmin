@@ -1,6 +1,6 @@
 <div id="operations">
   <h2>Search</h2>
-  <metal:block use-macro="options/filter_form_macro"/>
+  <metal:block use-macro="common/macros/filter-form"/>
 </div>
 
 <h1>Search roles</h1>

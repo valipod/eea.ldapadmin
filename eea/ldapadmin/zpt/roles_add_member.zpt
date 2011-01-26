@@ -28,7 +28,7 @@
     <li tal:repeat="user_info results/users">
 
       <tal:block define="is_authenticated python:True">
-        <metal:block use-macro="options/user_info_macro" />
+        <metal:block use-macro="common/macros/user-info" />
       </tal:block>
 
       <form tal:attributes="action string:${common/base_url}/add_user"
@@ -54,7 +54,7 @@
     <li tal:repeat="org_info results/orgs">
 
       <tal:block define="is_authenticated python:True">
-        <metal:block use-macro="options/org_info_macro" />
+        <metal:block use-macro="common/macros/org-info" />
       </tal:block>
 
       <form tal:attributes="action string:${common/base_url}/add_org"
