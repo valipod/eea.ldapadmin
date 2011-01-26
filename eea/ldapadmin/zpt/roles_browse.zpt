@@ -3,25 +3,8 @@
   <metal:block use-macro="common/macros/filter-form"/>
 
   <tal:block condition="options/can_edit">
-  <h2>Operations</h2>
-  <ul>
-    <li><a tal:define="del_url string:${common/base_url}/delete_role_html"
-           tal:condition="options/role_id"
-           tal:attributes="href string:${del_url}?role_id=${options/role_id}"
-           >Delete role <span tal:content="options/role_id" /></a></li>
-    <li><a tal:define="new_url string:${common/base_url}/create_role_html;
-                       role_param python:options['role_id'] or ''"
-           tal:attributes="href string:${new_url}?parent_role_id=${role_param}"
-           >Create sub-role</a></li>
-    <li><a tal:define="add_url string:${common/base_url}/add_member_html"
-           tal:condition="options/role_id"
-           tal:attributes="href string:${add_url}?role_id=${options/role_id}"
-           >Add members</a>
-    <li><a tal:define="rm_url string:${common/base_url}/remove_members_html"
-           tal:condition="options/role_id"
-           tal:attributes="href string:${rm_url}?role_id=${options/role_id}"
-           >Remove members</a>
-  </ul>
+    <h2>Operations</h2>
+    <tal:block content="structure python:common.buttons_bar('role', options['role_id'])"/>
   </tal:block>
 </div>
 

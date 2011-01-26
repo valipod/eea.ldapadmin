@@ -90,6 +90,15 @@ class CommonTemplateLogic(object):
     def is_authenticated(self):
         return _is_authenticated(self._get_request())
 
+    def buttons_bar(self, current_page, role_id):
+        options = {
+            'current_page': current_page,
+            'role_id': role_id,
+            'common': self,
+        }
+        tr = self.context._render_template
+        return tr.render('zpt/roles_buttons.zpt', **options)
+
     @property
     def macros(self):
         return load_template('zpt/roles_macros.zpt').macros
