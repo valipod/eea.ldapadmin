@@ -1,3 +1,8 @@
+<div class="role-parents">
+  <tal:block define="stack python:common.role_parents_stack(options['role_id'])"
+            content="structure python:common.breadcrumbs(stack)"/>
+</div>
+
 <h1>Add members to role <tt tal:content="options/role_id" /></h1>
 
 <div>
@@ -29,7 +34,7 @@
       Name of user/organisation:&nbsp;
       </strong>
     </label>
-    
+    <br />
     <input type="search" name="name" id="search-query"
            class="text-input large"
            tal:attributes="value options/search_name"/>

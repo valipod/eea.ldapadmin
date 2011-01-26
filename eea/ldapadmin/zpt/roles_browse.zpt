@@ -1,5 +1,7 @@
-<tal:block define="stack python:common.role_parents_stack(options['role_id'])"
+<div class="role-parents">
+  <tal:block define="stack python:common.role_parents_stack(options['role_id'])"
            content="structure python:common.breadcrumbs(stack)"/>
+</div>
 
 <tal:block content="structure common/message_boxes"/>
 
@@ -7,14 +9,14 @@
                              or 'Role %s' % options['role_id'])"
     tal:content="name"></h1>
 
-<tal:block condition="options/can_edit">
-<div tal:condition="options/role_id">
+<div>
   <div class="account-links clear">
-    <div class="right-position clear">
+    
+    <div class="right-position clear" tal:condition="options/role_id">
       <tal:block content="structure python:common.buttons_bar('role', options['role_id'])"/>
     </div>
     
-    <div class="left clear">
+    <div class="left clear" tal:condition="options/role_id">
       <a href="./" class="button"
           title="Back to roles">
            <img src="/++resource++eea.ldapadmin-www/back.png" class="middle-image image12"
@@ -22,11 +24,19 @@
            <span tal:content="string:Back to roles" />
       </a>
       &nbsp;
+      
+    </div>
+    
+    <div class="left clear">
+    <a href="./create_role_html/?parent_role_id=" class="button"
+       title="Create role">
+      <img src="/++resource++eea.ldapadmin-www/round_plus.png" alt=""
+           class="middle-image image" title="Create new role" />
+      Create role</a>
     </div>
   </div>
   <br />
 </div>
-</tal:block>
 
 <div class="roles-search-form">
   <tal:block content="structure common/search_roles_box"/>

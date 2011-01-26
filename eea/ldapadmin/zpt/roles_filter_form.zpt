@@ -1,6 +1,7 @@
 <form name="search"
       tal:define="filter_url string:${common/base_url}/filter"
       tal:attributes="action filter_url">
+  <br />
   <label for="search-roles-input">
       <strong>
       Roles pattern

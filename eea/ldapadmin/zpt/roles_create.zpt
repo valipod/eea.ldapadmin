@@ -1,3 +1,8 @@
+<div class="role-parents">
+  <tal:block define="stack python:common.role_parents_stack(options['parent_id'])"
+            content="structure python:common.breadcrumbs(stack)"/>
+</div>
+
 <tal:block content="structure common/message_boxes"/>
 
 <h1>

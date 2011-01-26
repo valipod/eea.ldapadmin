@@ -1,3 +1,8 @@
+<div class="role-parents">
+  <tal:block define="stack python:common.role_parents_stack(options['role_id'])"
+            content="structure python:common.breadcrumbs(stack)"/>
+</div>
+
 <h1>Remove members from <tt tal:content="options/role_id"/></h1>
 
 <tal:block content="structure common/message_boxes"/>
@@ -77,7 +82,47 @@
           tal:attributes="action url" method="post" name="remove-orgs">
     <input type="hidden" name="role_id"
            tal:attributes="value role_id" />
-    <ul class="role-orgs">
+    
+    <table class="account-datatable">
+        <thead>
+            <tr>
+                <td>
+                    <input type="checkbox" id="selectall" class="selectall"
+                           name="selectall" />
+                </td>
+                
+                <td>
+                    Organisation Name
+                </td>
+                
+                <td>
+                    Organisation ID
+                </td>
+            </tr>
+        </thead>
+        
+        <tbody>
+            <tal:block repeat="org_id python:sorted(role_members['orgs'])">
+                <tr tal:define="org_info python:role_members['orgs'][org_id]">
+                    <td class="checkbox-td">
+                        <input type="checkbox" name="org_id_list:list"
+                                tal:attributes="value org_id" />
+                    </td>
+                    <td>
+                        <span tal:content="org_info/name"/>
+                    </td>
+                    
+                    <td>
+                        <span tal:content="org_id"/>
+                    </td>
+                </tr>
+            </tal:block>
+        </tbody>
+    </table>
+    <br />
+    <input type="submit" value="Remove organisations" name="submit" class="primary-button" />
+    
+    <!--<ul class="role-orgs">
         <tal:block repeat="org_id python:sorted(role_members['orgs'])">
         <li tal:define="org_info python:role_members['orgs'][org_id]">
             <input type="checkbox" name="org_id_list:list"
@@ -86,8 +131,7 @@
             (<tt tal:content="org_id"/>)
         </li>
         </tal:block>
-    </ul>
-    <input type="submit" value="Remove organisations" />
+    </ul>-->
     </form>
     </tal:block>
 

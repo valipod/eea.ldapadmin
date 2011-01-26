@@ -3,6 +3,14 @@
 	margin-top: -4px;
 }
 
+.inline {
+	display: inline;
+}
+
+.center {
+	text-align: center;
+}
+
 .left-position {
 	float: left;
 }
@@ -50,7 +58,6 @@ a:visited {
 }
 
 a.button, .account-links a.current {
-	
 	font-size: 11px;
 	background-color: #F2F2F2 !important;
 	border: 1px solid #BBBBBB !important;
@@ -79,7 +86,7 @@ a.button, .account-links a.current {
 		left top, left bottom, from(#186087), to(#00446A));
 	filter: progid:DXImageTransform.Microsoft.Gradient(
 		StartColorStr='#186087', EndColorStr='#00446A', GradientType=0);
-	color: #FFFFFF!important;
+	color: #FFFFFF !important;
 }
 
 a.button:hover, a.current:hover {
@@ -91,16 +98,10 @@ a.button:hover, a.current:hover {
 		StartColorStr='#E4E5E5', EndColorStr='#F7F7F7', GradientType=0);
 	color: #111111 !important;
 	cursor: pointer;
-	
-	/*background: -moz-linear-gradient(-90deg, #186087, #00446A) repeat scroll 0 0 transparent;
 	border-bottom-color: #438BB1;
-	text-shadow: -1px -1px 0 rgba(0, 0, 0, 0.3);
-	color: #ffffff !important;
-	-moz-borde-radius: 4px;
-	-moz-box-shadow: 0 1px 4px rgba(0, 0, 0, 0.3);
 	border-color: -moz-use-text-color -moz-use-text-color #EBEBEB;
 	border-style: none;
-	border-width: 1px;*/
+	border-width: 1px;
 }
 
 a.button:focus {
@@ -440,22 +441,6 @@ div.filter-section table.account-table:hover {
 	margin-right: 1em;
 }
 
-/**
- * Sections
-*/
-
-.right-box {
-	float: right;
-	background-color: white;
-	width: 20em;
-	padding-left: 1em;
-}
-
-.left-box {
-	float: left;
-	
-}
-
 .roles-search-form {
 	font-size: 12px;
 }
@@ -477,7 +462,6 @@ div.filter-section table.account-table:hover {
 .search-help-text {
 	font-size: 12px;
 	font-weight: bold;
-	/*margin-left: 15px;*/
 }
 
 .search-help-text span {
@@ -487,10 +471,6 @@ div.filter-section table.account-table:hover {
 
 .checkbox-td {
 	width: 10px;
-}
-
-.center {
-	text-align: center;
 }
 
 .account-links {
@@ -503,8 +483,4 @@ div.filter-section table.account-table:hover {
 
 .role-parents a:hover {
 	text-decoration: none;
-}
-
-.inline {
-	display: inline;
 }

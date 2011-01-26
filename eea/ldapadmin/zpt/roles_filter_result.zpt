@@ -1,5 +1,3 @@
-
-
 <tal:block define="is_authenticated common/is_authenticated"
            repeat="role_id python:sorted(options['results'])">
   <tal:block define="role_members python:options['results'][role_id]">
@@ -110,6 +108,8 @@
 </tal:block>
 
 <p tal:condition="python:options['pattern'] and not options['results']"
-   class="no-results">
+   class="no-results center">
+  <img src="/++resource++eea.ldapadmin-www/info.png" class="middle-image"
+       title="Note" alt=""/>
   No roles found matching <tt tal:content="options/pattern"/>.
 </p>
