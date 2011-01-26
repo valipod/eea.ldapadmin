@@ -216,7 +216,6 @@ textarea.account-textarea:focus {
 div.account-links {
 	background-color: #F7F7F7;
 	padding: 0.7em 0em 1em 0.7em;
-	width: 100%;
 }
 
 /**
@@ -441,7 +440,6 @@ div.filter-section table.account-table:hover {
 
 .roles-search-form {
 	font-size: 12px;
-	width: 600px;
 }
 
 .roles-search-form form {
@@ -467,4 +465,8 @@ div.filter-section table.account-table:hover {
 .search-help-text span {
 	font-style: italic;
 	font-weight: normal;
+}
+
+.checkbox-td {
+	width: 10px;
 }

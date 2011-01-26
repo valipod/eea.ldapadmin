@@ -11,17 +11,44 @@
           tal:attributes="action url" method="post" name="remove-users">
     <input type="hidden" name="role_id"
            tal:attributes="value role_id" />
-    <ul class="role-users">
-        <tal:block repeat="user_id python:sorted(role_members['users'])">
-        <li tal:define="user_info python:role_members['users'][user_id]">
-            <input type="checkbox" name="user_id_list:list"
-                   tal:attributes="value user_id" />
-            <span tal:content="user_info/name"/>
-            (<tt tal:content="user_id"/>)
-        </li>
-        </tal:block>
-    </ul>
-    <input type="submit" value="Remove users" />
+    <table class="account-datatable">
+        <thead>
+            <tr>
+                <td>
+                    <input type="checkbox" id="selectall" class="selectall"
+                           name="selectall" />
+                </td>
+                
+                <td>
+                    Name
+                </td>
+                
+                <td>
+                    User ID
+                </td>
+            </tr>
+        </thead>
+        
+        <tbody>
+            <tal:block tal:repeat="user_id python:sorted(role_members['users'])">
+                <tr tal:define="user_info python:role_members['users'][user_id]">
+                    <td class="checkbox-td">
+                        <input type="checkbox" name="user_id_list:list"
+                            tal:attributes="value user_id" />
+                    </td>
+                    <td>
+                        <span tal:content="user_info/name"/>
+                    </td>
+                    
+                    <td>
+                        <span tal:content="user_id"/>
+                    </td>
+                </tr>
+            </tal:block>
+        </tbody>
+    </table>
+    <br />
+    <input type="submit" value="Remove users" name="submit" class="primary-button" />
     </form>
     </tal:block>
 
