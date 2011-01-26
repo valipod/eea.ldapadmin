@@ -9,7 +9,7 @@ from Products.PageTemplates.PageTemplateFile import PageTemplateFile
 from persistent.mapping import PersistentMapping
 from persistent.list import PersistentList
 
-from ldap_agent import LdapAgent
+import ldap_agent
 import ldap_config
 from ui_common import load_template, SessionMessages, TemplateRenderer
 
@@ -180,9 +180,16 @@ class RolesEditor(Folder):
         """ view """
         role_id = REQUEST.form.get('role_id', None)
         agent = self._get_ldap_agent()
+        try:
+            role_info = agent.role_info(role_id)
+        except ldap_agent.RoleNotFound:
+            REQUEST.RESPONSE.setStatus(404)
+            options = {'message': "Role %s does not exist." % role_id}
+            return self._render_template('zpt/generic_error.zpt', **options)
+
         options = {
             'role_id': role_id,
-            'role_info': agent.role_info(role_id),
+            'role_info': role_info,
             'role_names': agent.role_names_in_role(role_id),
             'role_members': role_members(agent, role_id),
             'can_edit': self.can_edit_roles(REQUEST.AUTHENTICATED_USER),

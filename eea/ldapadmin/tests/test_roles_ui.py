@@ -3,6 +3,7 @@ from copy import deepcopy
 from mock import Mock
 from eea.ldapadmin.roles_editor import RolesEditor, CommonTemplateLogic
 from eea.ldapadmin.ui_common import TemplateRenderer
+from eea.ldapadmin import ldap_agent
 
 def plaintext(element):
     import re
@@ -139,6 +140,17 @@ class BrowseTest(unittest.TestCase):
         cells = page.xpath('table[@class="account-datatable"]/tbody/tr/td')
         self.assertEqual(plaintext(cells[0]), org_info_fixture['name'])
         self.assertEqual(plaintext(cells[1]), org_info_fixture['url'])
+
+    def test_missing_role(self):
+        exc = ldap_agent.RoleNotFound("no-such-role")
+        self.mock_agent.role_info.side_effect = exc
+        self.request.form = {'role_id': 'no-such-role'}
+
+        page = parse_html(self.ui.index_html(self.request))
+
+        self.assertEqual(plaintext(page.xpath('//p[@class="message"]')[0]),
+                         "Role no-such-role does not exist.")
+        self.request.RESPONSE.setStatus.assert_called_once_with(404)
 
 
 class CreateDeleteRolesTest(unittest.TestCase):

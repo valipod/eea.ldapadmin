@@ -29,6 +29,8 @@ org_attr_map = {
     'locality': 'l',
 }
 
+class RoleNotFound(Exception): pass
+
 editable_org_fields = list(org_attr_map)
 
 def log_ldap_exceptions(func):
@@ -258,7 +260,10 @@ class LdapAgent(object):
         """
 
         query_dn = self._role_dn(role_id)
-        result = self.conn.search_s(query_dn, ldap.SCOPE_BASE)
+        try:
+            result = self.conn.search_s(query_dn, ldap.SCOPE_BASE)
+        except ldap.NO_SUCH_OBJECT:
+            raise RoleNotFound("Role %r does not exist" % role_id)
 
         assert len(result) == 1
         dn, attr = result[0]

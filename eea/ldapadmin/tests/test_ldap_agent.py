@@ -314,6 +314,11 @@ class LdapAgentTest(unittest.TestCase):
             role_dn, ldap.SCOPE_BASE)
         self.assertEqual(role_info, {'description': u"Some r\u014dle"})
 
+    def test_role_info_not_found(self):
+        self.mock_conn.search_s.side_effect = ldap.NO_SUCH_OBJECT
+        self.assertRaises(ldap_agent.RoleNotFound,
+                          self.agent.role_info, 'nosuchrole')
+
 class TestCreateRole(unittest.TestCase):
     def setUp(self):
         self.agent = StubbedLdapAgent(ldap_server='')
