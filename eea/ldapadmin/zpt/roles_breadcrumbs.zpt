@@ -1,0 +1,9 @@
+You are here:
+
+<a tal:attributes="href common/base_url">All roles</a>
+
+<tal:block repeat="item options/stack">
+  &raquo;
+  <a tal:attributes="href python:item[1]"
+     tal:content="python:item[0]"></a>
+</tal:block>

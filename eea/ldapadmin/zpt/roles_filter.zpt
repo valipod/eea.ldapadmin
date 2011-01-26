@@ -1,16 +1,5 @@
-<div class="role-parents"
-     tal:define="pattern options/pattern;
-                 url common/base_url;
-                 filter_url string:${url}/filter;
-                 this_filter_url string:${filter_url}?pattern:utf8:ustring=${pattern}">
-  You are here:
-  <a tal:attributes="href url">All roles</a>
-  &raquo; <a tal:attributes="href filter_url">Search</a>
-  <tal:block condition="pattern">
-    &raquo; <a tal:attributes="href this_filter_url"
-               ><tt tal:content="pattern"></tt></a>
-  </tal:block>
-</div>
+<tal:block define="stack options/breadcrumb_stack"
+           content="structure python:common.breadcrumbs(stack)"/>
 
 <h1 tal:content="python:options['title'] or 'Search roles'"></h1>
 

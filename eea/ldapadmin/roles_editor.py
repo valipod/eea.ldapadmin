@@ -90,6 +90,14 @@ class CommonTemplateLogic(object):
     def is_authenticated(self):
         return _is_authenticated(self._get_request())
 
+    def role_parents_stack(self, role_id):
+        return [(role_id, '?role_id=%s' % role_id)
+                for role_id in _role_parents(role_id)]
+
+    def breadcrumbs(self, stack):
+        tr = self.context._render_template
+        return tr.render('zpt/roles_breadcrumbs.zpt', stack=stack)
+
     def buttons_bar(self, current_page, role_id):
         options = {
             'current_page': current_page,
@@ -176,22 +184,25 @@ class RolesEditor(Folder):
             'role_id': role_id,
             'role_info': agent.role_info(role_id),
             'role_names': agent.role_names_in_role(role_id),
-            'role_parents': _role_parents(role_id),
             'role_members': role_members(agent, role_id),
             'can_edit': self.can_edit_roles(REQUEST.AUTHENTICATED_USER),
         }
         return self._render_template('zpt/roles_browse.zpt', **options)
 
     def _filter_results(self, pattern, title=None):
+        search_url = self.absolute_url() + '/filter'
         options = {
             'pattern': pattern,
             'title': title,
+            'breadcrumb_stack': [('Search', search_url)],
         }
         if pattern:
             agent = self._get_ldap_agent()
             results_html = filter_result_html(agent, pattern,
                                               self._render_template)
             options['results_html'] = results_html
+            pattern_url = search_url + '?pattern:utf8:ustring=' + pattern
+            options['breadcrumb_stack'] += [(pattern, pattern_url)]
         return self._render_template('zpt/roles_filter.zpt', **options)
 
     security.declareProtected(view, 'filter')

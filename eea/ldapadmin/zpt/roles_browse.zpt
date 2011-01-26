@@ -1,10 +1,5 @@
-  
-  You are here: <a href="">All roles</a>
-  <tal:block repeat="parent_id options/role_parents">
-    &raquo;
-    <a tal:attributes="href string:?role_id=${parent_id}"
-       tal:content="parent_id"></a>
-  </tal:block>
+<tal:block define="stack python:common.role_parents_stack(options['role_id'])"
+           content="structure python:common.breadcrumbs(stack)"/>
 
 <tal:block content="structure common/message_boxes"/>
 
