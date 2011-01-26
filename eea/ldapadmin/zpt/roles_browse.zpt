@@ -22,7 +22,7 @@
 </div>
 
 <div class="roles-search-form">
-  <metal:block use-macro="common/macros/filter-form"/>
+  <tal:block content="structure common/search_roles_box"/>
 </div>
 
 <div class="clear">&nbsp;</div>

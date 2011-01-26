@@ -99,6 +99,14 @@ class CommonTemplateLogic(object):
         tr = self.context._render_template
         return tr.render('zpt/roles_buttons.zpt', **options)
 
+    def search_roles_box(self, pattern=None):
+        options = {
+            'pattern': pattern,
+            'predefined_filters': self.context._predefined_filters(),
+        }
+        tr = self.context._render_template
+        return tr.render('zpt/roles_filter_form.zpt', **options)
+
     @property
     def macros(self):
         return load_template('zpt/roles_macros.zpt').macros
@@ -171,7 +179,6 @@ class RolesEditor(Folder):
             'role_parents': _role_parents(role_id),
             'role_members': role_members(agent, role_id),
             'can_edit': self.can_edit_roles(REQUEST.AUTHENTICATED_USER),
-            'predefined_filters': self._predefined_filters(),
         }
         return self._render_template('zpt/roles_browse.zpt', **options)
 
@@ -188,7 +195,6 @@ class RolesEditor(Folder):
             'role_parents': _role_parents(role_id),
             'role_members': role_members(agent, role_id),
             'can_edit': self.can_edit_roles(REQUEST.AUTHENTICATED_USER),
-            'predefined_filters': self._predefined_filters(),
         }
         html = self._render_template.render('zpt/roles_browse.zpt', **options)
 
@@ -197,13 +203,10 @@ class RolesEditor(Folder):
         from lxml import etree
         return etree.tostring(div)
 
-    security.declareProtected(view, 'filter')
-    def filter(self, REQUEST):
-        """ view """
-        pattern = REQUEST.form.get('pattern', '')
+    def _filter_results(self, pattern, title=None):
         options = {
             'pattern': pattern,
-            'predefined_filters': self._predefined_filters(),
+            'title': title,
         }
         if pattern:
             agent = self._get_ldap_agent()
@@ -211,6 +214,12 @@ class RolesEditor(Folder):
                                               self._render_template)
             options['results_html'] = results_html
         return self._render_template('zpt/roles_filter.zpt', **options)
+
+    security.declareProtected(view, 'filter')
+    def filter(self, REQUEST):
+        """ view """
+        pattern = REQUEST.form.get('pattern', '')
+        return self._filter_results(pattern)
 
     security.declareProtected(view, 'can_edit_roles')
     def can_edit_roles(self, user):

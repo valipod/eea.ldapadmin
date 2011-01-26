@@ -42,12 +42,4 @@ class Query(SimpleItem, PropertyManager):
 
     def index_html(self, REQUEST):
         """ view """
-        agent = self._get_ldap_agent()
-        is_authenticated = roles_editor._is_authenticated(REQUEST)
-        results_html = roles_editor.filter_result_html(agent, self.pattern,
-                                                       self._render_template)
-        options = {
-            'title': self.title_or_id(),
-            'results_html': results_html,
-        }
-        return self._render_template('zpt/query_index.zpt', **options)
+        return self.aq_parent._filter_results(self.pattern, self.title)
