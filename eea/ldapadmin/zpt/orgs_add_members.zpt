@@ -1,8 +1,16 @@
+<h1>
+  Add members to organisation
+  <tt tal:content="options/org_id"/>
+</h1>
+
 <form name="search-users"
       tal:attributes="action string:${common/base_url}/add_members_html">
   <input type="hidden" name="id" tal:attributes="value options/org_id"/>
-  <input type="search" name="search_query:utf8:ustring"
-         tal:attributes="value options/search_query"/>
+  <label>
+    name:
+    <input type="search" name="search_query:utf8:ustring" autofocus="autofocus"
+           tal:attributes="value options/search_query"/>
+  </label>
   <input type="submit" value="Search"/>
 </form>
 

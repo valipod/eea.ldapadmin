@@ -24,7 +24,7 @@ import roles_editor
 class Query(SimpleItem, PropertyManager):
     meta_type = 'Eionet Roles Editor Query'
     security = ClassSecurityInfo()
-    icon = 'misc_/EionetRolesEditor/query.gif'
+    icon = '++resource++eea.ldapadmin-query.gif'
 
     manage_options = PropertyManager.manage_options + (
         {'label':'View', 'action':''},
@@ -47,7 +47,7 @@ class Query(SimpleItem, PropertyManager):
         results_html = roles_editor.filter_result_html(agent, self.pattern,
                                                        self._render_template)
         options = {
-            'pattern': self.pattern,
+            'title': self.title_or_id(),
             'results_html': results_html,
         }
         return self._render_template('zpt/query_index.zpt', **options)

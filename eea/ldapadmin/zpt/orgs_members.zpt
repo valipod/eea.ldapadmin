@@ -9,8 +9,8 @@
 </div>
 
 <h1>
-  <tt tal:content="options/organisation/id"></tt> &ndash;
   <tal:block content="options/organisation/name"/>
+  (<tt tal:content="options/organisation/id"/>)
 </h1>
 
 <tal:block content="structure common/message_boxes"/>

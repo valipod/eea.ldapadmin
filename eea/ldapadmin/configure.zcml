@@ -13,6 +13,11 @@
       />
 
   <browser:resource
+      name="eea.ldapadmin-query.gif"
+      image="www/query.gif"
+      />
+
+  <browser:resource
       name="eea.ldapadmin-orgs_editor.gif"
       image="www/editor.gif"
       />

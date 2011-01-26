@@ -9,7 +9,7 @@
 
   <label>
     name:
-    <input type="search" name="name"
+    <input type="search" name="name" autofocus="autofocus"
            tal:attributes="value options/search_name"/>
   </label>
 

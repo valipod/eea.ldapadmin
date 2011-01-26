@@ -1,5 +1,5 @@
 <tal:block content="structure python:common.buttons_bar('filter')"/>
 
-<h1>Filter roles &mdash; <tt tal:content="options/pattern" /></h1>
+<h1 tal:content="options/title"/>
 
 <tal:block content="structure options/results_html"/>
