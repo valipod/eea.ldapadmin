@@ -182,27 +182,6 @@ class RolesEditor(Folder):
         }
         return self._render_template('zpt/roles_browse.zpt', **options)
 
-    security.declareProtected(view, 'browse_ajax')
-    def browse_ajax(self, REQUEST):
-        """ view """
-
-        role_id = REQUEST.form.get('role_id', None)
-        agent = self._get_ldap_agent()
-        options = {
-            'role_id': role_id,
-            'role_info': agent.role_info(role_id),
-            'role_names': agent.role_names_in_role(role_id),
-            'role_parents': _role_parents(role_id),
-            'role_members': role_members(agent, role_id),
-            'can_edit': self.can_edit_roles(REQUEST.AUTHENTICATED_USER),
-        }
-        html = self._render_template.render('zpt/roles_browse.zpt', **options)
-
-        from lxml.html import soupparser
-        div = soupparser.fromstring(html).xpath('//ul[@class="sub-roles"]')[0]
-        from lxml import etree
-        return etree.tostring(div)
-
     def _filter_results(self, pattern, title=None):
         options = {
             'pattern': pattern,
