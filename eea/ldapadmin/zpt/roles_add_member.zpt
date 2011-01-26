@@ -140,7 +140,7 @@
     </thead>
     
     <tbody>
-      <tr tal:repeat="user_info results/users">
+      <tr tal:repeat="org_info results/orgs">
         <td>
           <span tal:content="org_info/name" />
         </td>

@@ -93,12 +93,13 @@ class BrowseTest(unittest.TestCase):
         page = parse_html(self.ui.index_html(self.request))
 
         self.mock_agent.role_names_in_role.assert_called_once_with('places')
-        roles_ul = page.xpath('ul[@class="sub-roles"]')[0]
-        self.assertEqual(len(roles_ul.xpath('li')), 2)
-        self.assertEqual(roles_ul.xpath('li/a')[0].text, "agency")
-        self.assertEqual(roles_ul.xpath('li/span')[0].text, "The Agency")
-        self.assertEqual(roles_ul.xpath('li/a')[1].text, "bank")
-        self.assertEqual(roles_ul.xpath('li/span')[1].text, "Bank for Test")
+        table = page.xpath('table/tbody')[0]
+        self.assertEqual(len(table.xpath('.//tr')), 2)
+        tr1, tr2 = table.xpath('tr')
+        self.assertEqual(plaintext(tr1.xpath('td[1]')[0]), "agency")
+        self.assertEqual(plaintext(tr1.xpath('td[2]')[0]), "The Agency")
+        self.assertEqual(plaintext(tr2.xpath('td[1]')[0]), "bank")
+        self.assertEqual(plaintext(tr2.xpath('td[2]')[0]), "Bank for Test")
 
     def test_browse_role_info(self):
         page = parse_html(self.ui.index_html(self.request))
@@ -117,17 +118,11 @@ class BrowseTest(unittest.TestCase):
         self.mock_agent.members_in_role.assert_called_once_with('places')
         self.mock_agent.user_info.assert_called_once_with('jsmith')
 
-        txt = lambda xp, ctx=page: ctx.xpath(xp)[0].text_content().strip()
-        user_li = page.xpath('//ul[@class="role-users"]/li')[0]
-        self.assertEqual(txt('tt[@class="user-id"]', user_li), 'jsmith')
-        self.assertEqual(txt('span[@class="user-name"]', user_li),
-                         user_info_fixture['name'])
-        self.assertEqual(txt('a[@class="user-email"]', user_li),
-                         user_info_fixture['email'])
-        self.assertEqual(txt('span[@class="user-phone"]', user_li),
-                         user_info_fixture['phone'])
-        self.assertEqual(txt('span[@class="user-organisation"]', user_li),
-                         user_info_fixture['organisation'])
+        cells = page.xpath('table[@class="account-datatable"]/tbody/tr/td')
+        self.assertEqual(plaintext(cells[0]), user_info_fixture['name'])
+        self.assertEqual(plaintext(cells[1]), 'jsmith')
+        self.assertEqual(plaintext(cells[2]), user_info_fixture['email'])
+        self.assertEqual(plaintext(cells[4]), user_info_fixture['organisation'])
 
     def test_org_info(self):
         self.mock_agent.members_in_role.return_value = {
@@ -141,11 +136,9 @@ class BrowseTest(unittest.TestCase):
         self.mock_agent.members_in_role.assert_called_once_with('places')
         self.mock_agent.org_info.assert_called_once_with('bridge-club')
 
-        org_li = page.xpath('//ul[@class="role-orgs"]/li')[0]
-        self.assertEqual(plaintext(org_li.xpath('span[@class="org-name"]')[0]),
-                         org_info_fixture['name'])
-        self.assertEqual(plaintext(org_li.xpath('a')[0]),
-                         org_info_fixture['url'])
+        cells = page.xpath('table[@class="account-datatable"]/tbody/tr/td')
+        self.assertEqual(plaintext(cells[0]), org_info_fixture['name'])
+        self.assertEqual(plaintext(cells[1]), org_info_fixture['url'])
 
 
 class CreateDeleteRolesTest(unittest.TestCase):
@@ -175,12 +168,12 @@ class CreateDeleteRolesTest(unittest.TestCase):
         create_url = "URL/create_role_html?parent_role_id=places"
         create_links = page.xpath('//a[@href="%s"]' % create_url)
         self.assertEqual(len(create_links), 1)
-        self.assertEqual(create_links[0].text, "Create sub-role")
+        self.assertEqual(plaintext(create_links[0]), "Create sub-role")
 
         delete_url = "URL/delete_role_html?role_id=places"
         delete_links = page.xpath('//a[@href="%s"]' % delete_url)
         self.assertEqual(len(delete_links), 1)
-        self.assertEqual(delete_links[0].text_content(), "Delete role places")
+        self.assertEqual(plaintext(delete_links[0]), "Delete role places")
 
     def test_create_role_html(self):
         self.request.form = {'parent_role_id': 'places'}
@@ -251,7 +244,8 @@ class CreateDeleteRolesTest(unittest.TestCase):
         page = parse_html(self.ui.delete_role_html(self.request))
 
         self.mock_agent._sub_roles.assert_called_once_with('places-bank')
-        self.assertEqual([plaintext(li) for li in page.xpath('//form/ul/li')],
+        self.assertEqual([plaintext(li) for li in
+                          page.xpath('//form//tbody/tr')],
                          ['places-bank',
                           'places-bank-central',
                           'places-bank-branch'])
@@ -288,12 +282,12 @@ class AddRemoveRoleMembersTest(unittest.TestCase):
         add_member_url = "URL/add_member_html?role_id=places"
         add_member_links = page.xpath('//a[@href="%s"]' % add_member_url)
         self.assertEqual(len(add_member_links), 1)
-        self.assertEqual(add_member_links[0].text, "Add members")
+        self.assertEqual(plaintext(add_member_links[0]), "Add members")
 
         rm_members_url = "URL/remove_members_html?role_id=places"
         rm_members_links = page.xpath('//a[@href="%s"]' % rm_members_url)
         self.assertEqual(len(rm_members_links), 1)
-        self.assertEqual(rm_members_links[0].text, "Remove members")
+        self.assertEqual(plaintext(rm_members_links[0]), "Remove members")
 
     def test_add_user_html(self):
         self.request.form = {'role_id': 'places'}
@@ -312,8 +306,8 @@ class AddRemoveRoleMembersTest(unittest.TestCase):
         page = parse_html(self.ui.add_member_html(self.request))
 
         self.mock_agent.search_user.assert_called_once_with('smith')
-        name = plaintext(page.xpath('//ul/li/span[@class="user-name"]')[0])
-        self.assertEqual(name, "Joe Smith")
+        name = plaintext(page.xpath('//tbody/tr/td')[0])
+        self.assertEqual(name, "Joe Smith jsmith@example.com")
         form = page.xpath('//form[@name="add-user"]')[0]
         self.assertEqual(form.attrib['action'], 'URL/add_user')
 
@@ -355,8 +349,8 @@ class AddRemoveRoleMembersTest(unittest.TestCase):
 
         remove_form = page.xpath('//form[@name="remove-users"]')[0]
         self.assertEqual(remove_form.attrib['action'], 'URL/remove_members')
-        user_li = remove_form.xpath('.//ul[@class="role-users"]/li')[0]
-        user_checkbox = user_li.xpath('input[@name="user_id_list:list"]')[0]
+        user_tr = remove_form.xpath('.//tbody/tr')[0]
+        user_checkbox = user_tr.xpath('.//input[@name="user_id_list:list"]')[0]
         self.assertEqual(user_checkbox.attrib['value'], 'jsmith')
 
     def test_remove_users_submit(self):
@@ -396,7 +390,7 @@ class AddRemoveRoleMembersTest(unittest.TestCase):
         page = parse_html(self.ui.add_member_html(self.request))
 
         self.mock_agent.search_org.assert_called_once_with('club')
-        name = plaintext(page.xpath('//ul/li/span[@class="org-name"]')[0])
+        name = plaintext(page.xpath('//tbody/tr/td')[0])
         self.assertEqual(name, "Ye olde bridge club")
         form = page.xpath('//form[@name="add-org"]')[0]
         self.assertEqual(form.attrib['action'], 'URL/add_org')
@@ -440,8 +434,8 @@ class AddRemoveRoleMembersTest(unittest.TestCase):
 
         remove_form = page.xpath('//form[@name="remove-orgs"]')[0]
         self.assertEqual(remove_form.attrib['action'], 'URL/remove_members')
-        org_li = remove_form.xpath('.//ul[@class="role-orgs"]/li')[0]
-        org_checkbox = org_li.xpath('input[@name="org_id_list:list"]')[0]
+        org_li = remove_form.xpath('.//table/tbody/tr')[0]
+        org_checkbox = org_li.xpath('.//input[@name="org_id_list:list"]')[0]
         self.assertEqual(org_checkbox.attrib['value'], 'bridge-club')
 
     def test_remove_orgs_submit(self):
@@ -573,7 +567,8 @@ class FilterTest(unittest.TestCase):
                           "Organisations in places-bank"])
         # TODO we should also list places-shiny somehow
 
-        user_names = [s.text for s in page.xpath('//span[@class="user-name"]')]
+        user_names = [plaintext(s) for s in
+                      page.xpath('//table[1]/tbody/tr/td[1]')]
         expected_user_names = [user_map_fixture[user_id]['name']
                                for user_id in sorted(user_map_fixture)]
         self.assertEqual(user_names, expected_user_names)
@@ -590,18 +585,6 @@ class FilterTest(unittest.TestCase):
 
         pattern_input = page.xpath('//form/input[@type="search"]')[0]
         self.assertEqual(pattern_input.attrib['value'], 'places-*')
-        self.check_query_results(page)
-
-    def test_saved_query_html(self):
-        from eea.ldapadmin.query import Query
-        query_ob = Query()
-        query_ob.pattern = 'places-*'
-        query_ob._get_ldap_agent = Mock(return_value=self.mock_agent)
-        query_ob.REQUEST = self.request
-        query_ob._render_template = stubbed_renderer()
-
-        page = parse_html(query_ob.index_html(self.request))
-
         self.check_query_results(page)
 
     def test_no_results(self):
