@@ -7,19 +7,9 @@
       initialize="eea.ldapadmin.initialize"
       />
 
-  <browser:resource
-      name="eea.ldapadmin-roles_editor.gif"
-      image="www/editor.gif"
-      />
-
-  <browser:resource
-      name="eea.ldapadmin-query.gif"
-      image="www/query.gif"
-      />
-
-  <browser:resource
-      name="eea.ldapadmin-orgs_editor.gif"
-      image="www/editor.gif"
+  <browser:resourceDirectory
+      name="eea.ldapadmin-www"
+      directory="www"
       />
 
 </configure>

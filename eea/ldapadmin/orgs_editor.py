@@ -58,7 +58,7 @@ class CommonTemplateLogic(object):
 class OrganisationsEditor(SimpleItem):
     meta_type = 'Eionet Organisations Editor'
     security = ClassSecurityInfo()
-    icon = '++resource++eea.ldapadmin-orgs_editor.gif'
+    icon = '++resource++eea.ldapadmin-www/roles_editor.gif'
 
     manage_options = SimpleItem.manage_options[:1] + (
         {'label':'View', 'action':''},

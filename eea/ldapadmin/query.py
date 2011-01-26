@@ -24,7 +24,7 @@ import roles_editor
 class Query(SimpleItem, PropertyManager):
     meta_type = 'Eionet Roles Editor Query'
     security = ClassSecurityInfo()
-    icon = '++resource++eea.ldapadmin-query.gif'
+    icon = '++resource++eea.ldapadmin-www/roles_query.gif'
 
     manage_options = PropertyManager.manage_options + (
         {'label':'View', 'action':''},

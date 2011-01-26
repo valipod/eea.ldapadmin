@@ -113,7 +113,7 @@ def role_members(agent, role_id):
 class RolesEditor(Folder):
     meta_type = 'Eionet Roles Editor'
     security = ClassSecurityInfo()
-    icon = '++resource++eea.ldapadmin-roles_editor.gif'
+    icon = '++resource++eea.ldapadmin-www/roles_editor.gif'
 
     meta_types = (
         {'name': query.Query.meta_type, 'action': 'manage_add_query_html'},
