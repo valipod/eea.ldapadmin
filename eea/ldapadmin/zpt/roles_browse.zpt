@@ -17,6 +17,10 @@
            tal:condition="options/role_id"
            tal:attributes="href string:${add_url}?role_id=${options/role_id}"
            >Add members</a>
+    <li><a tal:define="rm_url string:${common/base_url}/remove_members_html"
+           tal:condition="options/role_id"
+           tal:attributes="href string:${rm_url}?role_id=${options/role_id}"
+           >Remove members</a>
   </ul>
   </tal:block>
 </div>
@@ -52,47 +56,25 @@
 
     <tal:block condition="role_members/users">
     <h2>Users in <tt tal:content="python:role_id or '[ROOT]'" /></h2>
-    <form tal:define="url string:${common/base_url}/remove_users"
-          tal:attributes="action url" method="post" name="remove-users"
-          style="display: inline">
-    <input type="hidden" name="role_id"
-           tal:attributes="value role_id" />
     <ul class="role-users">
         <tal:block repeat="user_id python:sorted(role_members['users'])">
         <li tal:define="user_info python:role_members['users'][user_id];
                         is_authenticated common/is_authenticated">
-            <input tal:condition="options/can_edit"
-                   type="checkbox" name="user_id_list:list"
-                   tal:attributes="value user_id" />
             <metal:block use-macro="options/user_info_macro" />
         </li>
         </tal:block>
     </ul>
-    <input tal:condition="options/can_edit"
-           type="submit" value="Remove users" />
-    </form>
     </tal:block>
 
     <tal:block condition="role_members/orgs">
     <h2>Organisations in <tt tal:content="python:role_id or '[ROOT]'" /></h2>
-    <form tal:define="url string:${common/base_url}/remove_orgs"
-          tal:attributes="action url" method="post" name="remove-orgs"
-          style="display: inline">
-    <input type="hidden" name="role_id"
-           tal:attributes="value role_id" />
     <ul class="role-orgs">
         <tal:block repeat="org_id python:sorted(role_members['orgs'])">
         <li tal:define="org_info python:role_members['orgs'][org_id]">
-            <input tal:condition="options/can_edit"
-                   type="checkbox" name="org_id_list:list"
-                   tal:attributes="value org_id" />
             <metal:block use-macro="options/org_info_macro" />
         </li>
         </tal:block>
     </ul>
-    <input tal:condition="options/can_edit"
-           type="submit" value="Remove organisations" />
-    </form>
     </tal:block>
 
 </tal:block>

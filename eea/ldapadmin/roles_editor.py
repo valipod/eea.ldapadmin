@@ -101,6 +101,15 @@ class RoleCreationError(Exception):
 
 import query
 
+def role_members(agent, role_id):
+    members = agent.members_in_role(role_id)
+    return {
+        'users': dict((user_id, agent.user_info(user_id))
+                      for user_id in members['users']),
+        'orgs': dict((org_id, agent.org_info(org_id))
+                     for org_id in members['orgs']),
+    }
+
 class RolesEditor(Folder):
     meta_type = 'Eionet Roles Editor'
     security = ClassSecurityInfo()
@@ -146,19 +155,13 @@ class RolesEditor(Folder):
         """ view """
         role_id = REQUEST.form.get('role_id', None)
         agent = self._get_ldap_agent()
-        members = agent.members_in_role(role_id)
         _general_tmpl = load_template('zpt/roles_macros.zpt')
         options = {
             'role_id': role_id,
             'role_info': agent.role_info(role_id),
             'role_names': agent.role_names_in_role(role_id),
             'role_parents': _role_parents(role_id),
-            'role_members': {
-                'users': dict((user_id, agent.user_info(user_id))
-                              for user_id in members['users']),
-                'orgs': dict((org_id, agent.org_info(org_id))
-                             for org_id in members['orgs']),
-            },
+            'role_members': role_members(agent, role_id),
             'can_edit': self.can_edit_roles(REQUEST.AUTHENTICATED_USER),
             'user_info_macro': _general_tmpl.macros['user-info'],
             'org_info_macro': _general_tmpl.macros['org-info'],
@@ -319,19 +322,42 @@ class RolesEditor(Folder):
         _set_session_message(REQUEST, 'info', msg)
         REQUEST.RESPONSE.redirect(self.absolute_url() + '/?role_id=' + role_id)
 
-    security.declareProtected(eionet_edit_roles, 'remove_users')
-    def remove_users(self, REQUEST):
-        """ Remove user several users from a role """
+    security.declareProtected(eionet_edit_roles, 'remove_members_html')
+    def remove_members_html(self, REQUEST):
+        """ Bulk-remove several members """
+        role_id = REQUEST.form['role_id']
+        agent = self._get_ldap_agent()
+        options = {
+            'role_id': role_id,
+            'role_members': role_members(agent, role_id),
+        }
+        return self._render_template('zpt/roles_remove_members.zpt', **options)
+
+    security.declareProtected(eionet_edit_roles, 'remove_members')
+    def remove_members(self, REQUEST):
+        """ Remove user several members from a role """
         role_id = REQUEST.form['role_id']
         user_id_list = REQUEST.form.get('user_id_list', [])
+        org_id_list = REQUEST.form.get('org_id_list', [])
         assert type(user_id_list) is list
+        assert type(org_id_list) is list
+
+        agent = self._get_ldap_agent(bind=True)
 
         if user_id_list:
-            agent = self._get_ldap_agent(bind=True)
             for user_id in user_id_list:
                 agent.remove_from_role(role_id, 'user', user_id)
 
             msg = "Users %r removed from role %r" % (user_id_list, role_id)
+            _set_session_message(REQUEST, 'info', msg)
+
+        if org_id_list:
+            agent = self._get_ldap_agent(bind=True)
+            for org_id in org_id_list:
+                agent.remove_from_role(role_id, 'org', org_id)
+
+            msg = ("Organisations %r removed from role %r" %
+                   (org_id_list, role_id))
             _set_session_message(REQUEST, 'info', msg)
 
         REQUEST.RESPONSE.redirect(self.absolute_url()+'/?role_id='+role_id)
@@ -351,24 +377,6 @@ class RolesEditor(Folder):
         }
 
         return self._render_template('zpt/roles_remove_user.zpt', **options)
-
-    security.declareProtected(eionet_edit_roles, 'remove_orgs')
-    def remove_orgs(self, REQUEST):
-        """ Remove organisation from a role """
-        role_id = REQUEST.form['role_id']
-        org_id_list = REQUEST.form.get('org_id_list', [])
-        assert type(org_id_list) is list
-
-        if org_id_list:
-            agent = self._get_ldap_agent(bind=True)
-            for org_id in org_id_list:
-                agent.remove_from_role(role_id, 'org', org_id)
-
-            msg = ("Organisations %r removed from role %r" %
-                   (org_id_list, role_id))
-            _set_session_message(REQUEST, 'info', msg)
-
-        REQUEST.RESPONSE.redirect(self.absolute_url()+'/?role_id='+role_id)
 
     security.declareProtected(eionet_edit_roles, 'remove_user_from_role')
     def remove_user_from_role(self, REQUEST):

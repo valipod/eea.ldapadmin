@@ -290,6 +290,11 @@ class AddRemoveRoleMembersTest(unittest.TestCase):
         self.assertEqual(len(add_member_links), 1)
         self.assertEqual(add_member_links[0].text, "Add members")
 
+        rm_members_url = "URL/remove_members_html?role_id=places"
+        rm_members_links = page.xpath('//a[@href="%s"]' % rm_members_url)
+        self.assertEqual(len(rm_members_links), 1)
+        self.assertEqual(rm_members_links[0].text, "Remove members")
+
     def test_add_user_html(self):
         self.request.form = {'role_id': 'places'}
 
@@ -346,10 +351,10 @@ class AddRemoveRoleMembersTest(unittest.TestCase):
                                                       id='jsmith')
         self.request.form = {'role_id': 'places'}
 
-        page = parse_html(self.ui.index_html(self.request))
+        page = parse_html(self.ui.remove_members_html(self.request))
 
         remove_form = page.xpath('//form[@name="remove-users"]')[0]
-        self.assertEqual(remove_form.attrib['action'], 'URL/remove_users')
+        self.assertEqual(remove_form.attrib['action'], 'URL/remove_members')
         user_li = remove_form.xpath('.//ul[@class="role-users"]/li')[0]
         user_checkbox = user_li.xpath('input[@name="user_id_list:list"]')[0]
         self.assertEqual(user_checkbox.attrib['value'], 'jsmith')
@@ -357,7 +362,7 @@ class AddRemoveRoleMembersTest(unittest.TestCase):
     def test_remove_users_submit(self):
         self.request.form = {'role_id': 'places', 'user_id_list': ['jsmith']}
 
-        self.ui.remove_users(self.request)
+        self.ui.remove_members(self.request)
 
         self.request.RESPONSE.redirect.assert_called_with(
             'URL/?role_id=places')
@@ -367,7 +372,7 @@ class AddRemoveRoleMembersTest(unittest.TestCase):
     def test_remove_users_submit_nothing(self):
         self.request.form = {'role_id': 'places'}
 
-        self.ui.remove_users(self.request)
+        self.ui.remove_members(self.request)
 
         self.request.RESPONSE.redirect.assert_called_with(
             'URL/?role_id=places')
@@ -420,7 +425,7 @@ class AddRemoveRoleMembersTest(unittest.TestCase):
                "'places', 'places-bank'.")
         self.assertEqual(session_messages(self.request), {'info': [msg]})
 
-    def test_remove_org_html(self):
+    def test_remove_orgs_html(self):
         self.mock_agent.members_in_role.return_value = {'users':[],
                                                         'orgs':['bridge-club']}
         self.mock_agent.role_names_in_role.return_value = {}
@@ -431,29 +436,29 @@ class AddRemoveRoleMembersTest(unittest.TestCase):
                                                      id='bridge-club')
         self.request.form = {'role_id': 'places'}
 
-        page = parse_html(self.ui.index_html(self.request))
+        page = parse_html(self.ui.remove_members_html(self.request))
 
         remove_form = page.xpath('//form[@name="remove-orgs"]')[0]
-        self.assertEqual(remove_form.attrib['action'], 'URL/remove_orgs')
+        self.assertEqual(remove_form.attrib['action'], 'URL/remove_members')
         org_li = remove_form.xpath('.//ul[@class="role-orgs"]/li')[0]
         org_checkbox = org_li.xpath('input[@name="org_id_list:list"]')[0]
         self.assertEqual(org_checkbox.attrib['value'], 'bridge-club')
 
-    def test_remove_org_submit(self):
+    def test_remove_orgs_submit(self):
         self.request.form = {'role_id': 'places',
                              'org_id_list': ['bridge-club']}
 
-        self.ui.remove_orgs(self.request)
+        self.ui.remove_members(self.request)
 
         self.request.RESPONSE.redirect.assert_called_with(
             'URL/?role_id=places')
         msg = "Organisations ['bridge-club'] removed from role 'places'"
         self.assertEqual(session_messages(self.request), {'info': [msg]})
 
-    def test_remove_org_submit_nothing(self):
+    def test_remove_orgs_submit_nothing(self):
         self.request.form = {'role_id': 'places'}
 
-        self.ui.remove_orgs(self.request)
+        self.ui.remove_members(self.request)
 
         self.request.RESPONSE.redirect.assert_called_with(
             'URL/?role_id=places')
