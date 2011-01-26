@@ -54,7 +54,7 @@
   <tal:block condition="role_names">
   <h2 tal:condition="role_id">Sub-roles in <tt tal:content="role_id"/></h2>
   
-  <table class="account-datatable">
+  <table class="account-datatable sub-roles">
       <thead>
           <tr>
               <td>
@@ -180,59 +180,4 @@
 </tal:block>
 <div class="clear">&nbsp;</div>
 
-<script>
-$(function() {
-    var www_url = '/++resource++eea.ldapadmin-www';
-    decorate_subrole_links($('ul.sub-roles'));
-
-    function decorate_subrole_links(sub_roles) {
-        $('li a', sub_roles).each(function() {
-            var arrow = $('<'+'img>').attr('src', www_url+'/right.png');
-            arrow.addClass('roles-tree-arrow').click(subrole_expand);
-            var arrow2 = $('<'+'img>').attr('src', www_url+'/down.png').hide();
-            arrow2.addClass('roles-tree-arrow').click(subrole_collapse);
-            $(this).before(arrow, arrow2);
-            var li = $(this).parent('li');
-            arrows(li).css({'position': 'relative', 'top': '4px'});
-            li.css('list-style', 'none');
-        });
-    }
-
-    function subrole_expand(evt) {
-        evt.preventDefault();
-        var li = $(this).parent('li');
-        var subroles_box = $('> div.subroles_box', li);
-        if(subroles_box.length < 1) {
-            subroles_box = fetch_subroles(li).appendTo(li);
-        } else {
-            subroles_box.show();
-        }
-        arrows(li).toggle();
-    }
-
-    function subrole_collapse(evt) {
-        evt.preventDefault();
-        var li = $(this).parent('li');
-        $('> div.subroles_box', li).hide();
-        arrows(li).toggle();
-    }
-
-    function fetch_subroles(li) {
-        var subroles_box = $('<'+'div>').addClass('subroles_box');
-        subroles_box.text("Loading...");
-        var href = $('a', li).attr('href');
-        $.get(href, function(data) {
-            var kid_sub_roles = $('ul.sub-roles', data);
-            var kid_users = $('ul.role-users', data).prev('h2').andSelf();
-            var kid_orgs = $('ul.role-orgs', data).prev('h2').andSelf();
-            subroles_box.empty().append(kid_sub_roles, kid_users, kid_orgs);
-            decorate_subrole_links(kid_sub_roles);
-        });
-        return subroles_box;
-    }
-
-    function arrows(li) {
-        return $('> .roles-tree-arrow', li);
-    }
-});
-</script>
+<script src="++resource++eea.ldapadmin-www/roles_tree.js"></script>
