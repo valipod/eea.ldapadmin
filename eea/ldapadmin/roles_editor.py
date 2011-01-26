@@ -291,14 +291,14 @@ class RolesEditor(Folder):
 
     security.declareProtected(eionet_edit_roles, 'delete_role')
     def delete_role(self, REQUEST):
-        """ remove a role and all its sub-roles """
-        role_id = REQUEST.form['role_id']
-        agent = self._get_ldap_agent(bind=True)
-        agent.delete_role(role_id)
-        parent_role_id = '-'.join(role_id.split('-')[:-1])
-        _set_session_message(REQUEST, 'info', "Removed role %s" % role_id)
-        REQUEST.RESPONSE.redirect(self.absolute_url() +
-                                  '/?role_id=' + parent_role_id)
+				""" remove a role and all its sub-roles """
+				role_id = REQUEST.form['role_id']
+				agent = self._get_ldap_agent(bind=True)
+				agent.delete_role(role_id)
+				parent_role_id = '-'.join(role_id.split('-')[:-1])
+				_set_session_message(REQUEST, 'info', "Removed role %s" % role_id)
+				rel_url = '/?role_id=' + parent_role_id if parent_role_id else '/'
+				REQUEST.RESPONSE.redirect(self.absolute_url() + rel_url)
 
 
     security.declareProtected(eionet_edit_roles, 'add_member_html')
