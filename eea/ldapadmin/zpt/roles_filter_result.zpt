@@ -1,5 +1,5 @@
 <tal:block define="is_authenticated common/is_authenticated"
-           repeat="role_id options/results">
+           repeat="role_id python:sorted(options['results'])">
   <tal:block define="role_members python:options['results'][role_id]">
 
   <tal:block condition="role_members/users">

@@ -1,6 +1,7 @@
 import logging
 from string import ascii_lowercase
 from functools import wraps
+import re
 import ldap, ldap.filter
 
 log = logging.getLogger(__name__)
@@ -155,22 +156,26 @@ class LdapAgent(object):
                         filterstr='(objectClass=groupOfUniqueNames)',
                         attrlist=())
 
-        pattern_bits = pattern.split('-')
+        pattern = pattern.lower()
+        for ch in pattern:
+            if ch not in ascii_lowercase + '-*':
+                return set()
+
+        if not pattern:
+            return set()
+
+        pattern = pattern.replace('-', r'\-').replace('*', r'.+')
+        compiled_pattern = re.compile(pattern)
 
         out = set()
         for dn, attr in result:
             role_id = self._role_id(dn)
             if role_id is None:
                 continue
-            role_id_bits = role_id.split('-')
-            if len(pattern_bits) > len(role_id_bits):
-                continue
-            for c in range(len(pattern_bits)):
-                if pattern_bits[c] != '*':
-                    if role_id_bits[c] != pattern_bits[c]:
-                        break # not a march
-            else:
-                out.add(role_id) # because we found no mismatch
+
+            if compiled_pattern.search(role_id.lower()) is not None:
+                out.add(role_id)
+
         return out
 
     def _query(self, dn):

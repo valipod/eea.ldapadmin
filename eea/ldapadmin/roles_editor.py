@@ -1,4 +1,5 @@
 from string import ascii_lowercase
+import operator
 
 from AccessControl import ClassSecurityInfo
 from AccessControl.Permissions import view, view_management_screens
@@ -136,6 +137,10 @@ class RolesEditor(Folder):
     def _get_ldap_agent(self, bind=False):
         return ldap_config.ldap_agent_with_config(self._config, bind)
 
+    def _predefined_filters(self):
+        return sorted(self.objectValues([query.Query.meta_type]),
+                      key=operator.methodcaller('getId'))
+
     security.declareProtected(view, 'index_html')
     def index_html(self, REQUEST):
         """ view """
@@ -157,6 +162,8 @@ class RolesEditor(Folder):
             'can_edit': self.can_edit_roles(REQUEST.AUTHENTICATED_USER),
             'user_info_macro': _general_tmpl.macros['user-info'],
             'org_info_macro': _general_tmpl.macros['org-info'],
+            'filter_form_macro': _general_tmpl.macros['filter-form'],
+            'predefined_filters': self._predefined_filters(),
         }
         return self._render_template('zpt/roles_browse.zpt', **options)
 
@@ -164,8 +171,11 @@ class RolesEditor(Folder):
     def filter(self, REQUEST):
         """ view """
         pattern = REQUEST.form.get('pattern', '')
+        _general_tmpl = load_template('zpt/roles_macros.zpt')
         options = {
             'pattern': pattern,
+            'filter_form_macro': _general_tmpl.macros['filter-form'],
+            'predefined_filters': self._predefined_filters(),
         }
         if pattern:
             agent = self._get_ldap_agent()

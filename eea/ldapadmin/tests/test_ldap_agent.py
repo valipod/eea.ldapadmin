@@ -220,23 +220,23 @@ class LdapAgentTest(unittest.TestCase):
 
     def test_filter_roles(self):
         expected_results = {
-            'A': ['A', 'A-B', 'A-C'],
-            'A-*': ['A-B', 'A-C'],
-            '*-B': ['A-B'],
+            '': [],
+            'asdf': [],
             '*': ['A', 'A-B', 'A-C',
                   'K', 'K-L', 'K-L-O',
                        'K-M', 'K-M-O',
                        'K-N', 'K-N-O', 'K-N-O-P',
                               'K-N-T'],
+            'A': ['A', 'A-B', 'A-C'],
+            'A-*': ['A-B', 'A-C'],
+            '*-B': ['A-B'],
             'K-*': ['K-L', 'K-L-O',
                     'K-M', 'K-M-O',
                     'K-N', 'K-N-O', 'K-N-O-P',
                            'K-N-T'],
             'K-N-*': ['K-N-O', 'K-N-O-P', 'K-N-T'],
             'K-*-O': ['K-L-O','K-M-O',  'K-N-O', 'K-N-O-P'],
-            'asdf': [],
-            '**': [],
-            '': [],
+            'M': ['K-M', 'K-M-O'],
         }
 
         role_id_list = [None, 'A', 'A-B', 'A-C', 'K', 'K-L', 'K-L-O',

@@ -34,3 +34,25 @@
     <a tal:condition="org_info/url"
        tal:attributes="href org_info/url" tal:content="org_info/url"></a>
 </metal:block>
+
+<metal:block define-macro="filter-form">
+  <form name="search"
+        tal:define="filter_url string:${common/base_url}/filter"
+        tal:attributes="action filter_url">
+    <label for="search-roles-input" style="display:none">Roles pattern</label>
+    <input id="search-roles-input" type="search" name="pattern:utf8:ustring"
+           size="30" autofocus="autofocus"
+           tal:attributes="value options/pattern|nothing"/>
+    <input type="submit" value="Search roles"/>
+    <p>examples: <tt>staff</tt>, <tt>eionet-*-dk</tt></p>
+    <tal:block condition="options/predefined_filters|nothing">
+    <h4>Preferined queries</h4>
+    <ul>
+      <li tal:repeat="fil options/predefined_filters">
+        <a tal:attributes="href fil/absolute_url"
+           tal:content="fil/title_or_id"></a>
+      </li>
+    </ul>
+    </tal:block>
+  </form>
+</metal:block>

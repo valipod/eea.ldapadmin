@@ -1,6 +1,10 @@
-<div id="operations" tal:condition="options/can_edit">
-<h2>Operations</h2>
-<ul>
+<div id="operations">
+  <h2>Search</h2>
+  <metal:block use-macro="options/filter_form_macro"/>
+
+  <tal:block condition="options/can_edit">
+  <h2>Operations</h2>
+  <ul>
     <li><a tal:define="del_url string:${common/base_url}/delete_role_html"
            tal:condition="options/role_id"
            tal:attributes="href string:${del_url}?role_id=${options/role_id}"
@@ -17,10 +21,9 @@
            tal:condition="options/role_id"
            tal:attributes="href string:${add_url}?role_id=${options/role_id}"
            >Add members (organisations)</a>
-</ul>
+  </ul>
+  </tal:block>
 </div>
-
-<tal:block content="structure python:common.buttons_bar('browse')"/>
 
 <h1 tal:define="name python:(options['role_info']['description'].strip()
                              or 'Role %s' % options['role_id'])"
@@ -41,6 +44,7 @@
                    role_names options/role_names;
                    role_members options/role_members">
     <tal:block condition="role_names">
+    <h2 tal:condition="role_id">Sub-roles in <tt tal:content="role_id"/></h2>
     <ul class="sub-roles">
         <li tal:repeat="sub_role_id python:sorted(role_names)">
             <a tal:attributes="href string:?role_id=${sub_role_id}"
