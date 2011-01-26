@@ -12,10 +12,12 @@
     </div>
     
     <div class="left clear">
-      <a tal:attributes="href string:./?role_id=${options/parent_id}" class="button"
-          title="Back to">
+      <a tal:attributes="href string:./?role_id=${options/parent_id};
+                        title string:Back to ${options/parent_id}"
+         class="button">
            <img src="/++resource++eea.ldapadmin-www/back.png" class="middle-image image12"
-                alt="" title="Back to account information" />
+                tal:attributes="title string:Back to ${options/parent_id}"
+                alt="" />
            <span tal:content="string:Back to ${options/parent_id}" />
       </a>
       &nbsp;
