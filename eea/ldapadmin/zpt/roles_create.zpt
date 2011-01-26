@@ -5,15 +5,15 @@
   <tt tal:content="python:options['parent_id'] or '[root]'"/>
 </h1>
 
-<div>
-  <div class="account-links clear" tal:condition="options/parent_id">
+<div tal:condition="options/parent_id">
+  <div class="account-links clear">
     <div class="right-position clear">
       <tal:block content="structure python:common.buttons_bar('create_role', options['parent_id'])"/>
     </div>
     
     <div class="left clear">
-      <a href="javascript:void(0); " class="button"
-          title="Back to account information">
+      <a tal:attributes="href string:./?role_id=${options/parent_id}" class="button"
+          title="Back to">
            <img src="/++resource++eea.ldapadmin-www/back.png" class="middle-image image12"
                 alt="" title="Back to account information" />
            <span tal:content="string:Back to ${options/parent_id}" />

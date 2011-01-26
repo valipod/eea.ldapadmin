@@ -501,6 +501,10 @@ div.filter-section table.account-table:hover {
 	font-size: 12px;
 }
 
+.role-parents a:hover {
+	text-decoration: none;
+}
+
 .inline {
 	display: inline;
 }

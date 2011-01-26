@@ -24,8 +24,8 @@
 
   <tal:block condition="options/predefined_filters|nothing">
   <p>
-    OR you can search by one of the
-    <a href="javascript:void(0); "
+    Or you can search by one of the existing
+    <a href="javascript:void(0); " class="account-link"
        onclick="toggleView('#predefined-queries'); ">
       predefined queries</a>.
   </p>
@@ -36,13 +36,9 @@
         <td>
           Query name
         </td>
-
+        
         <td>
           Query pattern
-        </td>
-
-        <td class="center">
-          Action
         </td>
       </tr>
     </thead>
@@ -57,18 +53,15 @@
         <td>
           <span tal:content="fil/pattern" />
         </td>
-
-        <td class="center">
-          <div class="clear">&nbsp;</div>
-          <a tal:attributes="href fil/absolute_url" class="button clear">
-            Search
-          </a>
-          <br />
-          <div class="clear">&nbsp;</div>
-        </td>
       </tr>
     </tbody>
   </table>
 
+  <!--<ul>
+    <li class="inline" tal:repeat="fil options/predefined_filters">
+      &middot;&nbsp;<a tal:attributes="href fil/absolute_url"
+         tal:content="fil/pattern"></a>
+    </li>
+  </ul>-->
   </tal:block>
 </form>

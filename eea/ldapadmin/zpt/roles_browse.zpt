@@ -7,11 +7,21 @@
                              or 'Role %s' % options['role_id'])"
     tal:content="name"></h1>
 
-<div>
-  <div class="account-links" tal:condition="options/role_id">
-    <tal:block condition="options/can_edit">
+<div tal:condition="options/can_edit">
+  <div class="account-links clear">
+    <div class="right-position clear">
       <tal:block content="structure python:common.buttons_bar('role', options['role_id'])"/>
-    </tal:block>
+    </div>
+    
+    <div class="left clear">
+      <a href="javascript:void(0); " class="button"
+          title="Back to account information">
+           <img src="/++resource++eea.ldapadmin-www/back.png" class="middle-image image12"
+                alt="" title="Back to account information" />
+           <span tal:content="string:Back to ${options/role_id}" />
+      </a>
+      &nbsp;
+    </div>
   </div>
   <br />
 </div>
