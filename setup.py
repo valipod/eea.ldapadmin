@@ -8,5 +8,5 @@ setup(name='eea.ldapadmin',
       packages=find_packages(),
       include_package_data=True,
       zip_safe=False,
-      install_requires=['python-ldap'],
+      install_requires=['python-ldap', 'lxml', 'BeautifulSoup'],
 )
