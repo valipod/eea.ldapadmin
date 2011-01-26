@@ -25,14 +25,12 @@
   <br />
 </div>
 
-<div class="roles-search-form">
-  <form name="roles-search-form">
+<div class="search-form">
+  <form name="search-form">
     <input type="hidden" name="role_id" tal:attributes="value options/role_id"/>
     
     <label for="search-query">
-      <strong>
-      Name of user/organisation:&nbsp;
-      </strong>
+      Name of user/organisation:
     </label>
     <br />
     <input type="search" name="name" id="search-query"
@@ -40,6 +38,7 @@
            tal:attributes="value options/search_name"/>
   
     <input type="submit" value="Search" class="primary-button" />
+    <div class="clear">&nbsp;</div>
   </form>
 </div>
 
@@ -111,7 +110,6 @@
                    tal:attributes="value user_info/id" />
     
             <input type="submit" value="Add" class="primary-button" />
-    
           </form>
         </td>
       </tr>
@@ -167,7 +165,7 @@
   </table>
   </tal:block>
 
-  <p class="no-results center" tal:condition="no_results">
+  <p class="search-message" tal:condition="no_results">
     <img src="/++resource++eea.ldapadmin-www/info.png" class="middle-image"
        title="Note" alt=""/>
     Found no users or organisations matching

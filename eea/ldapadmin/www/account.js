@@ -3,7 +3,7 @@ $(document).ready(function(){
 });
 
 function toggleView(selector){
-	$(selector).slideToggle();
+	$(selector).toggle();
 	
 	return false;
 }

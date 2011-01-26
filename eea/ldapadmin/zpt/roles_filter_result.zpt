@@ -108,7 +108,7 @@
 </tal:block>
 
 <p tal:condition="python:options['pattern'] and not options['results']"
-   class="no-results center">
+   class="search-message">
   <img src="/++resource++eea.ldapadmin-www/info.png" class="middle-image"
        title="Note" alt=""/>
   No roles found matching <strong tal:content="options/pattern" />.

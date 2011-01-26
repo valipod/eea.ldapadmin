@@ -7,7 +7,7 @@
   
 </h1>
 
-<div class="roles-search-form">
+<div class="search-form">
   <tal:block define="pattern options/pattern"
              content="structure python:common.search_roles_box(pattern)"/>
 </div>

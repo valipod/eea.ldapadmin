@@ -1,11 +1,8 @@
 <form name="search"
       tal:define="filter_url string:${common/base_url}/filter"
       tal:attributes="action filter_url">
-  <br />
   <label for="search-roles-input">
-      <strong>
       Roles pattern
-      </strong>
   </label>
   <span class="search-help-text">
       <span class="help-trigger">
@@ -25,7 +22,7 @@
 
   <tal:block condition="options/predefined_filters|nothing">
   <p>
-    or you can search by one of the existing
+    Search by one of the existing
     <a href="javascript:void(0); " class="account-link"
        onclick="toggleView('#predefined-queries'); ">
       predefined queries</a>.
@@ -57,12 +54,5 @@
       </tr>
     </tbody>
   </table>
-
-  <!--<ul>
-    <li class="inline" tal:repeat="fil options/predefined_filters">
-      &middot;&nbsp;<a tal:attributes="href fil/absolute_url"
-         tal:content="fil/pattern"></a>
-    </li>
-  </ul>-->
   </tal:block>
 </form>

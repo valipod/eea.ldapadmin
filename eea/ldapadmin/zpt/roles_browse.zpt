@@ -40,7 +40,7 @@
 
 <tal:block content="structure common/message_boxes"/>
 
-<div class="roles-search-form">
+<div class="search-form">
   <tal:block content="structure common/search_roles_box"/>
 </div>
 

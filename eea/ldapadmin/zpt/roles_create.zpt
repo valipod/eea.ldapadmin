@@ -54,7 +54,7 @@
   <table class="account-table">
     <tbody>
       <tr>
-        <td class="right-td">
+        <td>
           <label for="name">
             Name:
           </label>
@@ -68,7 +68,7 @@
       </tr>
       
       <tr>
-        <td class="right-td">
+        <td>
           <label for="description">
             Description:
           </label>

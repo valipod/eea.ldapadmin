@@ -3,14 +3,6 @@
 	margin-top: -4px;
 }
 
-.inline {
-	display: inline;
-}
-
-.center {
-	text-align: center;
-}
-
 .left-position {
 	float: left;
 }
@@ -39,12 +31,7 @@
 	height: 48px;
 }
 
-h1.account-h1 {
-	/*font-size: 1.1em !important;*/
-}
-
 a.account-link {
-	font-size: 1em;
 	text-decoration: none;
 	color: #00446A;
 }
@@ -58,54 +45,49 @@ a:visited {
 }
 
 a.button, .account-links a.current {
+	text-decoration: none;
 	font-size: 11px;
-	background-color: #F2F2F2 !important;
-	border: 1px solid #BBBBBB !important;
-	color: #333333 !important;
-	padding: 5px !important;
-	text-decoration: none !important;
-	display: inline !important;
+	font-weight: bold;
+	border: 1px solid #BBBBBB;
+	padding: 5px;
+	display: inline;
+	-moz-box-shadow: 0 1px 0 rgba(0, 0, 0, 0.1);
+	-webkit-box-shadow: 0px 1px 0px #000;
+	box-shadow: 0px 1px 0px #000000;
+}
+
+a.button {
+	color: #333333;
+	background-color: #F2F2F2;
 	/* Mozilla: */
 	background: -moz-linear-gradient(top, #F7F7F7, #E4E5E5);
-	-moz-box-shadow: 0 1px 0 rgba(0, 0, 0, 0.1);
 	/* Chrome, Safari:*/
 	background: -webkit-gradient(linear,
 		left top, left bottom, from(#F7F7F7), to(#E4E5E5));
-	-webkit-box-shadow: 0px 1px 0px #000;
 	/* MSIE */
 	filter: progid:DXImageTransform.Microsoft.Gradient(
 		StartColorStr='#F7F7F7', EndColorStr='#E4E5E5', GradientType=0);
-	box-shadow: 0px 1px 0px #000;
-	font-weight: bold;
-	
 }
 
 .account-links a.current {
+	background-color: #186087;
 	background: -moz-linear-gradient(-90deg, #186087, #00446A) repeat scroll 0 0 transparent;
 	background: -webkit-gradient(linear,
 		left top, left bottom, from(#186087), to(#00446A));
 	filter: progid:DXImageTransform.Microsoft.Gradient(
 		StartColorStr='#186087', EndColorStr='#00446A', GradientType=0);
-	color: #FFFFFF !important;
+	color: #FFFFFF;
 }
 
 a.button:hover, a.current:hover {
-	background-color: #EEEEEE;
+	background-color: #E4E5E5;
 	background: -moz-linear-gradient(top, #E4E5E5, #F7F7F7);
 	background: -webkit-gradient(linear,
 		left top, left bottom, from(#E4E5E5), to(#F7F7F7));
 	filter: progid:DXImageTransform.Microsoft.Gradient(
 		StartColorStr='#E4E5E5', EndColorStr='#F7F7F7', GradientType=0);
-	color: #111111 !important;
+	color: #111111;
 	cursor: pointer;
-	border-bottom-color: #438BB1;
-	border-color: -moz-use-text-color -moz-use-text-color #EBEBEB;
-	border-style: none;
-	border-width: 1px;
-}
-
-a.button:focus {
-	background-color: #E2E2E2;
 }
 
 input.primary-button {
@@ -148,18 +130,17 @@ input.primary-button:hover {
 */
 
 table.account-table {
-	font-size: 0.9em;
 	border-collapse: collapse;
+	margin: 0 auto;
 }
 
 table.account-table label {
-	font-weight: bold;
-	text-align: right !important;
 	vertical-align: middle;
+	float: right;
 }
 
 table.account-table tr {
-	border-top: 1px solid #EAEAEA;
+	/*border-top: 1px solid #EAEAEA;*/
 }
 
 table.account-table tr:last-child,
@@ -172,15 +153,7 @@ table.account-table td {
 }
 
 table.account-table td.fixed-width-label {
-	max-width: 100px !important;
-}
-
-td.top {
-	vertical-align: top !important;
-}
-
-td.right-td {
-	text-align: right !important;
+	/*max-width: 100px !important;*/
 }
 
 /**
@@ -189,6 +162,7 @@ td.right-td {
 
 label {
 	cursor: pointer;
+	font-weight: bold;
 }
 
 select.account-select.medium {
@@ -209,7 +183,6 @@ input.text-input, textarea.small,
 textarea.medium, textarea.large {
 	background-color: #FFFFFF;
 	border: 1px solid #A5CED1;
-	font-size: 0.9em !important;
 	padding: 0.5em;
 }
 
@@ -247,7 +220,6 @@ div.account-links {
 	border: 1px solid #B50000 !important;
 	background-color: #FFCECE !important;
 	color: #333333 !important;
-	font-size: 0.9em !important;
 	font-weight: bold;
 	padding: 0.5em 0em 0.5em 1em !important;
 	margin: 0 0 1em 0 !important;
@@ -257,7 +229,6 @@ div.account-links {
 	border: 1px solid #FFAE00 !important;
 	background-color: #FFF5CE !important;
 	color: #333333 !important;
-	font-size: 0.9em !important;
 	font-weight: bold;
 	padding: 0.5em 0em 0.5em 0.3em !important;
 	margin: 0 0 1em 0 !important;
@@ -278,7 +249,6 @@ table.account-datatable {
 	-moz-border-radius: 5px;
 	-webkit-border-radius: 5px;
 	border-radius: 5px;
-	font-size: .9em;
 }
 
 table.account-datatable tr,
@@ -366,7 +336,6 @@ div#operations {
 	position: absolute;
 	right: 1.5em;
 	width: 200px;
-	font-size: 12px;
 	-moz-border-radius: 3px;
 	-webkit-border-radius: 3px;
 	border-radius: 3px;
@@ -433,24 +402,12 @@ div.filter-section table.account-table:hover {
 	display: none;
 }
 
-.search-form {
-	width: 600px;
-}
-
-.search-form img {
-	margin-right: 1em;
-}
-
-.roles-search-form {
-	font-size: 12px;
-}
-
-.roles-search-form form, .account-links {
+.search-form form, .account-links {
 	background-color: #EFEFEF;
-	padding: 0px 15px;
+	font-size: 12px;
+	padding: 15px 15px 0px 15px;
 	background-color: #F2F2F2 !important;
 	color: #666666 !important;
-	padding: 0.5em !important;
 	background: -moz-linear-gradient(top, #EFEFEF, #E4E5E5);
 	background: -webkit-gradient(linear,
 		left top, left bottom, from(#F7F7F7), to(#E4E5E5));
@@ -459,14 +416,16 @@ div.filter-section table.account-table:hover {
 	border: 1px solid #D6D6D6;
 }
 
+.search-form table {
+	margin-bottom: 15px;
+}
+
 .search-help-text {
 	font-size: 12px;
-	font-weight: bold;
 }
 
 .search-help-text span {
 	font-style: italic;
-	font-weight: normal;
 }
 
 .checkbox-td {
@@ -483,4 +442,8 @@ div.filter-section table.account-table:hover {
 
 .role-parents a:hover {
 	text-decoration: none;
+}
+
+.search-message {
+	text-align: center;
 }
