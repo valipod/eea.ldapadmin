@@ -20,12 +20,12 @@
   <input id="search-roles-input" type="search" name="pattern:utf8:ustring"
          class="text-input large" autofocus="autofocus"
          tal:attributes="value options/pattern|nothing"/>
-  <input type="submit" value="Search roles" name="submit"
+  <input type="submit" value="Search roles"
          class="primary-button" />
 
   <tal:block condition="options/predefined_filters|nothing">
   <p>
-    Or you can search by one of the existing
+    or you can search by one of the existing
     <a href="javascript:void(0); " class="account-link"
        onclick="toggleView('#predefined-queries'); ">
       predefined queries</a>.

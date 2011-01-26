@@ -5,8 +5,6 @@
 
 <h1>Remove members from <tt tal:content="options/role_id"/></h1>
 
-<tal:block content="structure common/message_boxes"/>
-
 <div>
   <div class="account-links clear" tal:condition="options/role_id">
     <div class="right-position clear">
@@ -14,7 +12,7 @@
     </div>
     
     <div class="left clear">
-      <a tal:attributes="href string:./?role_id=${options/role_id};
+      <a tal:attributes="href string:${common/base_url}?role_id=${options/role_id};
                          title string:Back to ${options/role_id}"
           class="button">
            <img src="/++resource++eea.ldapadmin-www/back.png" class="middle-image image12"
@@ -26,6 +24,8 @@
   </div>
   <br />
 </div>
+
+<tal:block content="structure common/message_boxes"/>
 
 <tal:block define="role_id options/role_id;
                    role_members options/role_members">
@@ -72,67 +72,56 @@
         </tbody>
     </table>
     <br />
-    <input type="submit" value="Remove users" name="submit" class="primary-button" />
+    <input type="submit" value="Remove users" class="primary-button" />
     </form>
     </tal:block>
 
     <tal:block condition="role_members/orgs">
-    <h2>Organisations in <tt tal:content="python:role_id or '[ROOT]'" /></h2>
-    <form tal:define="url string:${common/base_url}/remove_members"
-          tal:attributes="action url" method="post" name="remove-orgs">
-    <input type="hidden" name="role_id"
-           tal:attributes="value role_id" />
-    
-    <table class="account-datatable">
-        <thead>
-            <tr>
-                <td>
-                    <input type="checkbox" id="selectall" class="selectall"
-                           name="selectall" />
-                </td>
-                
-                <td>
-                    Organisation Name
-                </td>
-                
-                <td>
-                    Organisation ID
-                </td>
-            </tr>
-        </thead>
-        
-        <tbody>
-            <tal:block repeat="org_id python:sorted(role_members['orgs'])">
-                <tr tal:define="org_info python:role_members['orgs'][org_id]">
-                    <td class="checkbox-td">
-                        <input type="checkbox" name="org_id_list:list"
-                                tal:attributes="value org_id" />
-                    </td>
-                    <td>
-                        <span tal:content="org_info/name"/>
-                    </td>
-                    
-                    <td>
-                        <span tal:content="org_id"/>
-                    </td>
-                </tr>
-            </tal:block>
-        </tbody>
-    </table>
-    <br />
-    <input type="submit" value="Remove organisations" name="submit" class="primary-button" />
-    
-    <!--<ul class="role-orgs">
-        <tal:block repeat="org_id python:sorted(role_members['orgs'])">
-        <li tal:define="org_info python:role_members['orgs'][org_id]">
-            <input type="checkbox" name="org_id_list:list"
-                   tal:attributes="value org_id" />
-            <span tal:content="org_info/name"/>
-            (<tt tal:content="org_id"/>)
-        </li>
-        </tal:block>
-    </ul>-->
+      <h2>Organisations in <tt tal:content="python:role_id or '[ROOT]'" /></h2>
+      <form tal:define="url string:${common/base_url}/remove_members"
+            tal:attributes="action url" method="post" name="remove-orgs">
+      <input type="hidden" name="role_id"
+             tal:attributes="value role_id" />
+      
+      <table class="account-datatable">
+          <thead>
+              <tr>
+                  <td>
+                      <input type="checkbox" id="selectall" class="selectall"
+                             name="selectall" />
+                  </td>
+                  
+                  <td>
+                      Organisation Name
+                  </td>
+                  
+                  <td>
+                      Organisation ID
+                  </td>
+              </tr>
+          </thead>
+          
+          <tbody>
+              <tal:block repeat="org_id python:sorted(role_members['orgs'])">
+                  <tr tal:define="org_info python:role_members['orgs'][org_id]">
+                      <td class="checkbox-td">
+                          <input type="checkbox" name="org_id_list:list"
+                                  tal:attributes="value org_id" />
+                      </td>
+                      <td>
+                          <span tal:content="org_info/name"/>
+                      </td>
+                      
+                      <td>
+                          <span tal:content="org_id"/>
+                      </td>
+                  </tr>
+              </tal:block>
+          </tbody>
+      </table>
+      <br />
+      <input type="submit" value="Remove organisations" class="primary-button" />
     </form>
-    </tal:block>
+  </tal:block>
 
 </tal:block>

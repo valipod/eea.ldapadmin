@@ -3,46 +3,50 @@
            content="structure python:common.breadcrumbs(stack)"/>
 </div>
 
-<tal:block content="structure common/message_boxes"/>
+
 
 <h1 tal:define="name python:(options['role_info']['description'].strip()
                              or 'Role %s' % options['role_id'])"
     tal:content="name"></h1>
 
-<div>
+<div tal:condition="options/can_edit">
   <div class="account-links clear">
     
     <div class="right-position clear" tal:condition="options/role_id">
       <tal:block content="structure python:common.buttons_bar('role', options['role_id'])"/>
     </div>
     
-    <div class="left clear" tal:condition="options/role_id">
-      <a href="./" class="button"
+    <div class="right-position clear" tal:condition="not:options/role_id">
+    <a tal:attributes="href string:${common/base_url}/create_role_html/?parent_role_id=" class="button"
+       title="Create role">
+      <img src="/++resource++eea.ldapadmin-www/round_plus.png" alt=""
+           class="middle-image image12" title="Create new role" />
+      Create role</a>
+    </div>
+    
+    <div class="left-position clear" tal:condition="options/role_id">
+      <a tal:attributes="href string:${common/base_url}" class="button"
           title="Back to roles">
            <img src="/++resource++eea.ldapadmin-www/back.png" class="middle-image image12"
                 alt="" title="Back to roles" />
            <span tal:content="string:Back to roles" />
       </a>
       &nbsp;
-      
     </div>
-    
-    <div class="left clear">
-    <a href="./create_role_html/?parent_role_id=" class="button"
-       title="Create role">
-      <img src="/++resource++eea.ldapadmin-www/round_plus.png" alt=""
-           class="middle-image image" title="Create new role" />
-      Create role</a>
-    </div>
+    <br />
   </div>
   <br />
 </div>
+
+<tal:block content="structure common/message_boxes"/>
 
 <div class="roles-search-form">
   <tal:block content="structure common/search_roles_box"/>
 </div>
 
 <div class="clear">&nbsp;</div>
+
+
 
 <tal:block define="role_id options/role_id;
            role_names options/role_names;

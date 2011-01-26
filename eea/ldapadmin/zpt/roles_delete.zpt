@@ -12,7 +12,7 @@
     </div>
     
     <div class="left clear">
-      <a tal:attributes="href string:./?role_id=${options/role_id};
+      <a tal:attributes="href string:${common/base_url}?role_id=${options/role_id};
                         title string:Back to ${options/role_id}"
          class="button">
            <img src="/++resource++eea.ldapadmin-www/back.png" class="middle-image image12"

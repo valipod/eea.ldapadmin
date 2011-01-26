@@ -111,5 +111,5 @@
    class="no-results center">
   <img src="/++resource++eea.ldapadmin-www/info.png" class="middle-image"
        title="Note" alt=""/>
-  No roles found matching <tt tal:content="options/pattern"/>.
+  No roles found matching <strong tal:content="options/pattern" />.
 </p>

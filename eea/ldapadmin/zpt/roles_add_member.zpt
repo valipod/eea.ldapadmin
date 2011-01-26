@@ -12,7 +12,7 @@
     </div>
     
     <div class="left clear">
-      <a tal:attributes="href string:./?role_id=${options/role_id};
+      <a tal:attributes="href string:${common/base_url}/?role_id=${options/role_id};
                          title string:Back to ${options/role_id}"
          class="button">
            <img src="/++resource++eea.ldapadmin-www/back.png" class="middle-image image12"
@@ -167,9 +167,11 @@
   </table>
   </tal:block>
 
-  <p class="no-results" tal:condition="no_results">
+  <p class="no-results center" tal:condition="no_results">
+    <img src="/++resource++eea.ldapadmin-www/info.png" class="middle-image"
+       title="Note" alt=""/>
     Found no users or organisations matching
-    <i tal:content="options/search_name"></i>.
+    <strong tal:content="options/search_name" />.
   </p>
 
 </tal:block>

@@ -3,7 +3,9 @@
            content="structure python:common.breadcrumbs(stack)"/>
 </div>
 
-<h1 tal:content="python:options['title'] or 'Search roles'"></h1>
+<h1 tal:content="python:options['title'] or 'Search roles'">
+  
+</h1>
 
 <div class="roles-search-form">
   <tal:block define="pattern options/pattern"

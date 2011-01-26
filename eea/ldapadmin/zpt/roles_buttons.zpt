@@ -39,5 +39,5 @@
     <img src="/++resource++eea.ldapadmin-www/delete_user.png"
          class="middle-image image12" alt="" title="Add members" />
     Remove members
-     </a>
+  </a>
 </tal:block>

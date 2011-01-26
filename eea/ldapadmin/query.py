@@ -42,4 +42,4 @@ class Query(SimpleItem, PropertyManager):
 
     def index_html(self, REQUEST):
         """ view """
-        return self.aq_parent._filter_results(self.pattern, self.title)
+        return self.aq_parent._filter_results(self.pattern, 'Predefined search query - ' + self.title)
