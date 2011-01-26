@@ -1,0 +1,81 @@
+
+<h1>Add members to role <tt tal:content="options/role_id" /></h1>
+
+
+<form name="search-members">
+
+  <input type="hidden" name="role_id" tal:attributes="value options/role_id"/>
+
+  <label>
+    Name of user/organisation
+    <input type="search" name="name"
+           tal:attributes="value options/search_name"/>
+  </label>
+
+  <input type="submit" value="Search" />
+
+</form>
+
+<tal:block define="results options/search_results;
+                   no_results python:options['search_name'] and
+                                     not (results['users'] or results['orgs'])"
+           condition="options/search_name">
+
+  <tal:block condition="results/users">
+  <h2>Users</h2>
+  <ul>
+
+    <li tal:repeat="user_info results/users">
+
+      <tal:block define="is_authenticated python:True">
+        <metal:block use-macro="options/user_info_macro" />
+      </tal:block>
+
+      <form tal:attributes="action string:${common/base_url}/add_user"
+            name="add-user" method="post" style="display: inline">
+
+        <input type="hidden" name="role_id"
+               tal:attributes="value options/role_id" />
+        <input type="hidden" name="user_id"
+               tal:attributes="value user_info/id" />
+
+        <input type="submit" value="add" />
+
+      </form>
+    </li>
+
+  </ul>
+  </tal:block>
+
+  <tal:block condition="results/orgs">
+  <h2>Organisations</h2>
+  <ul>
+
+    <li tal:repeat="org_info results/orgs">
+
+      <tal:block define="is_authenticated python:True">
+        <metal:block use-macro="options/org_info_macro" />
+      </tal:block>
+
+      <form tal:attributes="action string:${common/base_url}/add_org"
+            name="add-org" method="post" style="display: inline">
+
+        <input type="hidden" name="role_id"
+               tal:attributes="value options/role_id" />
+        <input type="hidden" name="org_id"
+               tal:attributes="value org_info/id" />
+
+        <input type="submit" value="add" />
+
+      </form>
+    </li>
+
+  </ul>
+  </tal:block>
+
+  <p class="no-results" tal:condition="no_results">
+    Found no users or organisations matching
+    <i tal:content="options/search_name"></i>.
+  </p>
+
+</tal:block>

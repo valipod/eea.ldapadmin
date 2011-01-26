@@ -285,30 +285,26 @@ class AddRemoveRoleMembersTest(unittest.TestCase):
 
         page = parse_html(self.ui.index_html(self.request))
 
-        add_user_url = "URL/add_user_html?role_id=places"
-        add_user_links = page.xpath('//a[@href="%s"]' % add_user_url)
-        self.assertEqual(len(add_user_links), 1)
-        self.assertEqual(add_user_links[0].text, "Add members (users)")
-
-        add_org_url = "URL/add_org_html?role_id=places"
-        add_org_links = page.xpath('//a[@href="%s"]' % add_org_url)
-        self.assertEqual(len(add_org_links), 1)
-        self.assertEqual(add_org_links[0].text, "Add members (organisations)")
+        add_member_url = "URL/add_member_html?role_id=places"
+        add_member_links = page.xpath('//a[@href="%s"]' % add_member_url)
+        self.assertEqual(len(add_member_links), 1)
+        self.assertEqual(add_member_links[0].text, "Add members")
 
     def test_add_user_html(self):
         self.request.form = {'role_id': 'places'}
 
-        page = parse_html(self.ui.add_user_html(self.request))
+        page = parse_html(self.ui.add_member_html(self.request))
 
         self.assertEqual(self.mock_agent.search_user.call_count, 0)
         self.assertEqual(plaintext(page.xpath('//h1')[0]),
-                         "Add users to role places")
+                         "Add members to role places")
 
     def test_add_user_search_html(self):
         self.request.form = {'role_id': 'places', 'name': 'smith'}
         self.mock_agent.search_user.return_value = [user_info_fixture]
+        self.mock_agent.search_org.return_value = []
 
-        page = parse_html(self.ui.add_user_html(self.request))
+        page = parse_html(self.ui.add_member_html(self.request))
 
         self.mock_agent.search_user.assert_called_once_with('smith')
         name = plaintext(page.xpath('//ul/li/span[@class="user-name"]')[0])
@@ -319,11 +315,12 @@ class AddRemoveRoleMembersTest(unittest.TestCase):
     def test_add_user_search_html_no_results(self):
         self.request.form = {'role_id': 'places', 'name': 'smith'}
         self.mock_agent.search_user.return_value = []
+        self.mock_agent.search_org.return_value = []
 
-        page = parse_html(self.ui.add_user_html(self.request))
+        page = parse_html(self.ui.add_member_html(self.request))
 
         self.assertEqual(plaintext(page.xpath('//p[@class="no-results"]')[0]),
-                         "Found no users matching smith.")
+                         "Found no users or organisations matching smith.")
 
     def test_add_user_submit(self):
         self.request.form = {'role_id': 'places-bank', 'user_id': 'jsmith'}
@@ -379,18 +376,19 @@ class AddRemoveRoleMembersTest(unittest.TestCase):
     def test_add_org_html(self):
         self.request.form = {'role_id': 'places'}
 
-        page = parse_html(self.ui.add_org_html(self.request))
+        page = parse_html(self.ui.add_member_html(self.request))
 
         self.assertEqual(self.mock_agent.search_org.call_count, 0)
         self.assertEqual(plaintext(page.xpath('//h1')[0]),
-                         "Add organisations to role places")
+                         "Add members to role places")
 
     def test_add_org_search_html(self):
         self.request.form = {'role_id': 'places', 'name': 'club'}
+        self.mock_agent.search_user.return_value = []
         self.mock_agent.search_org.return_value = [
             dict(org_info_fixture, id='club')]
 
-        page = parse_html(self.ui.add_org_html(self.request))
+        page = parse_html(self.ui.add_member_html(self.request))
 
         self.mock_agent.search_org.assert_called_once_with('club')
         name = plaintext(page.xpath('//ul/li/span[@class="org-name"]')[0])
@@ -400,12 +398,13 @@ class AddRemoveRoleMembersTest(unittest.TestCase):
 
     def test_add_org_search_html_no_results(self):
         self.request.form = {'role_id': 'places', 'name': 'club'}
+        self.mock_agent.search_user.return_value = []
         self.mock_agent.search_org.return_value = []
 
-        page = parse_html(self.ui.add_org_html(self.request))
+        page = parse_html(self.ui.add_member_html(self.request))
 
         self.assertEqual(plaintext(page.xpath('//p[@class="no-results"]')[0]),
-                         "Found no organisations matching club.")
+                         "Found no users or organisations matching club.")
 
     def test_add_org_submit(self):
         self.request.form = {'role_id': 'places-bank', 'org_id': 'bridge-club'}

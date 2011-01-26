@@ -13,14 +13,10 @@
                        role_param python:options['role_id'] or ''"
            tal:attributes="href string:${new_url}?parent_role_id=${role_param}"
            >Create sub-role</a></li>
-    <li><a tal:define="add_url string:${common/base_url}/add_user_html"
+    <li><a tal:define="add_url string:${common/base_url}/add_member_html"
            tal:condition="options/role_id"
            tal:attributes="href string:${add_url}?role_id=${options/role_id}"
-           >Add members (users)</a>
-    <li><a tal:define="add_url string:${common/base_url}/add_org_html"
-           tal:condition="options/role_id"
-           tal:attributes="href string:${add_url}?role_id=${options/role_id}"
-           >Add members (organisations)</a>
+           >Add members</a>
   </ul>
   </tal:block>
 </div>

@@ -274,23 +274,26 @@ class RolesEditor(Folder):
                                   '/?role_id=' + parent_role_id)
 
 
-    security.declareProtected(eionet_edit_roles, 'add_user_html')
-    def add_user_html(self, REQUEST):
+    security.declareProtected(eionet_edit_roles, 'add_member_html')
+    def add_member_html(self, REQUEST):
         """ view """
         role_id = REQUEST.form['role_id']
         search_name = REQUEST.form.get('name', '')
-        if search_name:
-            search_results = self._get_ldap_agent().search_user(search_name)
-        else:
-            search_results = []
         _general_tmpl = load_template('zpt/roles_macros.zpt')
         options = {
             'role_id': role_id,
             'search_name': search_name,
-            'search_results': search_results,
+            'search_results': None,
             'user_info_macro': _general_tmpl.macros['user-info'],
+            'org_info_macro': _general_tmpl.macros['org-info'],
         }
-        return self._render_template('zpt/roles_add_user.zpt', **options)
+        if search_name:
+            agent = self._get_ldap_agent()
+            options['search_results'] = {
+                'users': agent.search_user(search_name),
+                'orgs': agent.search_org(search_name),
+            }
+        return self._render_template('zpt/roles_add_member.zpt', **options)
 
     security.declareProtected(eionet_edit_roles, 'add_user')
     def add_user(self, REQUEST):
@@ -301,6 +304,18 @@ class RolesEditor(Folder):
         role_id_list = agent.add_to_role(role_id, 'user', user_id)
         roles_msg = ', '.join(repr(r) for r in role_id_list)
         msg = "User %r added to roles %s." % (user_id, roles_msg)
+        _set_session_message(REQUEST, 'info', msg)
+        REQUEST.RESPONSE.redirect(self.absolute_url() + '/?role_id=' + role_id)
+
+    security.declareProtected(eionet_edit_roles, 'add_org')
+    def add_org(self, REQUEST):
+        """ Add org `org_id` to role `role_id` """
+        role_id = REQUEST.form['role_id']
+        org_id = REQUEST.form['org_id']
+        agent = self._get_ldap_agent(bind=True)
+        role_id_list = agent.add_to_role(role_id, 'org', org_id)
+        roles_msg = ', '.join(repr(r) for r in role_id_list)
+        msg = "Organisation %r added to roles %s." % (org_id, roles_msg)
         _set_session_message(REQUEST, 'info', msg)
         REQUEST.RESPONSE.redirect(self.absolute_url() + '/?role_id=' + role_id)
 
@@ -336,36 +351,6 @@ class RolesEditor(Folder):
         }
 
         return self._render_template('zpt/roles_remove_user.zpt', **options)
-
-    security.declareProtected(eionet_edit_roles, 'add_org_html')
-    def add_org_html(self, REQUEST):
-        """ view """
-        role_id = REQUEST.form['role_id']
-        search_name = REQUEST.form.get('name', '')
-        if search_name:
-            search_results = self._get_ldap_agent().search_org(search_name)
-        else:
-            search_results = []
-        _general_tmpl = load_template('zpt/roles_macros.zpt')
-        options = {
-            'role_id': role_id,
-            'search_name': search_name,
-            'search_results': search_results,
-            'org_info_macro': _general_tmpl.macros['org-info'],
-        }
-        return self._render_template('zpt/roles_add_org.zpt', **options)
-
-    security.declareProtected(eionet_edit_roles, 'add_org')
-    def add_org(self, REQUEST):
-        """ Add org `org_id` to role `role_id` """
-        role_id = REQUEST.form['role_id']
-        org_id = REQUEST.form['org_id']
-        agent = self._get_ldap_agent(bind=True)
-        role_id_list = agent.add_to_role(role_id, 'org', org_id)
-        roles_msg = ', '.join(repr(r) for r in role_id_list)
-        msg = "Organisation %r added to roles %s." % (org_id, roles_msg)
-        _set_session_message(REQUEST, 'info', msg)
-        REQUEST.RESPONSE.redirect(self.absolute_url() + '/?role_id=' + role_id)
 
     security.declareProtected(eionet_edit_roles, 'remove_orgs')
     def remove_orgs(self, REQUEST):
