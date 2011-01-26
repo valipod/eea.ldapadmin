@@ -1,20 +1,41 @@
-
 <h1>Add members to role <tt tal:content="options/role_id" /></h1>
 
+<div>
+  <div class="account-links clear" tal:condition="options/role_id">
+    <div class="right-position clear">
+      <tal:block content="structure python:common.buttons_bar('add_member', options['role_id'])"/>
+    </div>
+    
+    <div class="left clear">
+      <a href="javascript:void(0); " class="button"
+          title="Back to account information">
+           <img src="/++resource++eea.ldapadmin-www/back.png" class="middle-image image12"
+                alt="" title="Back to account information" />
+           <span tal:content="string:Back to ${options/role_id}" />
+      </a>
+      &nbsp;
+    </div>
+  </div>
+  <br />
+</div>
 
-<form name="search-members">
-
-  <input type="hidden" name="role_id" tal:attributes="value options/role_id"/>
-
-  <label>
-    Name of user/organisation
-    <input type="search" name="name"
+<div class="roles-search-form">
+  <form name="roles-search-form">
+    <input type="hidden" name="role_id" tal:attributes="value options/role_id"/>
+    
+    <label for="search-query">
+      <strong>
+      Name of user/organisation:&nbsp;
+      </strong>
+    </label>
+    
+    <input type="search" name="name" id="search-query"
+           class="text-input large"
            tal:attributes="value options/search_name"/>
-  </label>
-
-  <input type="submit" value="Search" />
-
-</form>
+  
+    <input type="submit" value="Search" class="primary-button" />
+  </form>
+</div>
 
 <tal:block define="results options/search_results;
                    no_results python:options['search_name'] and
@@ -23,54 +44,121 @@
 
   <tal:block condition="results/users">
   <h2>Users</h2>
-  <ul>
-
-    <li tal:repeat="user_info results/users">
-
-      <tal:block define="is_authenticated python:True">
-        <metal:block use-macro="common/macros/user-info" />
-      </tal:block>
-
-      <form tal:attributes="action string:${common/base_url}/add_user"
+  
+  <table class="account-datatable">
+    <thead>
+      <tr>
+        <td>
+          Name / Email
+        </td>
+        
+        <td>
+          User ID
+        </td>
+        
+        <td>
+          Tel/Fax
+        </td>
+        
+        <td>
+          Organisation
+        </td>
+        
+        <td>
+          Add as member
+        </td>
+      </tr>
+    </thead>
+    
+    <tbody>
+      <tr tal:repeat="user_info results/users">
+        <td>
+          <span tal:content="user_info/name" />
+          <br />
+          
+          <a tal:condition="user_info/email"
+                  tal:attributes="href string:mailto:${user_info/email}"
+                  tal:content="user_info/email"
+                  class="user-email"></a>
+        </td>
+        
+        <td>
+          <span tal:content="user_info/id" />
+        </td>
+        
+        <td>
+          <span class="user-phone" tal:content="user_info/phone" />
+          <br />
+          <span class="user-phone" tal:content="user_info/fax" />
+        </td>
+        
+        <td>
+          <span tal:content="user_info/organisation" />
+        </td>
+        
+        <td class="center">
+          <form tal:attributes="action string:${common/base_url}/add_user"
             name="add-user" method="post" style="display: inline">
-
-        <input type="hidden" name="role_id"
-               tal:attributes="value options/role_id" />
-        <input type="hidden" name="user_id"
-               tal:attributes="value user_info/id" />
-
-        <input type="submit" value="add" />
-
-      </form>
-    </li>
-
-  </ul>
+            <input type="hidden" name="role_id"
+                   tal:attributes="value options/role_id" />
+            <input type="hidden" name="user_id"
+                   tal:attributes="value user_info/id" />
+    
+            <input type="submit" value="Add" class="primary-button" />
+    
+          </form>
+        </td>
+      </tr>
+    </tbody>
+  </table>
   </tal:block>
 
   <tal:block condition="results/orgs">
   <h2>Organisations</h2>
-  <ul>
-
-    <li tal:repeat="org_info results/orgs">
-
-      <tal:block define="is_authenticated python:True">
-        <metal:block use-macro="common/macros/org-info" />
-      </tal:block>
-
-      <form tal:attributes="action string:${common/base_url}/add_org"
-            name="add-org" method="post" style="display: inline">
-
-        <input type="hidden" name="role_id"
-               tal:attributes="value options/role_id" />
-        <input type="hidden" name="org_id"
-               tal:attributes="value org_info/id" />
-
-        <input type="submit" value="add" />
-
-      </form>
-    </li>
-
-  </ul>
+  
+  <table class="account-datatable">
+    <thead>
+      <tr>
+        <td>
+          Name
+        </td>
+        
+        <td>
+          URL
+        </td>
+        
+        <td>
+          Add as member
+        </td>
+      </tr>
+    </thead>
+    
+    <tbody>
+      <tr tal:repeat="user_info results/users">
+        <td>
+          <span tal:content="org_info/name" />
+        </td>
+        
+        <td>
+          <a tal:condition="org_info/url"
+            tal:attributes="href org_info/url" tal:content="org_info/url"></a>
+        </td>
+        
+        <td class="center">
+          <form tal:attributes="action string:${common/base_url}/add_org"
+                name="add-org" method="post" style="display: inline">
+    
+            <input type="hidden" name="role_id"
+                   tal:attributes="value options/role_id" />
+            <input type="hidden" name="org_id"
+                   tal:attributes="value org_info/id" />
+    
+            <input type="submit" value="add" class="primary-button" />
+          </form>
+        </td>
+      </tr>
+    </tbody>
+  </table>
   </tal:block>
 
   <p class="no-results" tal:condition="no_results">

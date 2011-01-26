@@ -1,26 +1,43 @@
-<ul tal:define="page options/current_page">
-  <li tal:condition="options/role_id">
-    <a tal:define="del_url string:${common/base_url}/delete_role_html"
-       tal:attributes="href string:${del_url}?role_id=${options/role_id};
-                       class python:'current' if page == 'role' else None"
-       >Delete role <span tal:content="options/role_id" /></a></li>
-  <li>
-    <a tal:define="new_url string:${common/base_url}/create_role_html;
-                   role_param python:options['role_id'] or ''"
-       tal:attributes="href string:${new_url}?parent_role_id=${role_param};
-                       class python:'current' if page == 'delete_role' else None"
-       >Create sub-role</a>
-  </li>
-  <li tal:condition="options/role_id">
-    <a tal:define="add_url string:${common/base_url}/add_member_html"
-       tal:attributes="href string:${add_url}?role_id=${options/role_id};
-                       class python:'current' if page == 'add_member' else None"
-       >Add members</a>
-  </li>
-  <li tal:condition="options/role_id">
-    <a tal:define="rm_url string:${common/base_url}/remove_members_html"
-       tal:attributes="href string:${rm_url}?role_id=${options/role_id};
-                       class python:'current' if page == 'remove_members' else None"
-       >Remove members</a>
-  </li>
-</ul>
+<tal:block define="page options/current_page">
+  <a tal:define="del_url string:${common/base_url}/delete_role_html"
+     tal:condition="options/role_id"
+     tal:attributes="href string:${del_url}?role_id=${options/role_id};
+                     class python:'current' if page == 'delete_role' else 'button'"
+     >
+    <img src="/++resource++eea.ldapadmin-www/delete.png"
+         class="middle-image image12" alt="" title="Delete role" />
+    
+    Delete role <span tal:content="options/role_id" />
+  </a>
+  &nbsp;
+  <a tal:define="new_url string:${common/base_url}/create_role_html;
+                 role_param python:options['role_id'] or ''"
+      tal:condition="options/role_id"
+     tal:attributes="href string:${new_url}?parent_role_id=${role_param};
+                     class python:'current' if page == 'create_role' else 'button'"
+     >
+    <img src="/++resource++eea.ldapadmin-www/round_plus.png"
+         class="middle-image image12" alt="" title="Create sub-role" />
+    Create sub-role
+  </a>
+  &nbsp;
+  <a tal:define="add_url string:${common/base_url}/add_member_html"
+     tal:condition="options/role_id"
+     tal:attributes="href string:${add_url}?role_id=${options/role_id};
+                     class python:'current' if page == 'add_member' else 'button'"
+     >
+    <img src="/++resource++eea.ldapadmin-www/users.png"
+         class="middle-image image12" alt="" title="Add members" />
+    Add members
+  </a>
+  &nbsp;
+  <a tal:define="rm_url string:${common/base_url}/remove_members_html"
+     tal:condition="options/role_id"
+     tal:attributes="href string:${rm_url}?role_id=${options/role_id};
+                     class python:'current' if page == 'remove_members' else 'button'"
+     >
+    <img src="/++resource++eea.ldapadmin-www/delete_user.png"
+         class="middle-image image12" alt="" title="Add members" />
+    Remove members
+     </a>
+</tal:block>

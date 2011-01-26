@@ -1,24 +1,70 @@
+<tal:block content="structure common/message_boxes"/>
+
 <h1>
   Create role under
   <tt tal:content="python:options['parent_id'] or '[root]'"/>
 </h1>
 
-<tal:block content="structure common/message_boxes"/>
+<div>
+  <div class="account-links clear" tal:condition="options/parent_id">
+    <div class="right-position clear">
+      <tal:block content="structure python:common.buttons_bar('create_role', options['parent_id'])"/>
+    </div>
+    
+    <div class="left clear">
+      <a href="javascript:void(0); " class="button"
+          title="Back to account information">
+           <img src="/++resource++eea.ldapadmin-www/back.png" class="middle-image image12"
+                alt="" title="Back to account information" />
+           <span tal:content="string:Back to ${options/parent_id}" />
+      </a>
+      &nbsp;
+    </div>
+  </div>
+  <br />
+</div>
 
 <form tal:attributes="action string:${common/base_url}/create_role"
       method="post">
-  <label>
-    name:
-    <input type="text" name="slug:utf8:ustring"
+  <table class="account-table">
+    <tbody>
+      <tr>
+        <td class="right-td">
+          <label for="name">
+            Name:
+          </label>
+        </td>
+        
+        <td>
+          <input type="text" id="name" name="slug:utf8:ustring"
+                 class="text-input medium"
            tal:attributes="value options/form_data/slug|nothing"/>
-  </label>
-  <label>
-    description:
-    <input type="text" name="description:utf8:ustring"
+        </td>
+      </tr>
+      
+      <tr>
+        <td class="right-td">
+          <label for="description">
+            Description:
+          </label>
+        </td>
+        
+        <td>
+          <input type="text" name="description:utf8:ustring" id="description"
+                 class="text-input medium"
            tal:attributes="value options/form_data/description|nothing"/>
-  </label>
-  <input tal:condition="options/parent_id"
-         type="hidden" name="parent_role_id"
-         tal:attributes="value options/parent_id"/>
-  <input type="submit" value="Create role"/>
+        </td>
+      </tr>
+      
+      <tr>
+        <td align="center" colspan="2">
+          <input tal:condition="options/parent_id"
+                  type="hidden" name="parent_role_id"
+                  tal:attributes="value options/parent_id"/>
+          <input type="submit" value="Create role" name="submit"
+                 class="primary-button"/>
+        </td>
+      </tr>
+    </tbody>
+  </table>
 </form>

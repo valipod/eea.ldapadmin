@@ -2,9 +2,27 @@
 
 <tal:block content="structure common/message_boxes"/>
 
+<div>
+  <div class="account-links clear" tal:condition="options/role_id">
+    <div class="right-position clear">
+      <tal:block content="structure python:common.buttons_bar('remove_members', options['role_id'])"/>
+    </div>
+    
+    <div class="left clear">
+      <a href="javascript:void(0); " class="button"
+          title="Back to account information">
+           <img src="/++resource++eea.ldapadmin-www/back.png" class="middle-image image12"
+                alt="" title="Back to account information" />
+           <span tal:content="string:Back to ${options/role_id}" />
+      </a>
+      &nbsp;
+    </div>
+  </div>
+  <br />
+</div>
+
 <tal:block define="role_id options/role_id;
                    role_members options/role_members">
-
     <tal:block condition="role_members/users">
     <h2>Users in <tt tal:content="python:role_id or '[ROOT]'" /></h2>
     <form tal:define="url string:${common/base_url}/remove_members"

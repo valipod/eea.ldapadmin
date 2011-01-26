@@ -39,24 +39,28 @@
   <form name="search"
         tal:define="filter_url string:${common/base_url}/filter"
         tal:attributes="action filter_url">
-    <label for="search-roles-input" style="display: none;">
+    <label for="search-roles-input">
         <strong>
         Roles pattern
         </strong>
     </label>
-    <input id="search-roles-input" type="search" name="pattern:utf8:ustring"
-           class="text-input large" autofocus="autofocus"
-           tal:attributes="value options/pattern|nothing"/>
-    <input type="submit" value="Search roles" name="submit"
-           class="primary-button" />
     <span class="search-help-text">
-        e.g. <span class="help-trigger">
-        staff
+        <span class="help-trigger">
+        (e.g. staff
         </span>,
         <span class="help-trigger">
             eionet-*-dk
+            )
         </span>
     </span>
+    <br />
+    <input id="search-roles-input" type="search" name="pattern:utf8:ustring"
+           class="text-input large" autofocus="autofocus"
+           tal:attributes="value options/pattern|nothing"/>
+    
+
+    <input type="submit" value="Search roles" name="submit"
+           class="primary-button" />
   </form>
   
 </metal:block>
