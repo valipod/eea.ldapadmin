@@ -1,7 +1,5 @@
-<div class="role-parents">
-  <tal:block define="stack options/breadcrumb_stack"
+<tal:block define="stack options/breadcrumb_stack"
            content="structure python:common.breadcrumbs(stack)"/>
-</div>
 
 <h1 tal:content="python:options['title'] or 'Search roles'">
   

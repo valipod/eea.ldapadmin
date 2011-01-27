@@ -1,9 +1,5 @@
-<div class="role-parents">
-  <tal:block define="stack python:common.role_parents_stack(options['role_id'])"
+<tal:block define="stack python:common.role_parents_stack(options['role_id'])"
            content="structure python:common.breadcrumbs(stack)"/>
-</div>
-
-
 
 <h1 tal:define="name python:(options['role_info']['description'].strip()
                              or 'Role %s' % options['role_id'])"
@@ -17,8 +13,8 @@
     </div>
     
     <div class="right-position clear" tal:condition="not:options/role_id">
-    <a tal:attributes="href string:${common/base_url}/create_role_html/?parent_role_id=" class="button"
-       title="Create role">
+    <a tal:attributes="href string:${common/base_url}/create_role_html/?parent_role_id="
+       class="button last-button" title="Create role">
       <img src="/++resource++eea.ldapadmin-www/round_plus.png" alt=""
            class="middle-image image12" title="Create new role" />
       Create role</a>

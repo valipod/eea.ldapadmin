@@ -69,6 +69,10 @@ a.button {
 		StartColorStr='#F7F7F7', EndColorStr='#E4E5E5', GradientType=0);
 }
 
+a.button.last-button {
+	margin-right: 3px;
+}
+
 .account-links a.current {
 	background-color: #186087;
 	background: -moz-linear-gradient(-90deg, #186087, #00446A) repeat scroll 0 0 transparent;

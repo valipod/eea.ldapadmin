@@ -34,7 +34,7 @@
   <a tal:define="rm_url string:${common/base_url}/remove_members_html"
      tal:condition="options/role_id"
      tal:attributes="href string:${rm_url}?role_id=${options/role_id};
-                     class python:'current' if page == 'remove_members' else 'button'"
+                     class python:'last-button current' if page == 'remove_members' else 'last-button button'"
      >
     <img src="/++resource++eea.ldapadmin-www/delete_user.png"
          class="middle-image image12" alt="" title="Add members" />
