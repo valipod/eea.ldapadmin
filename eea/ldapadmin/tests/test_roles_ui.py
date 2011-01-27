@@ -212,7 +212,7 @@ class CreateDeleteRolesTest(unittest.TestCase):
         self.request.RESPONSE.redirect.assert_called_with(
             'URL/?role_id=places-shiny')
 
-        msg = "Created role places-shiny 'Shiny new role'"
+        msg = 'Created role places-shiny "Shiny new role"'
         self.assertEqual(session_messages(self.request), {'info': [msg]})
 
     def test_create_role_submit_unicode(self):
@@ -330,7 +330,7 @@ class AddRemoveRoleMembersTest(unittest.TestCase):
 
         page = parse_html(self.ui.add_member_html(self.request))
 
-        self.assertEqual(plaintext(page.xpath('//p[@class="no-results"]')[0]),
+        self.assertEqual(plaintext(page.cssselect('p.search-message')[0]),
                          "Found no users or organisations matching smith.")
 
     def test_add_user_submit(self):
@@ -414,7 +414,7 @@ class AddRemoveRoleMembersTest(unittest.TestCase):
 
         page = parse_html(self.ui.add_member_html(self.request))
 
-        self.assertEqual(plaintext(page.xpath('//p[@class="no-results"]')[0]),
+        self.assertEqual(plaintext(page.cssselect('p.search-message')[0]),
                          "Found no users or organisations matching club.")
 
     def test_add_org_submit(self):
@@ -605,5 +605,5 @@ class FilterTest(unittest.TestCase):
 
         page = parse_html(self.ui.filter(self.request))
 
-        self.assertEqual(plaintext(page.xpath('//p[@class="no-results"]')[0]),
+        self.assertEqual(plaintext(page.cssselect('p.search-message')[0]),
                          "No roles found matching places-*.")

@@ -265,7 +265,7 @@ class RolesEditor(Folder):
         """ add a role """
         slug = REQUEST.form['slug']
         description = REQUEST.form['description']
-        parent_role_id = REQUEST.form.get('parent_role_id', None)
+        parent_role_id = REQUEST.form.get('parent_role_id', '') or None
 
         try:
             role_id = self._make_role(slug, parent_role_id, description)
@@ -274,11 +274,13 @@ class RolesEditor(Folder):
                 _set_session_message(REQUEST, 'error', msg)
             REQUEST.RESPONSE.redirect(self.absolute_url() +
                                       '/create_role_html?parent_role_id=' +
-                                      parent_role_id)
+                                      (parent_role_id or ''))
             form_data = {'slug': slug, 'description': description}
             REQUEST.SESSION[SESSION_FORM_DATA] = form_data
         else:
-            msg = "Created role %s %r" % (role_id, description)
+            msg = u'Created role %s' % role_id
+            if description:
+                msg += u' "%s"' % description
             _set_session_message(REQUEST, 'info', msg)
             REQUEST.RESPONSE.redirect(self.absolute_url() +
                                       '/?role_id=' + role_id)
@@ -446,8 +448,5 @@ class RolesEditor(Folder):
 
     security.declareProtected(view_management_screens, 'manage_add_query')
     manage_add_query = query.manage_add_query
-
-    def get_roles_editor(self):
-        return self
 
 InitializeClass(RolesEditor)
