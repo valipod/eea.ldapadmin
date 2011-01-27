@@ -331,7 +331,7 @@ class AddRemoveRoleMembersTest(unittest.TestCase):
         page = parse_html(self.ui.add_member_html(self.request))
 
         self.assertEqual(plaintext(page.cssselect('p.search-message')[0]),
-                         "Found no users or organisations matching smith.")
+                         "No matching users or organisations for smith.")
 
     def test_add_user_submit(self):
         self.request.form = {'role_id': 'places-bank', 'user_id': 'jsmith'}
@@ -415,7 +415,7 @@ class AddRemoveRoleMembersTest(unittest.TestCase):
         page = parse_html(self.ui.add_member_html(self.request))
 
         self.assertEqual(plaintext(page.cssselect('p.search-message')[0]),
-                         "Found no users or organisations matching club.")
+                         "No matching users or organisations for club.")
 
     def test_add_org_submit(self):
         self.request.form = {'role_id': 'places-bank', 'org_id': 'bridge-club'}
