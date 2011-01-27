@@ -460,6 +460,12 @@ div.filter-section table.account-table:hover {
 	width: 16px;
 	margin: 0;
 	padding: 0;
+	position: relative;
+	top: 4px;
+}
+
+.arrow-blank {
+	background-image: none;
 }
 
 .arrow-normal {
