@@ -42,9 +42,25 @@
                                      not (results['users'] or results['orgs'])"
            condition="options/search_name">
 
+  <p class="search-message" tal:condition="python:options['search_results']['users'] or options['search_results']['orgs']">
+    <img src="/++resource++eea.ldapadmin-www/search.png" class="middle-image"
+       title="Note" alt=""/>
+    Search results:
+      <a tal:condition="results/users" title="Go to users results"
+      tal:content="python:'%d users' % (len(results['users']))" href="#users-results"
+      />
+      <span tal:condition="python:options['search_results']['users'] and options['search_results']['orgs']">
+        and
+      </span>
+
+      <a tal:condition="results/orgs" title="Go to organisations results"
+      tal:content="python:'%d organisations' % (len(results['orgs']))" href="#organisations-results"
+      />
+  </p>
+
   <tal:block condition="results/users">
-  <h2>Users</h2>
-  
+  <h2 id="users-results">Users</h2>
+
   <table class="account-datatable">
     <thead>
       <tr>
@@ -69,7 +85,7 @@
         </td>
       </tr>
     </thead>
-    
+
     <tbody>
       <tr tal:repeat="user_info results/users">
         <td>
@@ -81,21 +97,21 @@
                   tal:content="user_info/email"
                   class="user-email"></a>
         </td>
-        
+
         <td>
           <span tal:content="user_info/id" />
         </td>
-        
+
         <td>
           <span class="user-phone" tal:content="user_info/phone" />
           <br />
           <span class="user-phone" tal:content="user_info/fax" />
         </td>
-        
+
         <td>
           <span tal:content="user_info/organisation" />
         </td>
-        
+
         <td class="center">
           <form tal:attributes="action string:${common/base_url}/add_user"
             name="add-user" method="post" style="display: inline">
@@ -103,67 +119,89 @@
                    tal:attributes="value options/role_id" />
             <input type="hidden" name="user_id"
                    tal:attributes="value user_info/id" />
-    
+
             <input type="submit" value="Add" class="primary-button" />
           </form>
         </td>
       </tr>
     </tbody>
   </table>
+
+  <div class="clear">&nbsp;</div>
+      <div class="left-position clear">
+        <a href="#workarea" class="account-link button" title="Click to go back to top">
+          <img src="/++resource++eea.ldapadmin-www/up.png" alt=""
+               class="middle-image image12" title="Back to top" />
+          Back to top
+        </a>
+      </div>
+      <br />
+      <div class="clear">&nbsp;</div>
   </tal:block>
 
   <tal:block condition="results/orgs">
-  <h2>Organisations</h2>
-  
+  <h2 id="organisations-results">Organisations</h2>
+
   <table class="account-datatable">
     <thead>
       <tr>
         <td>
           Name
         </td>
-        
+
         <td>
           URL
         </td>
-        
+
         <td>
           Add as member
         </td>
       </tr>
     </thead>
-    
+
     <tbody>
       <tr tal:repeat="org_info results/orgs">
         <td>
           <span tal:content="org_info/name" />
         </td>
-        
+
         <td>
           <a tal:condition="org_info/url"
             tal:attributes="href org_info/url" tal:content="org_info/url"></a>
         </td>
-        
+
         <td class="center">
           <form tal:attributes="action string:${common/base_url}/add_org"
                 name="add-org" method="post" style="display: inline">
-    
+
             <input type="hidden" name="role_id"
                    tal:attributes="value options/role_id" />
             <input type="hidden" name="org_id"
                    tal:attributes="value org_info/id" />
-    
+
             <input type="submit" value="add" class="primary-button" />
           </form>
         </td>
       </tr>
     </tbody>
   </table>
+
+  <div class="clear">&nbsp;</div>
+  <div class="left-position clear">
+    <a href="#workarea" class="account-link button" title="Click to go back to top">
+      <img src="/++resource++eea.ldapadmin-www/up.png" alt=""
+           class="middle-image image12" title="Back to top" />
+      Back to top
+    </a>
+  </div>
+  <br />
+  <div class="clear">&nbsp;</div>
   </tal:block>
 
   <p class="search-message" tal:condition="no_results">
     <img src="/++resource++eea.ldapadmin-www/info.png" class="middle-image"
        title="Note" alt=""/>
-    Found no users or organisations matching
+    No matching users or organisations for
     <strong tal:content="options/search_name" />.
   </p>
 
