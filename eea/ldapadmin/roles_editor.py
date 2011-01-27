@@ -90,14 +90,6 @@ class CommonTemplateLogic(object):
     def is_authenticated(self):
         return _is_authenticated(self._get_request())
 
-    def role_parents_stack(self, role_id):
-        return [(role_id, '?role_id=%s' % role_id)
-                for role_id in _role_parents(role_id)]
-
-    def breadcrumbs(self, stack):
-        tr = self.context._render_template
-        return tr.render('zpt/roles_breadcrumbs.zpt', stack=stack)
-
     def buttons_bar(self, current_page, role_id):
         options = {
             'current_page': current_page,
@@ -194,6 +186,8 @@ class RolesEditor(Folder):
             'role_members': role_members(agent, role_id),
             'can_edit': self.can_edit_roles(REQUEST.AUTHENTICATED_USER),
         }
+
+        self._set_breadcrumbs(self._role_parents_stack(role_id))
         return self._render_template('zpt/roles_browse.zpt', **options)
 
     def _filter_results(self, pattern, title=None):
@@ -201,15 +195,17 @@ class RolesEditor(Folder):
         options = {
             'pattern': pattern,
             'title': title,
-            'breadcrumb_stack': [('Search', search_url)],
         }
+        breadcrumbs = [('Search', search_url)]
         if pattern:
             agent = self._get_ldap_agent()
             results_html = filter_result_html(agent, pattern,
                                               self._render_template)
             options['results_html'] = results_html
             pattern_url = search_url + '?pattern:utf8:ustring=' + pattern
-            options['breadcrumb_stack'] += [(pattern, pattern_url)]
+            breadcrumbs += [(pattern, pattern_url)]
+
+        self._set_breadcrumbs(breadcrumbs)
         return self._render_template('zpt/roles_filter.zpt', **options)
 
     security.declareProtected(view, 'filter')
@@ -225,13 +221,17 @@ class RolesEditor(Folder):
     security.declareProtected(eionet_edit_roles, 'create_role_html')
     def create_role_html(self, REQUEST):
         """ view """
+        parent_role_id = REQUEST.form['parent_role_id']
         options = {
-            'parent_id': REQUEST.form['parent_role_id'],
+            'parent_id': parent_role_id,
         }
         session = REQUEST.SESSION
         if SESSION_FORM_DATA in session.keys():
             options['form_data'] = session[SESSION_FORM_DATA]
             del session[SESSION_FORM_DATA]
+
+        self._set_breadcrumbs(self._role_parents_stack(parent_role_id) +
+                              [("Create sub-role", '#')])
         return self._render_template('zpt/roles_create.zpt', **options)
 
     def _make_role(self, slug, parent_role_id, description):
@@ -296,6 +296,9 @@ class RolesEditor(Folder):
             'role_id': role_id,
             'roles_to_remove': to_remove,
         }
+
+        self._set_breadcrumbs(self._role_parents_stack(role_id) +
+                              [("Delete role", '#')])
         return self._render_template('zpt/roles_delete.zpt', **options)
 
     security.declareProtected(eionet_edit_roles, 'delete_role')
@@ -325,6 +328,9 @@ class RolesEditor(Folder):
                 'users': agent.search_user(search_name),
                 'orgs': agent.search_org(search_name),
             }
+
+        self._set_breadcrumbs(self._role_parents_stack(role_id) +
+                              [("Add member", '#')])
         return self._render_template('zpt/roles_add_member.zpt', **options)
 
     security.declareProtected(eionet_edit_roles, 'add_user')
@@ -360,6 +366,9 @@ class RolesEditor(Folder):
             'role_id': role_id,
             'role_members': role_members(agent, role_id),
         }
+
+        self._set_breadcrumbs(self._role_parents_stack(role_id) +
+                              [("Remove members", "#")])
         return self._render_template('zpt/roles_remove_members.zpt', **options)
 
     security.declareProtected(eionet_edit_roles, 'remove_members')
@@ -449,4 +458,42 @@ class RolesEditor(Folder):
     security.declareProtected(view_management_screens, 'manage_add_query')
     manage_add_query = query.manage_add_query
 
+    def _role_parents_stack(self, role_id):
+        return [(role_id, self.absolute_url() + '/?role_id=%s' % role_id)
+                for role_id in _role_parents(role_id)]
+
+    def _set_breadcrumbs(self, stack):
+        self.REQUEST._roles_editor_crumbs = stack
+
+    def breadcrumbtrail(self):
+        crumbs_html = self.aq_parent.breadcrumbtrail(self.REQUEST)
+        extra_crumbs = getattr(self.REQUEST, '_roles_editor_crumbs', [])
+        return extend_crumbs(crumbs_html, self.absolute_url(), extra_crumbs)
+
 InitializeClass(RolesEditor)
+
+def extend_crumbs(crumbs_html, editor_url, extra_crumbs):
+    from lxml.html.soupparser import fromstring
+    from lxml.html import tostring
+    from lxml.builder import E
+
+    crumbs = fromstring(crumbs_html).find('div[@class="breadcrumbtrail"]')
+
+    roles_div = crumbs.find('div[@class="breadcrumbitemlast"]')
+    roles_div.attrib['class'] = "breadcrumbitem"
+    roles_link = E.a(roles_div.text, href=editor_url)
+    roles_div.text = ""
+    roles_div.append(roles_link)
+
+    for title, href in extra_crumbs:
+        a = E.a(title, {'href': href})
+        div = E.div(a, {'class': 'breadcrumbitem'})
+        crumbs.append(div)
+
+    last_crumb = crumbs.xpath('div[@class="breadcrumbitem"]')[-1]
+    last_crumb_text = last_crumb.find('a').text
+    last_crumb.clear()
+    last_crumb.attrib['class'] = "breadcrumbitemlast"
+    last_crumb.text = last_crumb_text
+
+    return tostring(crumbs)

@@ -1,6 +1,3 @@
-<tal:block define="stack python:common.role_parents_stack(options['role_id'])"
-            content="structure python:common.breadcrumbs(stack)"/>
-
 <h1>Delete role <tt tal:content="options/role_id" /></h1>
 
 <div>
