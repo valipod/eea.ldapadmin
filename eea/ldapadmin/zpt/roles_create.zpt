@@ -12,7 +12,7 @@
       <tal:block content="structure python:common.buttons_bar('create_role', options['parent_id'])"/>
     </div>
     
-    <div class="left clear" tal:condition="options/parent_id">
+    <div class="clear" tal:condition="options/parent_id">
       <a tal:attributes="href string:${common/base_url}?role_id=${options/parent_id};
                         title string:Back to ${options/parent_id}"
          class="button">
@@ -33,7 +33,7 @@
       Create role</a>
     </div>
     
-    <div class="left clear" tal:condition="not:options/parent_id">
+    <div class="clear" tal:condition="not:options/parent_id">
       <a tal:attributes="title string:Back to roles; href string:${common/base_url}" class="button">
            <img src="/++resource++eea.ldapadmin-www/back.png" class="middle-image image12"
                 tal:attributes="title string:Back to roles"

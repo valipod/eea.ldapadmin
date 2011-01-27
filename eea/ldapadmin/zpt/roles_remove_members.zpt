@@ -37,8 +37,8 @@
         <thead>
             <tr>
                 <td>
-                    <input type="checkbox" id="selectall" class="selectall"
-                           name="selectall" />
+                    <input type="checkbox" class="selectall user_id_list" name="selectall"
+                           onclick="selectAll(name='user_id_list:list');"/>
                 </td>
                 
                 <td>
@@ -85,8 +85,8 @@
           <thead>
               <tr>
                   <td>
-                      <input type="checkbox" id="selectall" class="selectall"
-                             name="selectall" />
+                      <input type="checkbox" class="selectall org_id_list" name="selectall"
+                             onclick="selectAll(name='org_id_list:list');"/>
                   </td>
                   
                   <td>
