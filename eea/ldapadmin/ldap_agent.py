@@ -166,7 +166,8 @@ class LdapAgent(object):
         if not pattern:
             return set()
 
-        pattern = pattern.replace('-', r'\-').replace('*', r'.+')
+        pattern = pattern.replace('-', r'\b\-\b').replace('*', r'.*')
+        pattern = r'\b' + pattern + r'\b'
         compiled_pattern = re.compile(pattern)
 
         out = set()

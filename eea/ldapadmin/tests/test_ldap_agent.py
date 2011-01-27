@@ -226,7 +226,8 @@ class LdapAgentTest(unittest.TestCase):
                   'K', 'K-L', 'K-L-O',
                        'K-M', 'K-M-O',
                        'K-N', 'K-N-O', 'K-N-O-P',
-                              'K-N-T'],
+                              'K-N-T',
+                   'X-YADF-Z', 'X-Y-ZE'],
             'A': ['A', 'A-B', 'A-C'],
             'A-*': ['A-B', 'A-C'],
             '*-B': ['A-B'],
@@ -237,10 +238,15 @@ class LdapAgentTest(unittest.TestCase):
             'K-N-*': ['K-N-O', 'K-N-O-P', 'K-N-T'],
             'K-*-O': ['K-L-O','K-M-O',  'K-N-O', 'K-N-O-P'],
             'M': ['K-M', 'K-M-O'],
+            'X-Y': ['X-Y-ZE'],
+            'X-Y*': ['X-Y-ZE', 'X-YADF-Z'],
+            'Z': ['X-YADF-Z'],
+            'Z*': ['X-Y-ZE', 'X-YADF-Z'],
         }
 
         role_id_list = [None, 'A', 'A-B', 'A-C', 'K', 'K-L', 'K-L-O',
-                        'K-M', 'K-M-O', 'K-N', 'K-N-O', 'K-N-O-P', 'K-N-T']
+                        'K-M', 'K-M-O', 'K-N', 'K-N-O', 'K-N-O-P', 'K-N-T',
+                        'X-YADF-Z', 'X-Y-ZE']
         ret = [(self.agent._role_dn(role_id), {}) for role_id in role_id_list]
 
         for pattern, expected in expected_results.iteritems():
