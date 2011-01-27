@@ -3,6 +3,9 @@
     <script src="/++resource++eea.ldapadmin-www/jquery-1.4.4.min.js"></script>
     <script src="/++resource++eea.ldapadmin-www/account.js"></script>
     <link rel="stylesheet" type="text/css" media="screen" href="/++resource++eea.ldapadmin-www/style.css" />
+    <!--[if lt IE 8]>
+    <link rel="stylesheet" type="text/css" media="screen" href="/++resource++eea.ldapadmin-www/ie.css" />
+    <![endif]-->
     <tal:block content="structure options/body_html" />
   </metal:block>
 </metal:block>

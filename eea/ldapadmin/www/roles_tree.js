@@ -7,10 +7,10 @@ function decorate_subrole_links(sub_roles, level) {
     $('> tr', sub_roles).each(function() {
         var tr = $(this);
         tr.data('subroles-level', level);
-        var arrow = $('<'+'img>').attr('src', www_url+'/right.png');
-        arrow.addClass('roles-tree-arrow').click(subrole_expand);
-        var arrow2 = $('<'+'img>').attr('src', www_url+'/down.png').hide();
-        arrow2.addClass('roles-tree-arrow').click(subrole_collapse);
+        var arrow = $('<'+'img>').attr('src', www_url+'/s.gif');
+        arrow.addClass('roles-tree-arrow arrow-normal').click(subrole_expand);
+        var arrow2 = $('<'+'img>').attr('src', www_url+'/s.gif').hide();
+        arrow2.addClass('roles-tree-arrow arrow-down').click(subrole_collapse);
         var padding = '';
         for(var c = 0; c < level; c++) { padding += '&nbsp;&nbsp;&nbsp;'; }
         $('> td > a', tr).before(padding, arrow, arrow2);

@@ -447,3 +447,29 @@ div.filter-section table.account-table:hover {
 .search-message {
 	text-align: center;
 }
+
+.roles-tree-arrow {
+	background-image: url('/++resource++eea.ldapadmin-www/arrows.gif');
+	background-repeat: no-repeat;
+	border: 0 none;
+	height: 18px;
+	width: 16px;
+	margin: 0;
+	padding: 0;
+}
+
+.arrow-normal {
+}
+
+.arrow-normal:hover {
+	background-position: -32px 0;
+}
+
+.arrow-down {
+	background-position: -16px 0;
+	display: inline;
+}
+
+.arrow-down:hover {
+	background-position: -48px 0;
+}
