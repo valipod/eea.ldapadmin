@@ -28,6 +28,11 @@ function subrole_expand(evt) {
         subroles_tr_list.show();
     }
     arrows(tr).toggle();
+		/**
+		 * Firefox CSS display: block bug fix
+		*/
+		arrow2 = arrows(tr)[1];
+		$(arrow2).css({'display':'inline'});
 }
 
 function subrole_collapse(evt) {
