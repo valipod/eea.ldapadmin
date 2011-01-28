@@ -378,7 +378,7 @@ class LdapAgent(object):
 
     @log_ldap_exceptions
     def delete_org(self, org_id):
-        """ Remove the organisation `org_id` """
+        """ Delete the organisation `org_id` """
         assert self._bound, "call `perform_bind` before `delete_org`"
         log.info("Deleting organisation %r", org_id)
         result = self.conn.delete_s(self._org_dn(org_id))

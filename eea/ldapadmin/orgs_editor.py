@@ -171,7 +171,7 @@ class OrganisationsEditor(SimpleItem):
 
         return self._render_template('zpt/orgs_edit.zpt', **options)
 
-    security.declareProtected(eionet_edit_orgs, 'edit_organisation_html')
+    security.declareProtected(eionet_edit_orgs, 'edit_organisation')
     def edit_organisation(self, REQUEST):
         """ view """
         org_id = REQUEST.form['id']
@@ -198,24 +198,24 @@ class OrganisationsEditor(SimpleItem):
         REQUEST.RESPONSE.redirect(self.absolute_url() +
                                   '/organisation?id=' + org_id)
 
-    security.declareProtected(eionet_edit_orgs, 'remove_organisation_html')
-    def remove_organisation_html(self, REQUEST):
+    security.declareProtected(eionet_edit_orgs, 'delete_organisation_html')
+    def delete_organisation_html(self, REQUEST):
         """ view """
         org_id = REQUEST.form['id']
         options = {
             'org_info': self._get_ldap_agent().org_info(org_id),
         }
-        return self._render_template('zpt/orgs_remove.zpt', **options)
+        return self._render_template('zpt/orgs_delete.zpt', **options)
 
-    security.declareProtected(eionet_edit_orgs, 'remove_organisation')
-    def remove_organisation(self, REQUEST):
+    security.declareProtected(eionet_edit_orgs, 'delete_organisation')
+    def delete_organisation(self, REQUEST):
         """ view """
         org_id = REQUEST.form['id']
         agent = self._get_ldap_agent(bind=True)
         agent.delete_org(org_id)
 
         _set_session_message(REQUEST, 'info',
-                             'Organisation "%s" has been removed.' % org_id)
+                             'Organisation "%s" has been deleted.' % org_id)
         REQUEST.RESPONSE.redirect(self.absolute_url() + '/')
 
     security.declareProtected(eionet_edit_orgs, 'members_html')
@@ -272,7 +272,7 @@ class OrganisationsEditor(SimpleItem):
         }
         return self._render_template('zpt/orgs_add_members.zpt', **options)
 
-    security.declareProtected(eionet_edit_orgs, 'remove_members')
+    security.declareProtected(eionet_edit_orgs, 'add_members')
     def add_members(self, REQUEST):
         """ view """
         org_id = REQUEST.form['id']

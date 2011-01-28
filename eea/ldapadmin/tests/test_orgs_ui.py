@@ -217,32 +217,32 @@ class OrganisationsUITest(unittest.TestCase):
         self.assertEqual(html_value('Full address:'),
                          org_info_fixture['address'])
 
-    def test_remove_org_page(self):
+    def test_delete_org_page(self):
         import re
         self.request.form = {'id': 'bridge_club'}
         self.mock_agent.org_info.return_value = dict(org_info_fixture,
                                                      id='bridge_club')
 
-        page = parse_html(self.ui.remove_organisation_html(self.request))
+        page = parse_html(self.ui.delete_organisation_html(self.request))
 
         txt = page.xpath('//p[@class="confirm-delete"]')[0].text_content()
         self.assertEqual(re.sub(r'\s+', ' ', txt.strip()),
-                         ("Are you sure you want to remove the organisation "
+                         ("Are you sure you want to delete the organisation "
                           "Ye olde bridge club (bridge_club)?"))
         id_input = page.xpath('//form//input[@name="id"]')[0]
         self.assertEqual(id_input.attrib['value'], 'bridge_club')
 
-    def test_remove_org_submit(self):
+    def test_delete_org_submit(self):
         self.request.form = {'id': 'bridge_club'}
 
-        self.ui.remove_organisation(self.request)
+        self.ui.delete_organisation(self.request)
 
         self.mock_agent.delete_org.assert_called_once_with('bridge_club')
         self.request.RESPONSE.redirect.assert_called_with('URL/')
 
         page = parse_html(self.ui.index_html(self.request))
         self.assertEqual(page.xpath('//div[@class="system-msg"]')[0].text,
-                         'Organisation "bridge_club" has been removed.')
+                         'Organisation "bridge_club" has been deleted.')
 
 
 class OrganisationsUIMembersTest(unittest.TestCase):
