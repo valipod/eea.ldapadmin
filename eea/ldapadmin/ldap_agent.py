@@ -31,6 +31,10 @@ org_attr_map = {
 
 class RoleNotFound(Exception): pass
 
+class NameAlreadyExists(Exception): pass
+
+class OrgRenameError(Exception): pass
+
 editable_org_fields = list(org_attr_map)
 
 def log_ldap_exceptions(func):
@@ -375,6 +379,38 @@ class LdapAgent(object):
 
         result = self.conn.modify_s(self._org_dn(org_id), changes)
         assert result == (ldap.RES_MODIFY, [])
+
+    @log_ldap_exceptions
+    def rename_org(self, org_id, new_org_id):
+        assert self._bound, "call `perform_bind` before `rename_org`"
+        log.info("Renaming organisation %r to %r", org_id, new_org_id)
+
+        org_dn = self._org_dn(org_id)
+        new_org_dn = self._org_dn(new_org_id)
+
+        try:
+            result = self.conn.rename_s(org_dn, new_org_dn.split(',')[0])
+        except ldap.ALREADY_EXISTS:
+            raise NameAlreadyExists("Organisation %r already exists" %
+                                    new_org_id)
+        assert result == (ldap.RES_MODRDN, [])
+
+        try:
+            fil = ldap.filter.filter_format('(uniqueMember=%s)',(org_dn,))
+            result = self.conn.search_s(self._role_dn_suffix,
+                                        ldap.SCOPE_SUBTREE,
+                                            filterstr=fil, attrlist=())
+            for role_dn, attr in result:
+                mod_result = self.conn.modify_s(role_dn, (
+                    (ldap.MOD_DELETE, 'uniqueMember', [org_dn]),
+                    (ldap.MOD_ADD, 'uniqueMember', [new_org_dn]),
+                ))
+                assert mod_result == (ldap.RES_MODIFY, [])
+        except:
+            msg = ("Error while updating references to organisation "
+                   "from %r to %r" % (org_dn, new_org_dn))
+            log.exception(msg)
+            raise OrgRenameError(msg)
 
     @log_ldap_exceptions
     def delete_org(self, org_id):

@@ -4,6 +4,7 @@ from mock import Mock, patch
 from eea.ldapadmin.orgs_editor import OrganisationsEditor, CommonTemplateLogic
 from eea.ldapadmin.orgs_editor import validate_org_info, VALIDATION_ERRORS
 from eea.ldapadmin.ui_common import TemplateRenderer
+from eea.ldapadmin import ldap_agent
 
 from test_ldap_agent import org_info_fixture
 
@@ -30,6 +31,9 @@ validation_errors_fixture = {
     'fax': [u"invalid FAX"],
     'postal_code': [u"invalid POSTAL CODE"],
 }
+
+def session_messages(request):
+    return request.SESSION.get('eea.ldapadmin.orgs_editor.messages')
 
 
 class OrganisationsUITest(unittest.TestCase):
@@ -216,6 +220,60 @@ class OrganisationsUITest(unittest.TestCase):
         self.assertEqual(html_value('Country:'), org_info_fixture['country'])
         self.assertEqual(html_value('Full address:'),
                          org_info_fixture['address'])
+
+    def test_rename_org_page(self):
+        self.request.form = {'id': 'bridge_club'}
+        self.mock_agent.org_info.return_value = dict(org_info_fixture,
+                                                     id='bridge_club')
+
+        page = parse_html(self.ui.rename_organisation_html(self.request))
+
+        form = page.xpath('//form[@name="rename_organisation"]')[0]
+        self.assertEqual(form.attrib['action'], 'URL/rename_organisation')
+        org_id_input = form.xpath('//input[@name="id"]')[0]
+        self.assertEqual(org_id_input.attrib['value'], 'bridge_club')
+
+    def test_rename_org_submit(self):
+        self.request.form = {'id': 'bridge_club', 'new_id': 'tunnel_club'}
+
+        self.ui.rename_organisation(self.request)
+
+        self.mock_agent.rename_org.assert_called_once_with('bridge_club',
+                                                           'tunnel_club')
+        self.request.RESPONSE.redirect.assert_called_with(
+            'URL/organisation?id=tunnel_club')
+
+        msg = 'Organisation "bridge_club" renamed to "tunnel_club".'
+        self.assertEqual(session_messages(self.request), {'info': [msg]})
+
+    def test_rename_org_submit_fail(self):
+        self.request.form = {'id': 'bridge_club', 'new_id': 'tunnel_club'}
+        self.mock_agent.rename_org.side_effect = ldap_agent.NameAlreadyExists()
+
+        self.ui.rename_organisation(self.request)
+
+        self.mock_agent.rename_org.assert_called_once_with('bridge_club',
+                                                           'tunnel_club')
+        self.request.RESPONSE.redirect.assert_called_with(
+            'URL/organisation?id=bridge_club')
+
+        msg = ('Organisation "bridge_club" could not be renamed because '
+               '"tunnel_club" already exists.')
+        self.assertEqual(session_messages(self.request), {'error': [msg]})
+
+    def test_rename_org_submit_crash(self):
+        self.request.form = {'id': 'bridge_club', 'new_id': 'tunnel_club'}
+        self.mock_agent.rename_org.side_effect = ldap_agent.OrgRenameError()
+
+        self.ui.rename_organisation(self.request)
+
+        self.mock_agent.rename_org.assert_called_once_with('bridge_club',
+                                                           'tunnel_club')
+        self.request.RESPONSE.redirect.assert_called_with('URL/')
+
+        msg = ('Renaming of "bridge_club" failed mid-way. Some data may be '
+               'inconsistent. Please inform a system administrator.')
+        self.assertEqual(session_messages(self.request), {'error': [msg]})
 
     def test_delete_org_page(self):
         import re

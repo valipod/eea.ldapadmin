@@ -594,6 +594,49 @@ class OrganisationsTest(unittest.TestCase):
 
         self.mock_conn.delete_s.assert_called_once_with(poker_club_dn)
 
+    def test_rename_organisation(self):
+        self.agent._bound = True
+        org_dn = self.agent._org_dn
+        role_dn = self.agent._role_dn
+        self.mock_conn.rename_s.return_value = (ldap.RES_MODRDN, [])
+        self.mock_conn.search_s.return_value = [
+            (role_dn('eionet'), {}), (role_dn('eionet-something'), {})]
+        self.mock_conn.modify_s.return_value = (ldap.RES_MODIFY, [])
+
+        self.agent.rename_org('bridge_club', 'tunnel_club')
+
+        self.mock_conn.rename_s.assert_called_once_with(
+            org_dn('bridge_club'), 'cn=tunnel_club')
+        self.mock_conn.search_s.assert_called_once_with(
+            'ou=Roles,o=EIONET,l=Europe', ldap.SCOPE_SUBTREE,
+            filterstr='(uniqueMember=%s)' % org_dn('bridge_club'), attrlist=())
+        self.assertEqual(self.mock_conn.modify_s.call_args_list, [
+            ((role_dn('eionet'),
+              ((ldap.MOD_DELETE, 'uniqueMember', [org_dn('bridge_club')]),
+               (ldap.MOD_ADD, 'uniqueMember', [org_dn('tunnel_club')]))),
+             {}),
+            ((role_dn('eionet-something'),
+              ((ldap.MOD_DELETE, 'uniqueMember', [org_dn('bridge_club')]),
+               (ldap.MOD_ADD, 'uniqueMember', [org_dn('tunnel_club')]))),
+             {})])
+
+    def test_rename_organisation_fail(self):
+        self.agent._bound = True
+        org_dn = self.agent._org_dn
+        role_dn = self.agent._role_dn
+        self.mock_conn.rename_s.side_effect = ldap.ALREADY_EXISTS
+
+        self.assertRaises(ldap_agent.NameAlreadyExists,
+                          self.agent.rename_org, 'bridge_club', 'tunnel_club')
+
+        self.mock_conn.rename_s = Mock(return_value = (ldap.RES_MODRDN, []))
+        self.mock_conn.search_s.return_value = [
+            (role_dn('eionet'), {}), (role_dn('eionet-something'), {})]
+        self.mock_conn.modify_s.side_effect = ValueError # any error will do
+
+        self.assertRaises(ldap_agent.OrgRenameError,
+                          self.agent.rename_org, 'bridge_club', 'tunnel_club')
+
     def test_get_all_organisations(self):
         self.mock_conn.search_s.return_value = [
             ('cn=bridge_club,ou=Organisations,o=EIONET,l=Europe', {

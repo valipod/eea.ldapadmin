@@ -6,6 +6,10 @@
          >Edit <tal:block content="org_info/id"/></a>
     </li>
     <li>
+      <a tal:attributes="href string:${common/base_url}/rename_organisation_html?id=${org_info/id}"
+         >Change id of <tal:block content="org_info/id"/></a>
+    </li>
+    <li>
       <a tal:attributes="href string:${common/base_url}/delete_organisation_html?id=${org_info/id}"
          >Delete <tal:block content="org_info/id"/></a>
     </li>

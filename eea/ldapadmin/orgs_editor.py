@@ -11,7 +11,7 @@ from OFS.PropertyManager import PropertyManager
 from AccessControl.Permissions import view, view_management_screens
 from persistent.mapping import PersistentMapping
 
-from ldap_agent import LdapAgent, editable_org_fields
+import ldap_agent
 import ldap_config
 from ui_common import load_template, SessionMessages, TemplateRenderer
 
@@ -131,7 +131,7 @@ class OrganisationsEditor(SimpleItem):
         """ view """
         org_id = REQUEST.form['id']
         org_info = {}
-        for name in editable_org_fields:
+        for name in ldap_agent.editable_org_fields:
             org_info[name] = REQUEST.form.get(name)
 
         errors = validate_org_info(org_id, org_info)
@@ -176,7 +176,7 @@ class OrganisationsEditor(SimpleItem):
         """ view """
         org_id = REQUEST.form['id']
         org_info = {}
-        for name in editable_org_fields:
+        for name in ldap_agent.editable_org_fields:
             org_info[name] = REQUEST.form.get(name)
 
         errors = validate_org_info(org_id, org_info)
@@ -197,6 +197,52 @@ class OrganisationsEditor(SimpleItem):
         _set_session_message(REQUEST, 'info', "Organisation saved (%s)" % when)
         REQUEST.RESPONSE.redirect(self.absolute_url() +
                                   '/organisation?id=' + org_id)
+
+    security.declareProtected(eionet_edit_orgs, 'rename_organisation_html')
+    def rename_organisation_html(self, REQUEST):
+        """ view """
+        options = {
+            'org_id': REQUEST.form['id'],
+        }
+        return self._render_template('zpt/orgs_rename.zpt', **options)
+
+    security.declareProtected(eionet_edit_orgs, 'rename_organisation')
+    def rename_organisation(self, REQUEST):
+        """ view """
+        org_id = REQUEST.form['id']
+        new_org_id = REQUEST.form['new_id']
+
+        if org_id == new_org_id:
+            REQUEST.RESPONSE.redirect(self.absolute_url() +
+                                      '/organisation?id=' + org_id)
+            return
+
+        agent = self._get_ldap_agent(bind=True)
+
+        try:
+            agent.rename_org(org_id, new_org_id)
+
+        except ldap_agent.NameAlreadyExists:
+            msg = ('Organisation "%s" could not be renamed because "%s" '
+                   'already exists.' % (org_id, new_org_id))
+            _set_session_message(REQUEST, 'error', msg)
+            REQUEST.RESPONSE.redirect(self.absolute_url() +
+                                      '/organisation?id=' + org_id)
+            return
+
+        except ldap_agent.OrgRenameError:
+            msg = ('Renaming of "%s" failed mid-way. Some data may be '
+                   'inconsistent. Please inform a system administrator.' %
+                   org_id)
+            _set_session_message(REQUEST, 'error', msg)
+            REQUEST.RESPONSE.redirect(self.absolute_url() + '/')
+            return
+
+        msg = ('Organisation "%s" renamed to "%s".' % (org_id, new_org_id))
+        _set_session_message(REQUEST, 'info', msg)
+
+        REQUEST.RESPONSE.redirect(self.absolute_url() +
+                                  '/organisation?id=' + new_org_id)
 
     security.declareProtected(eionet_edit_orgs, 'delete_organisation_html')
     def delete_organisation_html(self, REQUEST):
