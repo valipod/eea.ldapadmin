@@ -55,14 +55,19 @@ class CommonTemplateLogic(object):
         return SessionMessages(self.context.REQUEST, SESSION_MESSAGES).html()
 
 
-class OrganisationsEditor(SimpleItem):
+class OrganisationsEditor(SimpleItem, PropertyManager):
     meta_type = 'Eionet Organisations Editor'
     security = ClassSecurityInfo()
     icon = '++resource++eea.ldapadmin-www/roles_editor.gif'
 
-    manage_options = SimpleItem.manage_options[:1] + (
+    manage_options = (
+        {'label':'Configure', 'action':'manage_edit'},
         {'label':'View', 'action':''},
-    ) + SimpleItem.manage_options[1:]
+    ) + PropertyManager.manage_options + SimpleItem.manage_options
+
+    _properties = (
+        {'id':'title', 'type': 'string', 'mode':'w', 'label': 'Title'},
+    )
 
     _render_template = TemplateRenderer(CommonTemplateLogic)
 
