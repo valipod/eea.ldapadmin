@@ -312,7 +312,7 @@ class OrganisationsEditor(SimpleItem, PropertyManager):
 
         if search_query:
             agent = self._get_ldap_agent()
-            found_users = agent.search_by_name(search_query)
+            found_users = agent.search_user(search_query)
         else:
             found_users = []
 

@@ -359,7 +359,7 @@ class OrganisationsUIMembersTest(unittest.TestCase):
 
     def test_add_members_html(self):
         self.request.form = {'id': 'bridge_club', 'search_query': u"smith"}
-        self.mock_agent.search_by_name.return_value = [
+        self.mock_agent.search_user.return_value = [
             {'id': 'anne', 'name': "Anne Smith"},
             {'id': 'jsmith', 'name': "Joe Something"},
         ]
@@ -376,7 +376,7 @@ class OrganisationsUIMembersTest(unittest.TestCase):
         self.assertEqual(form_add_members.attrib['action'],
                          'URL/add_members')
 
-        self.mock_agent.search_by_name.assert_called_once_with(u'smith')
+        self.mock_agent.search_user.assert_called_once_with(u'smith')
         results_li = form_add_members.xpath('.//ul/li')
         self.assertTrue("Anne Smith" in results_li[0].text_content())
         self.assertTrue("Joe Something" in results_li[1].text_content())
