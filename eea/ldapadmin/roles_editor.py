@@ -9,7 +9,7 @@ from Products.PageTemplates.PageTemplateFile import PageTemplateFile
 from persistent.mapping import PersistentMapping
 from persistent.list import PersistentList
 
-import ldap_agent
+from eea import usersdb
 import ldap_config
 from ui_common import load_template, SessionMessages, TemplateRenderer
 
@@ -174,7 +174,7 @@ class RolesEditor(Folder):
         agent = self._get_ldap_agent()
         try:
             role_info = agent.role_info(role_id)
-        except ldap_agent.RoleNotFound:
+        except usersdb.RoleNotFound:
             REQUEST.RESPONSE.setStatus(404)
             options = {'message': "Role %s does not exist." % role_id}
             return self._render_template('zpt/generic_error.zpt', **options)

@@ -11,7 +11,7 @@ from OFS.PropertyManager import PropertyManager
 from AccessControl.Permissions import view, view_management_screens
 from persistent.mapping import PersistentMapping
 
-import ldap_agent
+import eea.usersdb
 import ldap_config
 from ui_common import load_template, SessionMessages, TemplateRenderer
 
@@ -136,7 +136,7 @@ class OrganisationsEditor(SimpleItem, PropertyManager):
         """ view """
         org_id = REQUEST.form['id']
         org_info = {}
-        for name in ldap_agent.editable_org_fields:
+        for name in eea.usersdb.editable_org_fields:
             org_info[name] = REQUEST.form.get(name)
 
         errors = validate_org_info(org_id, org_info)
@@ -181,7 +181,7 @@ class OrganisationsEditor(SimpleItem, PropertyManager):
         """ view """
         org_id = REQUEST.form['id']
         org_info = {}
-        for name in ldap_agent.editable_org_fields:
+        for name in eea.usersdb.editable_org_fields:
             org_info[name] = REQUEST.form.get(name)
 
         errors = validate_org_info(org_id, org_info)
@@ -227,7 +227,7 @@ class OrganisationsEditor(SimpleItem, PropertyManager):
         try:
             agent.rename_org(org_id, new_org_id)
 
-        except ldap_agent.NameAlreadyExists:
+        except eea.usersdb.NameAlreadyExists:
             msg = ('Organisation "%s" could not be renamed because "%s" '
                    'already exists.' % (org_id, new_org_id))
             _set_session_message(REQUEST, 'error', msg)
@@ -235,7 +235,7 @@ class OrganisationsEditor(SimpleItem, PropertyManager):
                                       '/organisation?id=' + org_id)
             return
 
-        except ldap_agent.OrgRenameError:
+        except eea.usersdb.OrgRenameError:
             msg = ('Renaming of "%s" failed mid-way. Some data may be '
                    'inconsistent. Please inform a system administrator.' %
                    org_id)

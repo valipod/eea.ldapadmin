@@ -3,7 +3,7 @@ from copy import deepcopy
 from mock import Mock
 from eea.ldapadmin.roles_editor import RolesEditor, CommonTemplateLogic
 from eea.ldapadmin.ui_common import TemplateRenderer
-from eea.ldapadmin import ldap_agent
+from eea import usersdb
 
 def plaintext(element):
     import re
@@ -65,7 +65,7 @@ org_map_fixture = {
 
 user_info_fixture = user_map_fixture['jsmith']
 
-from test_ldap_agent import org_info_fixture
+from test_orgs_ui import org_info_fixture
 
 def session_messages(request):
     return request.SESSION.get('eea.ldapadmin.roles_editor.messages')
@@ -142,7 +142,7 @@ class BrowseTest(unittest.TestCase):
         self.assertEqual(plaintext(cells[1]), org_info_fixture['url'])
 
     def test_missing_role(self):
-        exc = ldap_agent.RoleNotFound("no-such-role")
+        exc = usersdb.RoleNotFound("no-such-role")
         self.mock_agent.role_info.side_effect = exc
         self.request.form = {'role_id': 'no-such-role'}
 

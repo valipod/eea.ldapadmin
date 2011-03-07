@@ -4,9 +4,21 @@ from mock import Mock, patch
 from eea.ldapadmin.orgs_editor import OrganisationsEditor, CommonTemplateLogic
 from eea.ldapadmin.orgs_editor import validate_org_info, VALIDATION_ERRORS
 from eea.ldapadmin.ui_common import TemplateRenderer
-from eea.ldapadmin import ldap_agent
+from eea import usersdb
 
-from test_ldap_agent import org_info_fixture
+org_info_fixture = {
+    'name': u"Ye olde bridge club",
+    'phone': u"+45 555 2222",
+    'fax': u"+45 555 9999",
+    'url': u"http://bridge.example.com/",
+    'postal_address': (u"13 Card games road\n"
+                       u"K\xf8benhavn, Danmark\n"),
+    'street': u"Card games road",
+    'po_box': u"123456",
+    'postal_code': u"DK 456789",
+    'country': u"Denmark",
+    'locality': u"K\xf8benhavn",
+}
 
 def parse_html(html):
     return fromstring(html)
@@ -248,7 +260,7 @@ class OrganisationsUITest(unittest.TestCase):
 
     def test_rename_org_submit_fail(self):
         self.request.form = {'id': 'bridge_club', 'new_id': 'tunnel_club'}
-        self.mock_agent.rename_org.side_effect = ldap_agent.NameAlreadyExists()
+        self.mock_agent.rename_org.side_effect = usersdb.NameAlreadyExists()
 
         self.ui.rename_organisation(self.request)
 
@@ -263,7 +275,7 @@ class OrganisationsUITest(unittest.TestCase):
 
     def test_rename_org_submit_crash(self):
         self.request.form = {'id': 'bridge_club', 'new_id': 'tunnel_club'}
-        self.mock_agent.rename_org.side_effect = ldap_agent.OrgRenameError()
+        self.mock_agent.rename_org.side_effect = usersdb.OrgRenameError()
 
         self.ui.rename_organisation(self.request)
 
