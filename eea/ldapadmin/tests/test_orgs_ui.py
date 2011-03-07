@@ -62,7 +62,7 @@ class OrganisationsUITest(unittest.TestCase):
         self.assertTrue(exists('//form//input[@name="locality:utf8:ustring"]'))
         self.assertTrue(exists('//form//input[@name="country:utf8:ustring"]'))
         self.assertTrue(exists('//form//textarea'
-                                    '[@name="address:utf8:ustring"]'))
+                                    '[@name="postal_address:utf8:ustring"]'))
 
     def test_create_org_submit(self):
         self.request.form = dict(org_info_fixture)
@@ -86,14 +86,14 @@ class OrganisationsUITest(unittest.TestCase):
 
         form = page.xpath('//form')[0]
         for name, value in org_info.iteritems():
-            if name == 'address':
+            if name == 'postal_address':
                 continue
             if name != 'id':
                 name += ':utf8:ustring'
             form_input = form.xpath('.//input[@name="%s"]' % name)
             self.assertEqual(form_input[0].attrib['value'], value)
-        form_input = form.xpath('.//textarea[@name="address:utf8:ustring"]')
-        self.assertEqual(form_input[0].text, org_info['address'])
+        form_input = form.xpath('.//textarea[@name="postal_address:utf8:ustring"]')
+        self.assertEqual(form_input[0].text, org_info['postal_address'])
 
     @patch('eea.ldapadmin.orgs_editor.validate_org_info')
     def test_create_org_submit_invalid(self, mock_validator):
@@ -131,7 +131,7 @@ class OrganisationsUITest(unittest.TestCase):
         self.assertEqual(form.xpath('//input[@name="id"]')[0].attrib['value'],
                          'bridge_club')
         for name, value in org_info_fixture.iteritems():
-            if name == 'address':
+            if name == 'postal_address':
                 xp = '//textarea[@name="%s:utf8:ustring"]' % name
                 frm_value = form.xpath(xp)[0].text
             else:
@@ -219,7 +219,7 @@ class OrganisationsUITest(unittest.TestCase):
         self.assertEqual(html_value('Locality:'), org_info_fixture['locality'])
         self.assertEqual(html_value('Country:'), org_info_fixture['country'])
         self.assertEqual(html_value('Full address:'),
-                         org_info_fixture['address'])
+                         org_info_fixture['postal_address'])
 
     def test_rename_org_page(self):
         self.request.form = {'id': 'bridge_club'}

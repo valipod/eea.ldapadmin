@@ -34,7 +34,7 @@ def mock_request():
 user_map_fixture = {
     'jsmith': {
         'id': "jsmith",
-        'name': "Joe Smith",
+        'full_name': "Joe Smith",
         'email': u"jsmith@example.com",
         'phone': u"555 1234",
         'fax': u"555 6789",
@@ -42,7 +42,7 @@ user_map_fixture = {
     },
     'anne': {
         'id': "anne",
-        'name': "Anne Tester",
+        'full_name': "Anne Tester",
         'email': u"anne@example.com",
         'phone': u"555 32879",
         'fax': u"",
@@ -120,7 +120,7 @@ class BrowseTest(unittest.TestCase):
         self.mock_agent.user_info.assert_called_once_with('jsmith')
 
         cells = page.xpath('table[@class="account-datatable"]/tbody/tr/td')
-        self.assertEqual(plaintext(cells[0]), user_info_fixture['name'])
+        self.assertEqual(plaintext(cells[0]), user_info_fixture['full_name'])
         self.assertEqual(plaintext(cells[1]), 'jsmith')
         self.assertEqual(plaintext(cells[2]), user_info_fixture['email'])
         self.assertEqual(plaintext(cells[4]), user_info_fixture['organisation'])
@@ -581,7 +581,7 @@ class FilterTest(unittest.TestCase):
 
         user_names = [plaintext(s) for s in
                       page.xpath('//table[1]/tbody/tr/td[1]')]
-        expected_user_names = [user_map_fixture[user_id]['name']
+        expected_user_names = [user_map_fixture[user_id]['full_name']
                                for user_id in sorted(user_map_fixture)]
         self.assertEqual(user_names, expected_user_names)
 

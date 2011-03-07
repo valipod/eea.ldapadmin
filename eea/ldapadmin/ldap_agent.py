@@ -7,11 +7,13 @@ import ldap, ldap.filter
 log = logging.getLogger(__name__)
 
 user_attr_map = {
-    'name': 'cn',
+    'first_name': 'givenName',
+    'last_name': 'sn',
+    'full_name': 'cn',
     'email': 'mail',
     'phone': 'telephoneNumber',
     'organisation': 'o',
-    'address': 'postalAddress',
+    'postal_address': 'postalAddress',
     'fax': 'facsimileTelephoneNumber',
     'url': 'labeledURI',
 }
@@ -21,7 +23,7 @@ org_attr_map = {
     'phone': 'telephoneNumber',
     'fax': 'facsimileTelephoneNumber',
     'url': 'labeledURI',
-    'address': 'postalAddress',
+    'postal_address': 'postalAddress',
     'street': 'street',
     'po_box': 'postOfficeBox',
     'postal_code': 'postalCode',

@@ -79,9 +79,9 @@
 
   <tr>
     <td><label for="edit-address">Full address:</label></td>
-    <td><textarea id="edit-address" name="address:utf8:ustring"
+    <td><textarea id="edit-address" name="postal_address:utf8:ustring"
                   rows="6" cols="30"
-                  tal:content="form_data/address|string:"></textarea></td>
+                  tal:content="form_data/postal_address|string:"></textarea></td>
   </tr>
 
 </tal:block>

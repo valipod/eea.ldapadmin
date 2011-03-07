@@ -33,7 +33,7 @@
           <tr tal:repeat="user_info role_members/users"
               tal:attributes="class python:'odd' if path('repeat/user_info/odd') else 'even'">
             <td>
-              <span tal:content="user_info/name" />
+              <span tal:content="user_info/full_name" />
             </td>
             
             <td>

@@ -1,6 +1,6 @@
 <!-- user-info: requires variable `user_info` -->
 <metal:block define-macro="user-info">
-    <span class="user-name" tal:content="user_info/name" />
+    <span class="user-name" tal:content="user_info/full_name" />
 
     <tal:block condition="is_authenticated">
         (<tt class="user-id" tal:content="user_info/id" />)

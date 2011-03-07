@@ -89,7 +89,7 @@
     <tbody>
       <tr tal:repeat="user_info results/users">
         <td>
-          <span tal:content="user_info/name" />
+          <span tal:content="user_info/full_name" />
           <br />
           
           <a tal:condition="user_info/email"

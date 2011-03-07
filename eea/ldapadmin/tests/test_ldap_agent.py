@@ -197,7 +197,7 @@ class LdapAgentTest(unittest.TestCase):
             'uid=usertwo,ou=Users,o=EIONET,l=Europe', ldap.SCOPE_BASE,
             filterstr='(objectClass=organizationalPerson)')
 
-        assert info['name'] == 'User Two'
+        assert info['full_name'] == 'User Two'
         assert info['email'] == 'user_two@example.com'
         assert info['phone'] == '555 1234 2'
         assert info['organisation'] == 'Testers Club'
@@ -527,8 +527,8 @@ org_info_fixture = {
     'phone': u"+45 555 2222",
     'fax': u"+45 555 9999",
     'url': u"http://bridge.example.com/",
-    'address': (u"13 Card games road\n"
-                u"K\xf8benhavn, Danmark\n"),
+    'postal_address': (u"13 Card games road\n"
+                       u"K\xf8benhavn, Danmark\n"),
     'street': u"Card games road",
     'po_box': u"123456",
     'postal_code': u"DK 456789",

@@ -76,7 +76,7 @@
 
   <tr>
     <td>Full address:</td>
-    <td tal:content="org_info/address"></td>
+    <td tal:content="org_info/postal_address"></td>
   </tr>
 
 </table>

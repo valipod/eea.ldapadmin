@@ -56,7 +56,7 @@
                             tal:attributes="value user_id" />
                     </td>
                     <td>
-                        <span tal:content="user_info/name"/>
+                        <span tal:content="user_info/full_name"/>
                     </td>
                     
                     <td>
