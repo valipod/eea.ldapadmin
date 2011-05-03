@@ -23,9 +23,22 @@ def ldap_agent_with_config(config, bind=False):
                  users_dn=config['users_dn'],
                  orgs_dn=config['orgs_dn'],
                  roles_dn=config['roles_dn'])
+
     if bind:
-        db.perform_bind(config['admin_dn'],
-                           config['admin_pw'])
+        db.perform_bind(config['admin_dn'], config['admin_pw'])
+
+        legacy_ldap_server = config.get('legacy_ldap_server', None)
+        if legacy_ldap_server:
+            from eea.userseditor.users_editor import (
+                CircaUsersDB, CIRCA_USERS_DN_SUFFIX, DualLDAPProxy)
+            legacy_db = CircaUsersDB(ldap_server=legacy_ldap_server,
+                                     users_dn=CIRCA_USERS_DN_SUFFIX,
+                                     encoding="ISO-8859-1")
+            legacy_db.perform_bind(config['legacy_admin_dn'],
+                                   config['legacy_admin_pw'])
+
+            db = DualLDAPProxy(db, legacy_db)
+
     return db
 
 edit_macro = load_template('zpt/ldap_config.zpt').macros['edit']

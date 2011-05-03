@@ -97,7 +97,16 @@ class PasswordResetTool(SimpleItem):
     security.declareProtected(view_management_screens, 'manage_edit_save')
     def manage_edit_save(self, REQUEST):
         """ save changes to configuration """
-        self._config.update(ldap_config.read_form(REQUEST.form, edit=True))
+        form = REQUEST.form
+        new_config = ldap_config.read_form(form, edit=True)
+
+        new_config['legacy_ldap_server'] = form.get('legacy_ldap_server', '')
+        new_config['legacy_admin_dn'] = form.get('legacy_admin_dn', '')
+        new_config['legacy_admin_pw'] = form.get('legacy_admin_pw', '')
+        if not new_config['legacy_admin_pw']:
+            del new_config['legacy_admin_pw'] # don't overwrite
+
+        self._config.update(new_config)
         REQUEST.RESPONSE.redirect(self.absolute_url() + '/manage_edit')
 
     def _get_ldap_agent(self, bind=False):
