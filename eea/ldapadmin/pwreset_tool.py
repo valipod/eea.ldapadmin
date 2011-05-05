@@ -1,3 +1,4 @@
+import logging
 from datetime import datetime, timedelta
 from collections import namedtuple
 from email.mime.text import MIMEText
@@ -14,6 +15,8 @@ from zope.sendmail.interfaces import IMailDelivery
 from eea import usersdb
 import ldap_config
 from ui_common import load_template, SessionMessages, TemplateRenderer
+
+log = logging.getLogger(__name__)
 
 manage_add_pwreset_tool_html = PageTemplateFile('zpt/pwreset_manage_add',
                                                 globals())
@@ -154,10 +157,14 @@ class PasswordResetTool(SimpleItem):
             # some people have multiple accounts; send mail for each account.
             for user_info in users:
                 token = self._new_token(user_info['id'])
+                log.info("Sending password recovery email to user %r at %r.",
+                         user_info['id'], email)
                 self._send_token_email(email, token, user_info)
             location = self.absolute_url() + '/messages_html?msg=email-sent'
 
         else:
+            log.info("Requested password recovery with invalid email %r.",
+                     email)
             msg = "Email address not found in database."
             _set_session_message(REQUEST, 'error', msg)
             location = self.absolute_url() + '/'
@@ -186,6 +193,7 @@ class PasswordResetTool(SimpleItem):
             if token_data.timestamp < cutoff_time:
                 expired.append(token)
         for token in expired:
+            log.info('Token %r expired.', token)
             del self._tokens[token]
 
     security.declareProtected(view, 'confirm_email')
@@ -221,6 +229,8 @@ class PasswordResetTool(SimpleItem):
             location = self.absolute_url() + '/confirm_email?token=' + token
 
         else:
+            log.info("Restting password for user %r with token %r",
+                     token_data.user_id, token)
             agent = self._get_ldap_agent(bind=True)
             agent.set_user_password(token_data.user_id, None, new_password)
             del self._tokens[token]
