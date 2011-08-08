@@ -1,5 +1,5 @@
 def initialize(context):
-    import roles_editor, orgs_editor, pwreset_tool
+    import roles_editor, orgs_editor, pwreset_tool, users_admin
 
     context.registerClass(roles_editor.RolesEditor, constructors=(
         ('manage_add_roles_editor_html',
@@ -17,4 +17,10 @@ def initialize(context):
         ('manage_add_pwreset_tool_html',
          pwreset_tool.manage_add_pwreset_tool_html),
         ('manage_add_pwreset_tool', pwreset_tool.manage_add_pwreset_tool),
+    ))
+
+    context.registerClass(users_admin.UsersAdmin, constructors=(
+        ('manage_add_users_admin_html',
+         users_admin.manage_add_users_admin_html),
+        ('manage_add_users_admin', users_admin.manage_add_users_admin),
     ))
