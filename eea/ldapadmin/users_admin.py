@@ -1,3 +1,4 @@
+from datetime import datetime
 from AccessControl import ClassSecurityInfo
 from App.class_init import InitializeClass
 from Products.PageTemplates.PageTemplateFile import PageTemplateFile
@@ -9,11 +10,13 @@ from persistent.mapping import PersistentMapping
 import ldap_config
 from ui_common import SessionMessages, TemplateRenderer
 
-import deform
+import deform, colander
 from eea import usersdb
 
 
 user_info_schema = usersdb.user_info_schema.clone()
+_uid_node = colander.SchemaNode(colander.String(), name='id')
+user_info_schema.children.insert(0, _uid_node)
 user_info_schema['postal_address'].widget = deform.widget.TextAreaWidget()
 
 
@@ -116,8 +119,30 @@ class UsersAdmin(SimpleItem, PropertyManager):
     security.declareProtected(eionet_edit_users, 'create_user')
     def create_user(self, REQUEST):
         """ view """
+
+        user_form = deform.Form(user_info_schema, buttons=['submit'])
+
+        if 'submit' in REQUEST.form:
+            try:
+                user_info = user_form.validate(REQUEST.form.items())
+
+            except deform.ValidationFailure, e:
+                pass # the form will be rendered with errors
+
+            else:
+                user_id = user_info.pop('id')
+
+                agent = self._get_ldap_agent(bind=True)
+                agent._update_full_name(user_info)
+                agent.create_user(user_id, user_info)
+
+                when = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+                msg = "User %s created (%s)" % (user_id, when)
+                _set_session_message(REQUEST, 'info', msg)
+                return REQUEST.RESPONSE.redirect(self.absolute_url())
+
         options = {
-            'user_form': deform.Form(user_info_schema, buttons=['submit']),
+            'user_form_html': user_form.render(REQUEST.form),
         }
         return self._render_template('zpt/users_create.zpt', **options)
 

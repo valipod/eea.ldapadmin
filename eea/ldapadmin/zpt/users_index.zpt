@@ -9,11 +9,11 @@
   </ul>
 </div>
 
-<tal:block condition="nothing">
 <h1>Users</h1>
 
 <tal:block content="structure common/message_boxes"/>
 
+<tal:block condition="nothing">
 <ul class="organisations" tal:condition="options/sorted_organisations">
   <li tal:repeat="org options/sorted_organisations">
     <a tal:define="orgs_url string:${common/base_url}/organisation"
