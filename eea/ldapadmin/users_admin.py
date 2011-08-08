@@ -130,7 +130,7 @@ class UsersAdmin(SimpleItem, PropertyManager):
                 pass # the form will be rendered with errors
 
             else:
-                user_id = user_info.pop('id')
+                user_id = str(user_info.pop('id'))
 
                 agent = self._get_ldap_agent(bind=True)
                 agent._update_full_name(user_info)
