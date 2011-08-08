@@ -3,7 +3,7 @@
   <h2>Operations</h2>
   <ul>
     <li>
-      <a tal:attributes="href string:${common/base_url}/create_user_html"
+      <a tal:attributes="href string:${common/base_url}/create_user"
           >Create user</a>
     </li>
   </ul>

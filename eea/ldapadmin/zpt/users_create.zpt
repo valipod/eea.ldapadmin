@@ -1,0 +1,11 @@
+<style>
+  form.deform li {
+    list-style: none;
+  }
+</style>
+
+<h1>Create user</h1>
+
+<tal:block content="structure common/message_boxes"/>
+
+<tal:block content="structure python:options['user_form'].render()"/>

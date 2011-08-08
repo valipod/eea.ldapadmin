@@ -9,6 +9,13 @@ from persistent.mapping import PersistentMapping
 import ldap_config
 from ui_common import SessionMessages, TemplateRenderer
 
+import deform
+from eea import usersdb
+
+
+user_info_schema = usersdb.user_info_schema.clone()
+user_info_schema['postal_address'].widget = deform.widget.TextAreaWidget()
+
 
 eionet_edit_users = 'Eionet edit users'
 
@@ -106,9 +113,12 @@ class UsersAdmin(SimpleItem, PropertyManager):
         }
         return self._render_template('zpt/users_index.zpt', **options)
 
-    security.declareProtected(eionet_edit_users, 'create_user_html')
-    def create_user_html(self, REQUEST):
+    security.declareProtected(eionet_edit_users, 'create_user')
+    def create_user(self, REQUEST):
         """ view """
-        raise NotImplementedError
+        options = {
+            'user_form': deform.Form(user_info_schema, buttons=['submit']),
+        }
+        return self._render_template('zpt/users_create.zpt', **options)
 
 InitializeClass(UsersAdmin)
