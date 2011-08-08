@@ -7,7 +7,7 @@
   }
 </style>
 
-<h1>Create user</h1>
+<h1>Create LDAP user</h1>
 
 <tal:block content="structure common/message_boxes"/>
 

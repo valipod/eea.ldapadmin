@@ -4,7 +4,7 @@
   <ul>
     <li>
       <a tal:attributes="href string:${common/base_url}/create_user"
-          >Create user</a>
+          >Create LDAP user</a>
     </li>
   </ul>
 </div>
