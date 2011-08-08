@@ -31,7 +31,7 @@
         
         <tbody>
           <tr tal:repeat="user_info role_members/users"
-              tal:attributes="class python:'odd' if path('repeat/user_info/odd') else 'even'">
+              tal:attributes="class python:path('repeat/user_info/odd') and 'odd' or 'even'">
             <td>
               <span tal:content="user_info/full_name" />
             </td>
@@ -91,7 +91,7 @@
         
         <tbody>
           <tr tal:repeat="org_info role_members/orgs"
-              tal:attributes="class python:'odd' if path('repeat/org_info/odd') else 'even'">
+              tal:attributes="class python:path('repeat/org_info/odd') and 'odd' or 'even'">
             <td>
               <span class="org-name" tal:content="org_info/name" />
             </td>

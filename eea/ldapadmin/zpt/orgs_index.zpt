@@ -1,4 +1,5 @@
-<div id="operations">
+<div id="operations"
+     tal:condition="options/can_edit">
   <h2>Operations</h2>
   <ul>
     <li>
@@ -12,7 +13,7 @@
 
 <tal:block content="structure common/message_boxes"/>
 
-<ul class="organisations">
+<ul class="organisations" tal:condition="options/sorted_organisations">
   <li tal:repeat="org options/sorted_organisations">
     <a tal:define="orgs_url string:${common/base_url}/organisation"
        tal:attributes="href string:${orgs_url}?id=${org/id}"
@@ -20,3 +21,7 @@
     <tal:block content="org/name"/>
   </li>
 </ul>
+
+<p tal:condition="not:options/sorted_organisations">
+  There is no organisation available.
+</p>

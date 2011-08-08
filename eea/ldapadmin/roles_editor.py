@@ -22,7 +22,7 @@ manage_add_roles_editor_html.config_defaults = lambda: ldap_config.defaults
 
 def manage_add_roles_editor(parent, id, REQUEST=None):
     """ Create a new RolesEditor object """
-    form = (REQUEST.form if REQUEST is not None else {})
+    form = (REQUEST is not None and REQUEST.form or {})
     config = ldap_config.read_form(form)
     obj = RolesEditor(config)
     obj.title = form.get('title', id)
@@ -165,7 +165,7 @@ class RolesEditor(Folder):
 
     def _predefined_filters(self):
         return sorted(self.objectValues([query.Query.meta_type]),
-                      key=operator.methodcaller('getId'))
+                      key=lambda ob: ob.getId())
 
     security.declareProtected(view, 'index_html')
     def index_html(self, REQUEST):
@@ -309,7 +309,7 @@ class RolesEditor(Folder):
         agent.delete_role(role_id)
         parent_role_id = '-'.join(role_id.split('-')[:-1])
         _set_session_message(REQUEST, 'info', "Removed role %s" % role_id)
-        rel_url = '/?role_id=' + parent_role_id if parent_role_id else '/'
+        rel_url = parent_role_id and '/?role_id=' + parent_role_id or '/'
         REQUEST.RESPONSE.redirect(self.absolute_url() + rel_url)
 
     security.declareProtected(eionet_edit_roles, 'add_member_html')

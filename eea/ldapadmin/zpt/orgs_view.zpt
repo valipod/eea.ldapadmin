@@ -1,4 +1,6 @@
-<div id="operations" tal:define="org_info options/organisation">
+<div id="operations"
+     tal:define="org_info options/organisation"
+     tal:condition="options/can_edit">
   <h2>Operations</h2>
   <ul>
     <li>

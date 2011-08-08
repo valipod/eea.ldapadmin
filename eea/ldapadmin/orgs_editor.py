@@ -23,7 +23,7 @@ manage_add_orgs_editor_html.config_defaults = lambda: ldap_config.defaults
 
 def manage_add_orgs_editor(parent, id, REQUEST=None):
     """ Adds a new Eionet Organisations Editor object """
-    form = (REQUEST.form if REQUEST is not None else {})
+    form = (REQUEST is not None and REQUEST.form or {})
     config = ldap_config.read_form(form)
     obj = OrganisationsEditor(config)
     obj.title = form.get('title', id)
@@ -92,6 +92,10 @@ class OrganisationsEditor(SimpleItem, PropertyManager):
     def _get_ldap_agent(self, bind=False):
         return ldap_config.ldap_agent_with_config(self._config, bind)
 
+    security.declareProtected(view, 'can_edit_orgs')
+    def can_edit_orgs(self, user):
+        return bool(user.has_permission(eionet_edit_orgs, self))
+
     security.declareProtected(view, 'index_html')
     def index_html(self, REQUEST):
         """ view """
@@ -102,6 +106,7 @@ class OrganisationsEditor(SimpleItem, PropertyManager):
         orgs.sort(key=operator.itemgetter('name'))
         options = {
             'sorted_organisations': orgs,
+            'can_edit': self.can_edit_orgs(REQUEST.AUTHENTICATED_USER),
         }
         return self._render_template('zpt/orgs_index.zpt', **options)
 
@@ -112,6 +117,7 @@ class OrganisationsEditor(SimpleItem, PropertyManager):
         agent = self._get_ldap_agent()
         options = {
             'organisation': agent.org_info(org_id),
+            'can_edit': self.can_edit_orgs(REQUEST.AUTHENTICATED_USER),
         }
         return self._render_template('zpt/orgs_view.zpt', **options)
 
