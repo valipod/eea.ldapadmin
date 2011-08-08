@@ -1,7 +1,6 @@
 import logging
 from datetime import datetime, timedelta
-from collections import namedtuple
-from email.mime.text import MIMEText
+from email.MIMEText import MIMEText
 
 from AccessControl import ClassSecurityInfo
 from AccessControl.Permissions import view, view_management_screens
@@ -64,11 +63,21 @@ class CommonTemplateLogic(object):
     def message_boxes(self):
         return SessionMessages(self._get_request(), SESSION_MESSAGES).html()
 
-TokenData = namedtuple('TokenData', 'user_id timestamp')
+class TokenData(tuple):
+    def __new__(cls, user_id, timestamp):
+        return tuple.__new__(cls, (user_id, timestamp))
+
+    @property
+    def user_id(self):
+        return self[0]
+
+    @property
+    def timestamp(self):
+        return self[1]
 
 def random_token():
-    import base64, hashlib, random
-    bits = hashlib.sha1(str(datetime.now()) + str(random.random())).digest()
+    import base64, sha, random
+    bits = sha.new(str(datetime.now()) + str(random.random())).digest()
     return base64.urlsafe_b64encode(bits)[:20]
 
 
