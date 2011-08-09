@@ -1,4 +1,5 @@
 from datetime import datetime
+import random
 from AccessControl import ClassSecurityInfo
 from App.class_init import InitializeClass
 from Products.PageTemplates.PageTemplateFile import PageTemplateFile
@@ -16,8 +17,16 @@ from eea import usersdb
 
 user_info_schema = usersdb.user_info_schema.clone()
 _uid_node = colander.SchemaNode(colander.String(), name='id')
+_password_node = colander.SchemaNode(colander.String(), name='password')
 user_info_schema.children.insert(0, _uid_node)
+user_info_schema.children.insert(1, _password_node)
 user_info_schema['postal_address'].widget = deform.widget.TextAreaWidget()
+
+
+password_letters = '23456789ABCDEFGHIJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz'
+
+def generate_password():
+    return ''.join(random.choice(password_letters) for n in range(8))
 
 
 eionet_edit_users = 'Eionet edit users'
@@ -120,21 +129,27 @@ class UsersAdmin(SimpleItem, PropertyManager):
     def create_user(self, REQUEST):
         """ view """
 
+        form_data = dict(REQUEST.form)
+        if not form_data.get('password', ''):
+            form_data['password'] = generate_password()
+
         user_form = deform.Form(user_info_schema, buttons=['submit'])
 
         if 'submit' in REQUEST.form:
             try:
-                user_info = user_form.validate(REQUEST.form.items())
+                user_info = user_form.validate(form_data.items())
 
             except deform.ValidationFailure, e:
                 pass # the form will be rendered with errors
 
             else:
                 user_id = str(user_info.pop('id'))
+                password = str(user_info.pop('password'))
 
                 agent = self._get_ldap_agent(bind=True)
                 agent._update_full_name(user_info)
                 agent.create_user(user_id, user_info)
+                agent.set_user_password(user_id, None, password)
 
                 when = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
                 msg = "User %s created (%s)" % (user_id, when)
@@ -142,7 +157,7 @@ class UsersAdmin(SimpleItem, PropertyManager):
                 return REQUEST.RESPONSE.redirect(self.absolute_url())
 
         options = {
-            'user_form_html': user_form.render(REQUEST.form),
+            'user_form_html': user_form.render(form_data),
         }
         return self._render_template('zpt/users_create.zpt', **options)
 
