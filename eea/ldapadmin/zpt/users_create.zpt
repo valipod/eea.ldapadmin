@@ -2,12 +2,23 @@
   form.deform li {
     list-style: none;
   }
+  form.deform li label {
+    display: block;
+    float: left;
+    clear: left;
+    width: 200px;
+  }
   form.deform p.error {
-      color: red;
+    color: red;
+  }
+  p.hint {
+    font-style: italic;
   }
 </style>
 
 <h1>Create LDAP user</h1>
+
+<p class="hint">Fields marked with <tt>*</tt> are mandatory.</p>
 
 <tal:block content="structure common/message_boxes"/>
 
