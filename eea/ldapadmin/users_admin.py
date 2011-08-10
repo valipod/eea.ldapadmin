@@ -159,6 +159,8 @@ class UsersAdmin(SimpleItem, PropertyManager):
                     return REQUEST.RESPONSE.redirect(self.absolute_url())
             except ldap.ALREADY_EXISTS, e:
                 _set_session_message(REQUEST, 'error', "User already exists")
+            except ValueError, e:
+                _set_session_message(REQUEST, 'error', "Validation Error: %s" % e)
             except Exception, e:
                 _set_session_message(REQUEST, 'error', "Error: %s" % e)
         options = {
