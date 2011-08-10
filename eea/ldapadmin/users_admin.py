@@ -9,6 +9,7 @@ from AccessControl.Permissions import view, view_management_screens
 from persistent.mapping import PersistentMapping
 
 import ldap_config
+import ldap
 from ui_common import SessionMessages, TemplateRenderer
 
 import deform, colander
@@ -137,25 +138,29 @@ class UsersAdmin(SimpleItem, PropertyManager):
 
         if 'submit' in REQUEST.form:
             try:
-                user_info = user_form.validate(form_data.items())
+                try:
+                    user_info = user_form.validate(form_data.items())
 
-            except deform.ValidationFailure, e:
-                pass # the form will be rendered with errors
+                except deform.ValidationFailure, e:
+                    pass # the form will be rendered with errors
 
-            else:
-                user_id = str(user_info.pop('id'))
-                password = str(user_info.pop('password'))
+                else:
+                    user_id = str(user_info.pop('id'))
+                    password = str(user_info.pop('password'))
 
-                agent = self._get_ldap_agent(bind=True)
-                agent._update_full_name(user_info)
-                agent.create_user(user_id, user_info)
-                agent.set_user_password(user_id, None, password)
+                    agent = self._get_ldap_agent(bind=True)
+                    agent._update_full_name(user_info)
+                    agent.create_user(user_id, user_info)
+                    agent.set_user_password(user_id, None, password)
 
-                when = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-                msg = "User %s created (%s)" % (user_id, when)
-                _set_session_message(REQUEST, 'info', msg)
-                return REQUEST.RESPONSE.redirect(self.absolute_url())
-
+                    when = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+                    msg = "User %s created (%s)" % (user_id, when)
+                    _set_session_message(REQUEST, 'info', msg)
+                    return REQUEST.RESPONSE.redirect(self.absolute_url())
+            except ldap.ALREADY_EXISTS, e:
+                _set_session_message(REQUEST, 'error', "User already exists")
+            except Exception, e:
+                _set_session_message(REQUEST, 'error', "Error: %s" % e)
         options = {
             'user_form_html': user_form.render(form_data),
         }
